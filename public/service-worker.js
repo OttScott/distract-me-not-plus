@@ -853,9 +853,14 @@ function checkUrlShouldBeBlockedLocal(url) {
         specificity: result.specificity
       };
     }
+      // Only check blacklist keywords if:
+    // 1. Pattern matching didn't block the URL, AND
+    // 2. The URL wasn't explicitly allowed by an allow pattern
+    // If matchedPattern exists and the result is not blocked, it means it was explicitly allowed
+    const wasExplicitlyAllowed = !result.blocked && result.matchedPattern && result.reason && 
+      (result.reason.includes('Allow') || result.reason.includes('allowed'));
     
-    // If pattern matching didn't block, check blacklist keywords
-    if (!result.blocked) {
+    if (!result.blocked && !wasExplicitlyAllowed) {
       for (const keyword of blacklistKeywords) {
         try {
           const pattern = typeof keyword === 'string' ? keyword : keyword.pattern || keyword;
@@ -873,6 +878,8 @@ function checkUrlShouldBeBlockedLocal(url) {
           logError('Error checking denylist keyword:', e);
         }
       }
+    } else if (wasExplicitlyAllowed) {
+      logInfo(`URL was explicitly allowed by pattern, skipping keyword checks: ${result.matchedPattern}`);
     }
     
     // Return the pattern matching result (allowed)

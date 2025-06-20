@@ -399,15 +399,46 @@ describe('Keyword Blocking Integration Tests', () => {
           keyword: 'path.with.dots',
           shouldMatch: true
         }
-      ];
-
-      testCases.forEach(testCase => {
+      ];      testCases.forEach(testCase => {
         const result = mockServiceWorkerFunctions.checkUrlShouldBeBlockedLocal(
           testCase.url, [], [], [testCase.keyword], []
         );
         
         expect(result.blocked).toBe(testCase.shouldMatch);
       });
+    });
+
+    it('should allow URLs that match allow patterns even if they contain deny keywords (epicgames bug)', () => {
+      const url = 'https://accounts.epicgames.com/exchange?exchangeCode=67bde013c04e40cca48b9b58a51a84cd&redirectUrl=https%3A%2F%2Fwww.unrealengine.com%2Fmarketplace%2Fen%2Fproduct%2Fmegascans-abandoned-factory';
+      const whitelistRules = ['https://*.epicgames.com/*'];
+      const blacklistRules = [];
+      const blacklistKeywords = ['lace']; // Should match "marketplace" in URL but be overridden by allow pattern
+      const whitelistKeywords = [];
+
+      const result = mockServiceWorkerFunctions.checkUrlShouldBeBlockedLocal(
+        url, blacklistRules, whitelistRules, blacklistKeywords, whitelistKeywords
+      );
+
+      // URL should be ALLOWED because the allow pattern takes precedence over the deny keyword
+      expect(result.blocked).toBe(false);
+      expect(result.reason).toContain('Allow');
+      expect(result.reason).not.toContain('lace');
+    });
+
+    it('should block URLs with deny keywords when no allow patterns match', () => {
+      const url = 'https://someother.com/marketplace/product';
+      const whitelistRules = ['https://*.epicgames.com/*']; // Doesn't match
+      const blacklistRules = [];
+      const blacklistKeywords = ['lace']; // Should match "marketplace" in URL
+      const whitelistKeywords = [];
+
+      const result = mockServiceWorkerFunctions.checkUrlShouldBeBlockedLocal(
+        url, blacklistRules, whitelistRules, blacklistKeywords, whitelistKeywords
+      );
+
+      // URL should be BLOCKED because no allow pattern matches, so keyword check applies
+      expect(result.blocked).toBe(true);
+      expect(result.reason).toContain('lace');
     });
   });
 });

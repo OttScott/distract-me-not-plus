@@ -30,6 +30,8 @@ import { logger, defaultLogsSettings } from 'helpers/logger';
 import { defaultTimerSettings, unactiveTimerRuntimeSettings } from 'helpers/timer';
 import { now } from 'helpers/date';
 import { translate } from 'helpers/i18n';
+import { notificationManager } from 'helpers/notificationManager';
+import { scheduleMonitor } from 'helpers/scheduleMonitor';
 import queryString from 'query-string';
 
 const contextMenus = [
@@ -103,6 +105,8 @@ export class Background extends Component {
 
   setSchedule = (value) => {
     this.schedule = value;
+    // Start monitoring the new schedule for notifications
+    scheduleMonitor.updateSchedule(value);
   };
 
   getSchedule = () => {
@@ -335,6 +339,9 @@ export class Background extends Component {
     browser.runtime.onMessage.addListener(this.handleMessage);
     browser.contextMenus.onClicked.addListener(this.handleContextMenusClick);
     this.initContextMenus();
+    
+    // Initialize notification system
+    this.initNotificationSystem();
   };
 
   initContextMenus = async () => {
@@ -345,34 +352,20 @@ export class Background extends Component {
         enabled: this.isContextMenuEnableable(menu, activeTab),
       });
     }
-    browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-      if (changeInfo.status === 'complete') {
-        this.updateContextMenus(tab);
+  };
+
+  initNotificationSystem = async () => {
+    try {
+      // Initialize the notification manager
+      await notificationManager.initialize();
+      
+      // Start monitoring the current schedule if enabled
+      if (this.schedule && this.schedule.isEnabled) {
+        scheduleMonitor.startMonitoring(this.schedule);
       }
-    });
-    browser.tabs.onReplaced.addListener((addedTabId, removedTabId) => {
-      getTab(addedTabId).then((tab) => {
-        if (tab) {
-          this.updateContextMenus(tab);
-        }
-      });
-    });
-    browser.tabs.onActivated.addListener((activeInfo) => {
-      getTab(activeInfo.tabId).then((tab) => {
-        if (tab) {
-          this.updateContextMenus(tab);
-        }
-      });
-    });
-    browser.tabs.onRemoved.addListener((tabId, removeInfo) => {
-      setTimeout(() => {
-        getActiveTab().then((tab) => {
-          if (tab) {
-            this.updateContextMenus(tab);
-          }
-        });
-      }, 100);
-    });
+    } catch (error) {
+      this.debug('Failed to initialize notification system:', error);
+    }
   };
 
   updateIcon = () => {

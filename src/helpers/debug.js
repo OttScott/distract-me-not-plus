@@ -7,6 +7,11 @@ export const logInfo = (message, data) => {
   console.log(`[DMN INFO] ${message}`, data || '');
 };
 
+// Add logError helper for consistency with service worker
+export const logError = (message, data) => {
+  console.error(`[DMN ERROR] ${message}`, data || '');
+};
+
 // Add any other debug helpers
 export const debug = {
   log: (...args) => {

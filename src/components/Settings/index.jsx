@@ -15,9 +15,17 @@ import {
   HistoryIcon,
   Pill,
   TimeIcon,
-  Badge,  WarningSignIcon,
+  Badge,
+  WarningSignIcon,
   ImportIcon,
   ExportIcon,
+  RefreshIcon,
+  TrashIcon,
+  UploadIcon,
+  PlayIcon,
+  InfoSignIcon,
+  Heading,
+  Text
 } from 'evergreen-ui';
 import { translate } from 'helpers/i18n';
 import { debug, isDevEnv, logInfo } from 'helpers/debug';
@@ -55,7 +63,6 @@ import {
   Tooltip,
   TruncatedText,
   Button,
-  Diagnostics,
 } from 'components';
 import { defaultLogsSettings } from 'helpers/logger';
 import { defaultTimerSettings } from 'helpers/timer';
@@ -66,7 +73,7 @@ import { set, cloneDeep, debounce } from 'lodash';
 import { format } from 'date-fns';
 import './styles.scss';
 import { syncStorage } from 'helpers/syncStorage';
-import { syncStatusLog, diagnostics, syncableSettings, localOnlySettings, syncStatusTracker } from 'helpers/syncDiagnostics';
+import { diagnostics, syncableSettings, localOnlySettings, syncStatusTracker } from 'helpers/syncDiagnostics';
 
 export class Settings extends Component {
   constructor(props) {
@@ -794,7 +801,8 @@ export class Settings extends Component {
       const result = await diagnostics.forceSyncAllData();
       
       if (result.success) {
-        toaster.success(translate('forceSyncSuccess'), {
+        const message = result.message || translate('forceSyncSuccess');
+        toaster.success(message, {
           id: 'force-sync-success',
           duration: 3
         });
@@ -821,13 +829,32 @@ export class Settings extends Component {
       // Show results in a dialog or update state to show in UI
       console.log('Sync Diagnosis Results:', { results, problems });
       
-      toaster.success(`Sync diagnosis complete. Found ${problems.problemCount} issues.`, {
-        id: 'diagnosis-complete',
-        duration: 3
-      });
+      // Enhanced feedback based on new diagnostics
+      if (problems.problemCount === 0) {
+        toaster.success(problems.summaryMessage || 'Sync diagnosis complete - no issues found!', {
+          id: 'diagnosis-complete',
+          duration: 4
+        });
+      } else if (problems.overallHealth === 'poor') {
+        toaster.danger(`Sync issues detected: ${problems.summaryMessage}`, {
+          id: 'diagnosis-critical',
+          duration: 6
+        });
+      } else {
+        toaster.warning(`Sync diagnosis found ${problems.problemCount} ${problems.problemCount === 1 ? 'issue' : 'issues'} to address`, {
+          id: 'diagnosis-warning',
+          duration: 5
+        });
+      }
       
-      // Update state with diagnosis results if needed
-      this.setState({ lastDiagnosisResults: { results, problems } });
+      // Update state with diagnosis results including telemetry
+      this.setState({ 
+        lastDiagnosisResults: { 
+          results, 
+          problems, 
+          timestamp: new Date().toISOString() 
+        } 
+      });
       
       // Refresh sync status after diagnosis
       this.loadCurrentSyncStatus();
@@ -1752,6 +1779,59 @@ export class Settings extends Component {
             <Text>Duration: {this.state.lastSyncTestResults.duration}ms</Text>
           </Pane>
 
+          {/* Storage Telemetry Display */}
+          {this.state.lastSyncTestResults.telemetry && this.state.lastSyncTestResults.telemetry.storageUsage && (
+            <Pane marginBottom={8}>
+              <Heading size={200} marginBottom={4}>Storage Usage</Heading>
+              <Text size={300} display="block">
+                Sync Storage: {this.state.lastSyncTestResults.telemetry.storageUsage.preTest?.bytesUsed || 0} bytes 
+                ({this.state.lastSyncTestResults.telemetry.storageUsage.preTest?.quotaPercentage || 0}% of {Math.round((this.state.lastSyncTestResults.telemetry.storageUsage.preTest?.quotaBytes || 102400) / 1024)}KB quota)
+              </Text>
+              <Text size={300} display="block">
+                Items: {this.state.lastSyncTestResults.telemetry.storageUsage.preTest?.itemCount || 0} / {this.state.lastSyncTestResults.telemetry.storageUsage.preTest?.maxItemsAllowed || 512}
+              </Text>
+            </Pane>
+          )}
+
+          {/* Effective Settings Display */}
+          {this.state.lastSyncTestResults.telemetry && this.state.lastSyncTestResults.telemetry.effectiveSettings && (
+            <Pane marginBottom={8}>
+              <Heading size={200} marginBottom={4}>Active Configuration</Heading>
+              <Text size={300} display="block">
+                Rules: {this.state.lastSyncTestResults.telemetry.effectiveSettings.totalRules} active blocking rules
+              </Text>
+              <Text size={300} display="block">
+                Keywords: {this.state.lastSyncTestResults.telemetry.effectiveSettings.totalKeywords} active keywords
+              </Text>
+              <Text size={300} display="block">
+                Categories: {this.state.lastSyncTestResults.telemetry.effectiveSettings.enabledCategories} enabled 
+                / {this.state.lastSyncTestResults.telemetry.effectiveSettings.totalCategories} total
+              </Text>
+            </Pane>
+          )}
+
+          {/* Performance Metrics */}
+          {this.state.lastSyncTestResults.telemetry && this.state.lastSyncTestResults.telemetry.performance && (
+            <Pane marginBottom={8}>
+              <Heading size={200} marginBottom={4}>Performance</Heading>
+              {this.state.lastSyncTestResults.telemetry.performance.writeLatency && (
+                <Text size={300} display="block">
+                  Write Speed: {this.state.lastSyncTestResults.telemetry.performance.writeLatency}ms
+                </Text>
+              )}
+              {this.state.lastSyncTestResults.telemetry.performance.readLatency && (
+                <Text size={300} display="block">
+                  Read Speed: {this.state.lastSyncTestResults.telemetry.performance.readLatency}ms
+                </Text>
+              )}
+              {this.state.lastSyncTestResults.telemetry.performance.listenerLatency && (
+                <Text size={300} display="block">
+                  Listener Response: {this.state.lastSyncTestResults.telemetry.performance.listenerLatency}ms
+                </Text>
+              )}
+            </Pane>
+          )}
+
           {this.state.lastSyncTestResults.details && (
             <Pane marginBottom={8}>
               <Text size={300} fontFamily="mono">
@@ -1778,14 +1858,56 @@ export class Settings extends Component {
           marginBottom={16}
           borderRadius={3}
         >
-          <Pane display="flex" alignItems="center" marginBottom={8}>            <WarningSignIcon color="info" marginRight={8} />
+          <Pane display="flex" alignItems="center" marginBottom={8}>
+            <WarningSignIcon color="info" marginRight={8} />
             <Heading size={500}>Diagnosis Results</Heading>
+            {this.state.lastDiagnosisResults.problems && this.state.lastDiagnosisResults.problems.overallHealth && (
+              <Badge 
+                color={
+                  this.state.lastDiagnosisResults.problems.overallHealth === 'excellent' ? 'green' :
+                  this.state.lastDiagnosisResults.problems.overallHealth === 'good' ? 'green' :
+                  this.state.lastDiagnosisResults.problems.overallHealth === 'fair' ? 'yellow' : 'red'
+                } 
+                marginLeft={8}
+              >
+                {this.state.lastDiagnosisResults.problems.overallHealth.toUpperCase()}
+              </Badge>
+            )}
           </Pane>
           
-          {this.state.lastDiagnosisResults.problems && this.state.lastDiagnosisResults.problems.length > 0 ? (
+          {/* Summary Message */}
+          {this.state.lastDiagnosisResults.problems && this.state.lastDiagnosisResults.problems.summaryMessage && (
+            <Pane marginBottom={12}>
+              <Text size={400} fontWeight={500}>
+                {this.state.lastDiagnosisResults.problems.summaryMessage}
+              </Text>
+            </Pane>
+          )}
+
+          {/* Telemetry Summary */}
+          {this.state.lastDiagnosisResults.problems && this.state.lastDiagnosisResults.problems.telemetry && (
+            <Pane marginBottom={12}>
+              <Heading size={300} marginBottom={8}>System Status</Heading>
+              {this.state.lastDiagnosisResults.problems.telemetry.storage && (
+                <Text size={300} display="block" marginBottom={4}>
+                  Storage: {this.state.lastDiagnosisResults.problems.telemetry.storage.bytesUsed} bytes 
+                  ({this.state.lastDiagnosisResults.problems.telemetry.storage.quotaPercentage}% of quota)
+                </Text>
+              )}
+              {this.state.lastDiagnosisResults.problems.telemetry.settings && (
+                <Text size={300} display="block" marginBottom={4}>
+                  Active: {this.state.lastDiagnosisResults.problems.telemetry.settings.totalRules} rules, 
+                  {' '}{this.state.lastDiagnosisResults.problems.telemetry.settings.totalKeywords} keywords in 
+                  {' '}{this.state.lastDiagnosisResults.problems.telemetry.settings.enabledCategories} categories
+                </Text>
+              )}
+            </Pane>
+          )}
+          
+          {this.state.lastDiagnosisResults.problems && this.state.lastDiagnosisResults.problems.problems && this.state.lastDiagnosisResults.problems.problems.length > 0 ? (
             <div>
-              <Text marginBottom={8}>Problems Found:</Text>
-              {this.state.lastDiagnosisResults.problems.map((problem, index) => (
+              <Heading size={300} marginBottom={8}>Issues Found:</Heading>
+              {this.state.lastDiagnosisResults.problems.problems.map((problem, index) => (
                 <Pane key={index} marginBottom={4}>
                   <Badge color="red" marginRight={8}>!</Badge>
                   <Text size={300}>{problem}</Text>
@@ -1794,20 +1916,27 @@ export class Settings extends Component {
             </div>
           ) : (
             <Pane marginBottom={8}>
-              <Badge color="green">No Problems Found</Badge>
+              <Badge color="green">✅ No Issues Detected</Badge>
             </Pane>
           )}
 
-          {this.state.lastDiagnosisResults.recommendations && this.state.lastDiagnosisResults.recommendations.length > 0 && (
+          {this.state.lastDiagnosisResults.problems && this.state.lastDiagnosisResults.problems.suggestions && this.state.lastDiagnosisResults.problems.suggestions.length > 0 && (
             <div>
-              <Text marginBottom={8} marginTop={12}>Recommendations:</Text>
-              {this.state.lastDiagnosisResults.recommendations.map((rec, index) => (
+              <Heading size={300} marginBottom={8} marginTop={12}>Recommendations:</Heading>
+              {this.state.lastDiagnosisResults.problems.suggestions.map((suggestion, index) => (
                 <Pane key={index} marginBottom={4}>
-                  <Badge color="blue" marginRight={8}>i</Badge>
-                  <Text size={300}>{rec}</Text>
+                  <Badge color="blue" marginRight={8}>💡</Badge>
+                  <Text size={300}>{suggestion}</Text>
                 </Pane>
               ))}
             </div>
+          )}
+
+          {/* Timestamp */}
+          {this.state.lastDiagnosisResults.timestamp && (
+            <Text size={200} color="muted" marginTop={12}>
+              Last checked: {new Date(this.state.lastDiagnosisResults.timestamp).toLocaleString()}
+            </Text>
           )}
         </Pane>
       )}

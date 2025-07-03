@@ -1,5 +1,5 @@
 import { syncStorage } from './syncStorage';
-import { logInfo } from './debug';
+import { logInfo, debug } from './debug';
 
 /**
  * Settings that should sync between devices
@@ -411,6 +411,7 @@ export const diagnostics = {
    * Test sync functionality by writing and reading test data
    */
   async testSync() {
+    const startTimestamp = performance.now();
     const testId = `sync_test_${Date.now()}`;
     const testData = {
       testTimestamp: new Date().toISOString(),
@@ -424,25 +425,48 @@ export const diagnostics = {
       startTime: new Date().toISOString(),
       success: false,
       steps: [],
-      errors: []
+      errors: [],
+      telemetry: {
+        effectiveSettings: {},
+        storageUsage: {},
+        performance: {}
+      }
     };
 
     try {
+      // Collect storage telemetry before test
+      results.steps.push('Collecting storage telemetry...');
+      const preTestTelemetry = await this.collectStorageTelemetry();
+      results.telemetry.storageUsage.preTest = preTestTelemetry;
+      results.steps.push(`✅ Current sync storage: ${preTestTelemetry.bytesUsed} bytes (${preTestTelemetry.quotaPercentage}% of quota)`);
+
+      // Collect effective settings count
+      results.steps.push('Analyzing effective settings...');
+      const effectiveSettings = await this.getEffectiveSettingsCount();
+      results.telemetry.effectiveSettings = effectiveSettings;
+      results.steps.push(`✅ Found ${effectiveSettings.totalRules} blocking rules, ${effectiveSettings.totalKeywords} keywords across ${effectiveSettings.enabledCategories} enabled categories`);
+
       // Step 1: Write to sync storage
+      const writeStartTime = performance.now();
       results.steps.push('Writing test data to sync storage...');
       await chrome.storage.sync.set({ [testId]: testData });
-      results.steps.push('✅ Successfully wrote to sync storage');
+      const writeEndTime = performance.now();
+      results.telemetry.performance.writeLatency = Math.round(writeEndTime - writeStartTime);
+      results.steps.push(`✅ Successfully wrote to sync storage (${results.telemetry.performance.writeLatency}ms)`);
 
       // Wait a moment for potential replication
       await new Promise(resolve => setTimeout(resolve, 100));
 
       // Step 2: Read from sync storage
+      const readStartTime = performance.now();
       results.steps.push('Reading test data from sync storage...');
       const readData = await chrome.storage.sync.get(testId);
       if (!readData[testId]) {
         throw new Error('Test data not found in sync storage after write');
       }
-      results.steps.push('✅ Successfully read from sync storage');
+      const readEndTime = performance.now();
+      results.telemetry.performance.readLatency = Math.round(readEndTime - readStartTime);
+      results.steps.push(`✅ Successfully read from sync storage (${results.telemetry.performance.readLatency}ms)`);
 
       // Step 3: Verify data integrity
       results.steps.push('Verifying data integrity...');
@@ -452,6 +476,7 @@ export const diagnostics = {
       results.steps.push('✅ Data integrity verified');
 
       // Step 4: Test storage listener (if available)
+      const listenerStartTime = performance.now();
       results.steps.push('Testing storage change listener...');
       let listenerTriggered = false;
       
@@ -467,16 +492,25 @@ export const diagnostics = {
         await new Promise(resolve => setTimeout(resolve, 100));
         chrome.storage.onChanged.removeListener(testListener);
         
+        const listenerEndTime = performance.now();
+        results.telemetry.performance.listenerLatency = Math.round(listenerEndTime - listenerStartTime);
+        
         if (listenerTriggered) {
-          results.steps.push('✅ Storage change listener working correctly');
+          results.steps.push(`✅ Storage change listener working correctly (${results.telemetry.performance.listenerLatency}ms)`);
         } else {
-          results.steps.push('⚠️ Storage change listener may not be working');
+          results.steps.push(`⚠️ Storage change listener may not be working (${results.telemetry.performance.listenerLatency}ms)`);
         }
       } else {
         results.steps.push('⚠️ Storage change listener API not available');
       }
 
-      // Step 5: Clean up
+      // Step 5: Collect post-test telemetry
+      results.steps.push('Collecting post-test storage telemetry...');
+      const postTestTelemetry = await this.collectStorageTelemetry();
+      results.telemetry.storageUsage.postTest = postTestTelemetry;
+      results.steps.push(`✅ Post-test sync storage: ${postTestTelemetry.bytesUsed} bytes (${postTestTelemetry.quotaPercentage}% of quota)`);
+
+      // Step 6: Clean up
       results.steps.push('Cleaning up test data...');
       await chrome.storage.sync.remove(testId);
       results.steps.push('✅ Test data cleaned up');
@@ -498,7 +532,11 @@ export const diagnostics = {
       }
     }
 
+    const endTimestamp = performance.now();
     results.endTime = new Date().toISOString();
+    results.duration = Math.round(endTimestamp - startTimestamp);
+    results.telemetry.performance.totalDuration = results.duration;
+    
     return results;
   },
 
@@ -617,7 +655,9 @@ export const diagnostics = {
       return {
         success: true,
         syncedKeys: Object.keys(syncableData),
-        timestamp: syncableData._lastForcedSync
+        syncedCount: Object.keys(syncableData).length,
+        timestamp: syncableData._lastForcedSync,
+        message: `Successfully synced ${Object.keys(syncableData).length} settings to cloud storage`
       };
     } catch (error) {
       return {
@@ -633,10 +673,38 @@ export const diagnostics = {
   async diagnoseProblems() {
     const problems = [];
     const suggestions = [];
+    const telemetry = {};
     
     try {
+      // Collect storage telemetry for analysis
+      const storageTelemetry = await this.collectStorageTelemetry();
+      telemetry.storage = storageTelemetry;
+      
+      // Collect effective settings telemetry
+      const effectiveSettings = await this.getEffectiveSettingsCount();
+      telemetry.settings = effectiveSettings;
+      
       // Check sync status history first
       const syncStatus = await syncStatusTracker.getSyncStatus();
+      telemetry.syncHistory = syncStatus;
+      
+      // Enhanced storage quota analysis
+      if (storageTelemetry.quotaPercentage > 85) {
+        problems.push(`Sync storage critical: ${storageTelemetry.quotaPercentage}% of quota used (${storageTelemetry.bytesUsed}/${storageTelemetry.quotaBytes} bytes)`);
+        suggestions.push('Urgent: Clear old data or reduce rule/keyword lists to prevent sync failures');
+      } else if (storageTelemetry.quotaPercentage > 70) {
+        problems.push(`Sync storage warning: ${storageTelemetry.quotaPercentage}% of quota used (${storageTelemetry.bytesUsed}/${storageTelemetry.quotaBytes} bytes)`);
+        suggestions.push('Consider optimizing rule lists or clearing unused categories');
+      }
+      
+      // Analyze largest storage items
+      if (storageTelemetry.largestItems && storageTelemetry.largestItems.length > 0) {
+        const largestItem = storageTelemetry.largestItems[0];
+        if (largestItem.size > 10000) { // >10KB for single item
+          problems.push(`Large storage item detected: "${largestItem.key}" uses ${largestItem.size} bytes`);
+          suggestions.push(`Review and optimize the "${largestItem.key}" list to reduce storage usage`);
+        }
+      }
       
       // Check for sync health issues
       if (syncStatus.consecutiveErrors >= 3) {
@@ -654,17 +722,38 @@ export const diagnostics = {
         suggestions.push('Review recent error messages for patterns');
       }
       
-      // Check storage quota (only if chrome.storage.sync is available)
-      if (chrome?.storage?.sync?.getBytesInUse) {
-        try {
-          const bytesUsed = await chrome.storage.sync.getBytesInUse(null);
-          if (bytesUsed > 90000) { // Close to 100KB limit
-            problems.push(`Sync storage is ${Math.round(bytesUsed/1024)}KB (near 100KB limit)`);
-            suggestions.push('Consider removing old data or reducing list sizes');
+      // Analyze effective settings configuration
+      // Only warn about missing rules if the extension is enabled and expected to block content
+      if (effectiveSettings.totalRules === 0 && effectiveSettings.totalKeywords === 0) {
+        if (effectiveSettings.isEnabled && effectiveSettings.syncEnabled) {
+          // Check if this might be a fresh install or sync issue rather than intentional
+          if (telemetry.storage && telemetry.storage.bytesUsed < 100) { // Very minimal storage suggests fresh install
+            suggestions.push('Add blocking rules or keywords to enable content filtering functionality');
+          } else {
+            problems.push('No active blocking rules or keywords found despite extension being enabled');
+            suggestions.push('Check if rules failed to sync properly or add new blocking rules');
           }
-        } catch (quotaError) {
-          debug.error('Failed to check storage quota:', quotaError);
         }
+        // If extension is disabled, don't warn about missing rules
+      } else if (effectiveSettings.enabledCategories === 0 && (effectiveSettings.totalRules > 0 || effectiveSettings.totalKeywords > 0)) {
+        problems.push('Rules/keywords configured but no categories appear active');
+        suggestions.push('Check category settings or rule list configuration');
+      }
+      
+      // Only warn about very large rule sets if they're actually causing storage issues
+      // 1000+ rules is fine if storage usage is reasonable
+      if (effectiveSettings.totalRules > 1000 && telemetry.storage?.quotaPercentage > 50) {
+        problems.push(`Large rule set: ${effectiveSettings.totalRules} rules using ${telemetry.storage.quotaPercentage}% of storage quota`);
+        suggestions.push('Consider optimizing rules or using more specific patterns to reduce storage usage');
+      } else if (effectiveSettings.totalRules > 2000) {
+        // Only warn at very high counts regardless of storage
+        problems.push(`Very large rule set: ${effectiveSettings.totalRules} rules across ${effectiveSettings.enabledCategories} categories`);
+        suggestions.push('Consider if all rules are necessary - extremely large rule sets may impact performance');
+      }
+      
+      if (!effectiveSettings.syncEnabled) {
+        problems.push('Sync is disabled in extension settings');
+        suggestions.push('Enable sync in extension settings to synchronize rules across devices');
       }
       
       // Check for duplicate data (only if chrome.storage is available)
@@ -675,15 +764,19 @@ export const diagnostics = {
           
           if (syncData && localData) {
             let duplicates = 0;
+            const duplicateKeys = [];
+            
             Object.keys(syncData).forEach(key => {
               if (localData.hasOwnProperty(key) && !localOnlySettings.includes(key)) {
                 duplicates++;
+                duplicateKeys.push(key);
               }
             });
             
             if (duplicates > 5) {
-              problems.push(`${duplicates} settings found in both local and sync storage`);
-              suggestions.push('Run storage cleanup to remove duplicates');
+              problems.push(`Data synchronization inefficiency: ${duplicates} settings are stored in both local and cloud storage, potentially causing conflicts and using extra storage space`);
+              suggestions.push('Run storage cleanup to remove local duplicates and improve sync reliability - the extension will use cloud storage as the primary source');
+              telemetry.duplicateKeys = duplicateKeys.slice(0, 10); // Show first 10
             }
             
             // Check for missing timestamps
@@ -694,37 +787,69 @@ export const diagnostics = {
               'whitelistKeywordsLastModifiedDate'
             ];
             
-            const missingTimestamps = timestampKeys.filter(key => !syncData[key]);
+            const missingTimestamps = timestampKeys.filter(key => !syncData[key] && !localData[key]);
             if (missingTimestamps.length > 0) {
-              problems.push(`Missing timestamps: ${missingTimestamps.join(', ')}`);
-              suggestions.push('Timestamps help resolve sync conflicts between devices');
+              problems.push(`Missing sync timestamps: ${missingTimestamps.join(', ')}`);
+              suggestions.push('Timestamps help resolve sync conflicts - consider forcing a sync to generate them');
             }
             
-            // Check for very large arrays
+            // Enhanced analysis for large arrays - focus on storage impact rather than count
             ['blacklist', 'whitelist', 'blacklistKeywords', 'whitelistKeywords'].forEach(key => {
-              if (syncData[key] && Array.isArray(syncData[key]) && syncData[key].length > 100) {
-                problems.push(`Large ${key} (${syncData[key].length} items) may slow sync`);
-                suggestions.push(`Consider organizing ${key} into categories or removing unused items`);
+              const syncArray = syncData[key] || [];
+              const localArray = localData[key] || [];
+              const effectiveArray = localArray.length > 0 ? localArray : syncArray;
+              
+              if (Array.isArray(effectiveArray) && effectiveArray.length > 0) {
+                const arraySize = new Blob([JSON.stringify(effectiveArray)]).size;
+                
+                // Only warn if array is consuming significant storage (>10KB per array)
+                if (arraySize > 10240) {
+                  problems.push(`Large ${key}: ${effectiveArray.length} items using ${Math.round(arraySize/1024)}KB of storage`);
+                  suggestions.push(`Consider optimizing ${key} patterns or removing unused entries`);
+                }
+                // Or if array count is extremely high (>1000 items)
+                else if (effectiveArray.length > 1000) {
+                  problems.push(`Very large ${key}: ${effectiveArray.length} items`);
+                  suggestions.push(`Consider organizing ${key} into more specific patterns`);
+                }
               }
             });
           }
         } catch (storageError) {
-          debug.error('Failed to check storage data:', storageError);
+          problems.push(`Failed to analyze storage data: ${storageError.message}`);
+          suggestions.push('Storage access errors may indicate browser sync issues');
         }
       }
       
     } catch (error) {
       problems.push(`Error during diagnosis: ${error.message}`);
+      suggestions.push('Diagnostic errors may indicate deeper sync system issues');
     }
     
     // Determine overall health based on sync status and problems
-    let overallHealth = 'good';
+    let overallHealth = 'excellent';
     const syncStatus = await syncStatusTracker.getSyncStatus();
     
-    if (syncStatus.syncHealth === 'poor' || problems.length >= 3) {
+    if (syncStatus.syncHealth === 'poor' || problems.length >= 4) {
       overallHealth = 'poor';
-    } else if (syncStatus.syncHealth === 'fair' || problems.length > 0) {
+    } else if (syncStatus.syncHealth === 'fair' || problems.length >= 2) {
       overallHealth = 'fair';
+    } else if (problems.length === 1) {
+      overallHealth = 'good';
+    }
+    
+    // Generate summary message
+    let summaryMessage = 'No Problems Found';
+    if (problems.length > 0) {
+      summaryMessage = `Found ${problems.length} ${problems.length === 1 ? 'issue' : 'issues'} affecting sync health`;
+    } else {
+      // Provide positive feedback about what's working
+      const activeRules = telemetry.settings?.totalRules || 0;
+      const activeKeywords = telemetry.settings?.totalKeywords || 0;
+      const enabledCategories = telemetry.settings?.enabledCategories || 0;
+      const storageUsage = telemetry.storage?.quotaPercentage || 0;
+      
+      summaryMessage = `✅ Sync healthy: ${activeRules} rules, ${activeKeywords} keywords across ${enabledCategories} categories. Storage: ${storageUsage}% used.`;
     }
     
     return {
@@ -732,7 +857,9 @@ export const diagnostics = {
       problems: problems,
       suggestions: suggestions,
       overallHealth: overallHealth,
-      syncHealth: syncStatus.syncHealth
+      syncHealth: syncStatus.syncHealth,
+      telemetry: telemetry,
+      summaryMessage: summaryMessage
     };
   },
 
@@ -977,6 +1104,128 @@ export const diagnostics = {
         success: false,
         error: error.message,
         message: `Failed to sync from cloud: ${error.message}`
+      };
+    }
+  },
+
+  /**
+   * Collects comprehensive storage telemetry
+   * Following SRP - only handles storage usage analysis
+   * 
+   * @returns {Object} Storage usage metrics
+   */
+  async collectStorageTelemetry() {
+    try {
+      const allData = await chrome.storage.sync.get(null);
+      const keys = Object.keys(allData);
+      
+      // Calculate individual item sizes
+      const itemSizes = {};
+      let totalBytes = 0;
+      
+      for (const key of keys) {
+        const itemSize = new Blob([JSON.stringify(allData[key])]).size;
+        itemSizes[key] = itemSize;
+        totalBytes += itemSize;
+      }
+      
+      // Chrome sync storage quota is 100KB (102,400 bytes)
+      const SYNC_QUOTA_BYTES = 102400;
+      const quotaPercentage = Math.round((totalBytes / SYNC_QUOTA_BYTES) * 100);
+      
+      return {
+        bytesUsed: totalBytes,
+        quotaBytes: SYNC_QUOTA_BYTES,
+        quotaPercentage: quotaPercentage,
+        itemCount: keys.length,
+        maxItemsAllowed: 512, // Chrome sync storage item limit
+        largestItems: Object.entries(itemSizes)
+          .sort(([,a], [,b]) => b - a)
+          .slice(0, 5)
+          .map(([key, size]) => ({ key, size }))
+      };
+    } catch (error) {
+      return {
+        error: error.message,
+        bytesUsed: 0,
+        quotaBytes: 102400,
+        quotaPercentage: 0,
+        itemCount: 0
+      };
+    }
+  },
+
+  /**
+   * Analyzes current effective settings and rules
+   * Following SRP - only handles settings analysis
+   * 
+   * @returns {Object} Effective settings metrics
+   */
+  async getEffectiveSettingsCount() {
+    try {
+      const localData = await chrome.storage.local.get(null);
+      const syncData = await chrome.storage.sync.get(null);
+      
+      let totalRules = 0;
+      let totalKeywords = 0;
+      let enabledCategories = 0;
+      const categoryStatus = {};
+      
+      // Check for standard blacklist/whitelist structure (most common)
+      const standardLists = [
+        { key: 'blacklist', type: 'rules' },
+        { key: 'whitelist', type: 'rules' }, 
+        { key: 'blacklistKeywords', type: 'keywords' },
+        { key: 'whitelistKeywords', type: 'keywords' }
+      ];
+      
+      standardLists.forEach(({ key, type }) => {
+        const localList = localData[key] || [];
+        const syncList = syncData[key] || [];
+        const effectiveList = localList.length > 0 ? localList : syncList;
+        
+        if (Array.isArray(effectiveList) && effectiveList.length > 0) {
+          const activeItems = effectiveList.filter(item => 
+            item && typeof item === 'string' && item.trim().length > 0
+          );
+          
+          if (activeItems.length > 0) {
+            if (type === 'keywords') {
+              totalKeywords += activeItems.length;
+            } else {
+              totalRules += activeItems.length;
+            }
+            
+            categoryStatus[key] = { 
+              enabled: true, 
+              count: activeItems.length,
+              type: type
+            };
+            enabledCategories++;
+          }
+        }
+      });
+      
+      // Check if extension/sync is enabled
+      const isEnabled = localData.isEnabled !== false;
+      const syncEnabled = localData.syncEnabled !== false;
+      
+      return {
+        totalRules,
+        totalKeywords,
+        enabledCategories,
+        totalCategories: Object.keys(categoryStatus).length,
+        categoryBreakdown: categoryStatus,
+        isEnabled,
+        syncEnabled
+      };
+    } catch (error) {
+      return {
+        totalRules: 0,
+        totalKeywords: 0,
+        enabledCategories: 0,
+        totalCategories: 0,
+        error: error.message
       };
     }
   }

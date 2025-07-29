@@ -90,7 +90,7 @@ jobs:
         if: always()
 
   test:
-    name: Test Suite
+    name: Test Suite (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -124,7 +124,7 @@ jobs:
         continue-on-error: true
 
   build-test:
-    name: Build Test
+    name: Build Test (${{ matrix.browser }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -162,8 +162,10 @@ jobs:
 
       - name: Build ${{ matrix.browser }} 🔧
         run: |
-          echo "Building for ${{ matrix.browser }} with CI warnings suppressed..."
-          CI=false npm run build:${{ matrix.browser }}
+          echo "Building for ${{ matrix.browser }}..."
+          # Temporarily disable CI strict mode for build to avoid treating warnings as errors
+          # Also disable treating warnings as errors specifically for the build process
+          GENERATE_SOURCEMAP=false INLINE_RUNTIME_CHUNK=false CI=false npm run build:${{ matrix.browser }}
 
       - name: Validate build artifacts 🔍
         run: |

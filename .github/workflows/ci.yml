@@ -8,6 +8,18 @@ on:
   schedule:
     # Run CI daily at 06:00 UTC
     - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      run_tests:
+        description: 'Run full test suite'
+        required: false
+        default: true
+        type: boolean
+      run_builds:
+        description: 'Run build tests for all browsers'
+        required: false
+        default: true
+        type: boolean
 
 env:
   NODE_VERSION: '18'

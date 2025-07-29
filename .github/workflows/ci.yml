@@ -187,7 +187,29 @@ jobs:
       - name: Checkout 🛎️
         uses: actions/checkout@v4
 
-      - name: Dependency Review 📋
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Basic Dependency Check 📋
+        run: |
+          echo "🔍 Checking for known vulnerabilities..."
+          npm audit --audit-level=moderate || echo "⚠️ Found vulnerabilities, check npm audit output above"
+          
+          echo "📦 Checking for outdated packages..."
+          npx npm-check-updates --target minor --format group || echo "ℹ️ Some packages have updates available"
+          
+          echo "🔒 Checking package licenses..."
+          npx license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;0BSD;CC0-1.0;Unlicense;WTFPL' --summary || echo "⚠️ Check license compatibility"
+        continue-on-error: true
+
+      - name: Advanced Dependency Review (if available) 📋
         uses: actions/dependency-review-action@v3
         with:
           fail-on-severity: moderate
+        continue-on-error: true

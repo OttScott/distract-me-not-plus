@@ -5,6 +5,9 @@
 
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 
+// Import modules after setting up mocks
+import { syncStatusTracker } from '../../helpers/syncDiagnostics.js';
+
 // Mock chrome.storage API
 const mockChromeStorage = {
   local: {
@@ -28,9 +31,6 @@ global.debug = {
 
 // Mock logInfo function
 global.logInfo = jest.fn();
-
-// Import modules after setting up mocks
-import { syncStatusTracker } from '../../helpers/syncDiagnostics.js';
 
 describe('Sync Status Tracker', () => {
   beforeEach(() => {

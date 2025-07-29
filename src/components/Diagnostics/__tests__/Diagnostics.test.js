@@ -2,6 +2,11 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
+// Now import the component after mocking
+import Diagnostics from '../index';
+import { toaster } from 'evergreen-ui';
+import { diagnostics } from 'helpers/syncDiagnostics';
+
 // Mock evergreen-ui components and utilities
 jest.mock('evergreen-ui', () => {
   const originalModule = jest.requireActual('evergreen-ui');
@@ -15,11 +20,6 @@ jest.mock('evergreen-ui', () => {
     }
   };
 });
-
-// Now import the component after mocking
-import Diagnostics from '../index';
-import { toaster } from 'evergreen-ui';
-import { diagnostics } from 'helpers/syncDiagnostics';
 
 // Mock the translate helper
 jest.mock('helpers/i18n', () => ({

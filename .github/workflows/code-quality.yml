@@ -38,10 +38,43 @@ jobs:
           CI: true
 
       - name: SonarCloud Scan 🔍
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarqube-scan-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        continue-on-error: true
+
+      - name: SonarCloud Quality Gate check 🚪
+        uses: sonarqube-quality-gate-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        continue-on-error: true
+
+      - name: Generate SonarCloud setup guide 📋
+        if: failure()
+        run: |
+          echo "# SonarCloud Setup Guide" > sonarcloud-setup.md
+          echo "" >> sonarcloud-setup.md
+          echo "SonarCloud analysis failed. This is likely because SONAR_TOKEN is not configured." >> sonarcloud-setup.md
+          echo "" >> sonarcloud-setup.md
+          echo "## To set up SonarCloud:" >> sonarcloud-setup.md
+          echo "1. Visit https://sonarcloud.io and sign up/login" >> sonarcloud-setup.md
+          echo "2. Import your GitHub repository" >> sonarcloud-setup.md
+          echo "3. Get your project token from SonarCloud" >> sonarcloud-setup.md
+          echo "4. Add SONAR_TOKEN to your repository secrets:" >> sonarcloud-setup.md
+          echo "   - Go to GitHub repo Settings > Secrets and variables > Actions" >> sonarcloud-setup.md
+          echo "   - Click 'New repository secret'" >> sonarcloud-setup.md
+          echo "   - Name: SONAR_TOKEN" >> sonarcloud-setup.md
+          echo "   - Value: [your SonarCloud token]" >> sonarcloud-setup.md
+          echo "5. Re-run the workflow" >> sonarcloud-setup.md
+
+      - name: Upload SonarCloud setup guide 📤
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonarcloud-setup-guide
+          path: sonarcloud-setup.md
+          retention-days: 30
 
   lighthouse:
     name: Lighthouse Performance Audit

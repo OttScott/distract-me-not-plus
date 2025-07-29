@@ -67,12 +67,17 @@ jobs:
 
       - name: Generate deployment report 📋
         id: deploy
+        env:
+          DEPLOY_ENV: ${{ github.event.inputs.environment || 'staging' }}
+          COMMIT_SHA: ${{ github.sha }}
+          REPO_NAME: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           echo "Deployment completed successfully!"
-          echo "Environment: ${{ github.event.inputs.environment || 'staging' }}"
-          echo "Commit: ${{ github.sha }}"
+          echo "Environment: $DEPLOY_ENV"
+          echo "Commit: $COMMIT_SHA"
           echo "Artifacts uploaded to GitHub Actions"
-          echo "url=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_OUTPUT
+          echo "url=https://github.com/$REPO_NAME/actions/runs/$RUN_ID" >> $GITHUB_OUTPUT
 
   notify-slack:
     name: Notify Team

@@ -153,6 +153,8 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Generate health report 📋
+        env:
+          REPO_NAME: ${{ github.repository }}
         run: |
           echo "# Weekly CI/CD Pipeline Health Report" > health-report.md
           echo "" >> health-report.md
@@ -176,9 +178,9 @@ jobs:
           echo "4. Review code quality trends in SonarCloud" >> health-report.md
           echo "" >> health-report.md
           echo "### 🔗 Quick Links:" >> health-report.md
-          echo "- [GitHub Actions](https://github.com/${{ github.repository }}/actions)" >> health-report.md
+          echo "- [GitHub Actions](https://github.com/$REPO_NAME/actions)" >> health-report.md
           echo "- [CI/CD Documentation](./CI-CD-DOCUMENTATION.md)" >> health-report.md
-          echo "- [Security Alerts](https://github.com/${{ github.repository }}/security)" >> health-report.md
+          echo "- [Security Alerts](https://github.com/$REPO_NAME/security)" >> health-report.md
 
       - name: Upload health report 📤
         uses: actions/upload-artifact@v4

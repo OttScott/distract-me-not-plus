@@ -44,35 +44,44 @@ jobs:
 
       - name: Check formatting 💅
         run: |
-          npx prettier --check "src/**/*.{js,jsx,json,css,scss}"
+          echo "Checking code formatting..."
+          if npx prettier --check "src/**/*.{js,jsx,json,css,scss}"; then
+            echo "✅ All files are properly formatted"
+          else
+            echo "❌ Some files need formatting"
+            echo "Run 'npx prettier --write \"src/**/*.{js,jsx,json,css,scss}\"' to fix formatting issues"
+            exit 1
+          fi
 
       - name: Run ESLint 🧹
         run: |
           echo "🧹 Running ESLint..."
-          npm install @microsoft/eslint-formatter-sarif || echo "SARIF formatter install failed, continuing with basic ESLint..."
           
-          # Try SARIF format first, fallback to basic format
-          if npx eslint src --ext .js,.jsx --format=@microsoft/eslint-formatter-sarif --output-file eslint-results.sarif 2>/dev/null; then
-            echo "✅ ESLint completed with SARIF output"
+          # Install SARIF formatter if not already available
+          npm list @microsoft/eslint-formatter-sarif || npm install @microsoft/eslint-formatter-sarif --no-save
+          
+          # Run ESLint with SARIF output
+          if npx eslint src --ext .js,.jsx --format=@microsoft/eslint-formatter-sarif --output-file eslint-results.sarif; then
+            echo "✅ ESLint completed successfully"
           else
-            echo "⚠️ SARIF format failed, running basic ESLint..."
-            npx eslint src --ext .js,.jsx || echo "ESLint found issues"
-            # Create minimal SARIF file for upload
+            echo "⚠️ ESLint found issues, but continuing..."
+          fi
+          
+          # Ensure SARIF file exists and is valid
+          if [ -f eslint-results.sarif ] && [ -s eslint-results.sarif ]; then
+            echo "✅ SARIF file created and is not empty"
+            # Validate it's valid JSON
+            if jq empty eslint-results.sarif 2>/dev/null; then
+              echo "✅ SARIF file is valid JSON"
+            else
+              echo "⚠️ SARIF file is invalid JSON, creating fallback"
+              echo '{"version": "2.1.0", "runs": [{"tool": {"driver": {"name": "ESLint"}}, "results": []}]}' > eslint-results.sarif
+            fi
+          else
+            echo "⚠️ SARIF file missing or empty, creating fallback"
             echo '{"version": "2.1.0", "runs": [{"tool": {"driver": {"name": "ESLint"}}, "results": []}]}' > eslint-results.sarif
           fi
         continue-on-error: true
-
-      - name: Check if SARIF file exists
-        id: check_sarif
-        run: |
-          if [ -f eslint-results.sarif ]; then
-            echo "sarif_exists=true" >> $GITHUB_OUTPUT
-            echo "✅ SARIF file ready for upload"
-          else
-            echo "sarif_exists=false" >> $GITHUB_OUTPUT
-            echo "⚠️ Creating empty SARIF file"
-            echo '{"version": "2.1.0", "runs": [{"tool": {"driver": {"name": "ESLint"}}, "results": []}]}' > eslint-results.sarif
-          fi
 
       - name: Upload SARIF file 📤
         uses: github/codeql-action/upload-sarif@v3

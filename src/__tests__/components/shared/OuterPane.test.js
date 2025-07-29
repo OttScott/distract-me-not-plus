@@ -6,7 +6,7 @@ it('renders correctly', () => {
   const { asFragment } = render(
     <OuterPane>
       <span>Children</span>
-    </OuterPane>
+    </OuterPane>,
   );
   expect(asFragment()).toMatchSnapshot();
 });

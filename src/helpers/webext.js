@@ -72,13 +72,17 @@ export function openExtensionPage(url, options = {}) {
     if (tabs.length > 0) {
       for (const tab of tabs) {
         if (stripUrl(tab.url) === stripUrl(pageUrl)) {
-          nativeAPI.tabs.update(tab.id, {
-            url: pageUrl,
-            active: true,
-          }, () => {
-            nativeAPI.tabs.reload(tab.id);
-            handleClose();
-          });
+          nativeAPI.tabs.update(
+            tab.id,
+            {
+              url: pageUrl,
+              active: true,
+            },
+            () => {
+              nativeAPI.tabs.reload(tab.id);
+              handleClose();
+            },
+          );
           return;
         }
       }
@@ -168,7 +172,7 @@ export function sendNotification(
   message,
   title = 'Distract Me Not',
   type = 'basic',
-  id = undefined
+  id = undefined,
 ) {
   try {
     browser.notifications.create(id, {

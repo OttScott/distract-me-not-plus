@@ -17,7 +17,7 @@ export const debug = {
   },
   error: (...args) => {
     console.error('[DMN ERROR]', ...args);
-  }
+  },
 };
 
 export class report {

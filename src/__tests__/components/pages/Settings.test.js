@@ -25,7 +25,8 @@ const mockStorageData = {
   unblock: {
     temporaryAccess: false,
     passwordChallenge: false,
-  },  schedule: {
+  },
+  schedule: {
     type: 'none',
     days: {
       monday: [],
@@ -34,10 +35,11 @@ const mockStorageData = {
       thursday: [],
       friday: [],
       saturday: [],
-      sunday: []
+      sunday: [],
     },
     timeRanges: [],
-  },  password: {
+  },
+  password: {
     isEnabled: false,
     hashedPassword: '',
   },
@@ -67,7 +69,8 @@ it('renders all tabs', () => {
   const unblocking = screen.getByRole('tab', {
     name: /^unblocking/i,
   });
-  const schedule = screen.getByRole('tab', { name: /^schedule/i });  const denyList = screen.getByRole('tab', { name: /^denyList/i });
+  const schedule = screen.getByRole('tab', { name: /^schedule/i });
+  const denyList = screen.getByRole('tab', { name: /^denyList/i });
   const allowList = screen.getByRole('tab', { name: /^allowList/i });
   const password = screen.getByRole('tab', { name: /^password/i });
   const timer = screen.getByRole('tab', { name: /^timer/i });
@@ -111,38 +114,38 @@ it('accepts only passwords that contains at least 8 characters', async () => {
   for (let i = 0; i <= minCharsNumber; i++) {
     passwords.push(Array(i + 1).join('p'));
   }
-  
+
   // Create custom mock data with password enabled
   const passwordEnabledMockData = {
     ...mockStorageData,
     password: {
       isEnabled: true,
       hashedPassword: '',
-      isSet: false // Ensure it's not set so validation triggers
-    }
+      isSet: false, // Ensure it's not set so validation triggers
+    },
   };
-  
+
   // Override storage mock for this test
   global.chrome.storage.sync.get.mockResolvedValue(passwordEnabledMockData);
   global.chrome.storage.local.get.mockResolvedValue(passwordEnabledMockData);
-  
+
   // Mock the toaster.danger call to verify validation
   const mockToasterDanger = jest.fn();
   const toaster = require('evergreen-ui').toaster;
   toaster.danger = mockToasterDanger;
-  
+
   // render our component
   const { container } = render(<Settings enablePassword={true} />);
-  
+
   // Wait for component to load the mocked data
   await waitFor(() => {
     const passwordInput = container.querySelector('input[type="password"]');
     expect(passwordInput).toBeInTheDocument();
   });
-  
+
   const passwordInput = container.querySelector('input[type="password"]');
   const saveButton = screen.getByRole('button', { name: 'save' });
-  
+
   // test passwords containing less than 8 characters
   for (let i = 0; i < minCharsNumber; i++) {
     mockToasterDanger.mockClear(); // Clear previous calls
@@ -150,23 +153,23 @@ it('accepts only passwords that contains at least 8 characters', async () => {
       target: { value: passwords[i] },
     });
     fireEvent.click(saveButton);
-      // Wait for toaster call and verify it was called with correct message key
+    // Wait for toaster call and verify it was called with correct message key
     await waitFor(() => {
       expect(mockToasterDanger).toHaveBeenCalledWith(
         'passwordIsShort',
-        expect.any(Object)
+        expect.any(Object),
       );
     });
   }
-  
+
   // test correct password (having 8 chars)
   mockToasterDanger.mockClear();
   fireEvent.change(passwordInput, {
     target: { value: passwords[minCharsNumber] },
   });
   fireEvent.click(saveButton);
-  
+
   // For valid password, toaster.danger should not be called
-  await new Promise(resolve => setTimeout(resolve, 100)); // Small delay
+  await new Promise((resolve) => setTimeout(resolve, 100)); // Small delay
   expect(mockToasterDanger).not.toHaveBeenCalled();
 }, 30000);

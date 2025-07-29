@@ -1,0 +1,181 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [master, Features, develop]
+  pull_request:
+    branches: [master, Features]
+  schedule:
+    # Run CI daily at 06:00 UTC
+    - cron: '0 6 * * *'
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  lint-and-format:
+    name: Lint and Format Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check formatting 💅
+        run: |
+          npx prettier --check "src/**/*.{js,jsx,json,css,scss}"
+
+      - name: Run ESLint 🧹
+        run: |
+          npx eslint src --ext .js,.jsx --format=@microsoft/eslint-formatter-sarif --output-file eslint-results.sarif
+        continue-on-error: true
+
+      - name: Upload SARIF file 📤
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: eslint-results.sarif
+        if: always()
+
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [16, 18, 20]
+    
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests 🧪
+        run: npm test -- --coverage --watchAll=false --ci --testResultsProcessor=jest-sonar-reporter
+        env:
+          CI: true
+
+      - name: Upload coverage to Codecov 📊
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-${{ matrix.node-version }}
+        continue-on-error: true
+
+  build-test:
+    name: Build Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        browser: [firefox, chrome, edge]
+    
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build ${{ matrix.browser }} 🔧
+        run: npm run build:${{ matrix.browser }}
+
+      - name: Validate build artifacts 🔍
+        run: |
+          echo "Checking build directory..."
+          ls -la build/
+          
+          echo "Checking manifest.json..."
+          if [ -f build/manifest.json ]; then
+            echo "✅ manifest.json exists"
+            cat build/manifest.json | jq '.'
+          else
+            echo "❌ manifest.json missing"
+            exit 1
+          fi
+          
+          echo "Checking essential files..."
+          for file in index.html service-worker.js; do
+            if [ -f "build/$file" ]; then
+              echo "✅ $file exists"
+            else
+              echo "❌ $file missing"
+              exit 1
+            fi
+          done
+
+      - name: Package extension 📦
+        run: npm run package:${{ matrix.browser }}
+
+      - name: Upload build artifact 💾
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.browser }}-${{ github.sha }}
+          path: distract_me_not-*-${{ matrix.browser }}.zip
+          retention-days: 7
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit 🔒
+        run: |
+          npm audit --audit-level=moderate --production
+        continue-on-error: true
+
+      - name: Run CodeQL Analysis 🔍
+        uses: github/codeql-action/init@v2
+        with:
+          languages: javascript
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Dependency Review 📋
+        uses: actions/dependency-review-action@v3
+        with:
+          fail-on-severity: moderate

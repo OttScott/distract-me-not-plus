@@ -1,0 +1,98 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [Features, develop]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - dev
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  deploy-staging:
+    name: Deploy to ${{ github.event.inputs.environment || 'staging' }}
+    runs-on: ubuntu-latest
+    environment: 
+      name: ${{ github.event.inputs.environment || 'staging' }}
+      url: ${{ steps.deploy.outputs.url }}
+    
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests 🧪
+        run: npm test -- --watchAll=false --ci
+        env:
+          CI: true
+
+      - name: Build all browser versions 🔧
+        run: |
+          npm run build:firefox
+          npm run build:chrome
+          npm run build:edge
+
+      - name: Package extensions 📦
+        run: |
+          npm run package:firefox
+          npm run package:chrome
+          npm run package:edge
+
+      - name: Upload staging artifacts 📤
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-build-${{ github.sha }}
+          path: |
+            distract_me_not-*-firefox.zip
+            distract_me_not-*-chrome.zip
+            distract_me_not-*-edge.zip
+          retention-days: 30
+
+      - name: Generate deployment report 📋
+        id: deploy
+        run: |
+          echo "Deployment completed successfully!"
+          echo "Environment: ${{ github.event.inputs.environment || 'staging' }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Artifacts uploaded to GitHub Actions"
+          echo "url=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_OUTPUT
+
+  notify-slack:
+    name: Notify Team
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    if: always() && (success() || failure())
+    
+    steps:
+      - name: Slack Notification 📢
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ needs.deploy-staging.result }}
+          channel: '#releases'
+          username: 'GitHub Actions'
+          icon_emoji: ':rocket:'
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+          text: |
+            Staging deployment ${{ needs.deploy-staging.result }}!
+            Environment: ${{ github.event.inputs.environment || 'staging' }}
+            Branch: ${{ github.ref_name }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: env.SLACK_WEBHOOK_URL != ''

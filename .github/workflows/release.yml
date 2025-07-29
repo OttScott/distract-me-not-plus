@@ -3,46 +3,147 @@ on:
   push:
     tags:
       - 'v*.*.*'
-      - 'force-release'
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      force_release:
+        description: 'Force release (bypass checks)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '18'
+
 jobs:
-  build-and-release:
+  quality-checks:
     runs-on: ubuntu-latest
+    outputs:
+      should-release: ${{ steps.checks.outputs.should-release }}
+    
     steps:
       - name: Checkout 🛎️
-        uses: actions/checkout@v2
-
-      - name: Setup node 🔨
-        uses: actions/setup-node@v2
+        uses: actions/checkout@v4
         with:
-          node-version: 12
-          registry-url: https://registry.npmjs.org/
+          fetch-depth: 0
 
-      - name: Install, Test and Build 🔧
-        run: |
-          npm install
-          npm test
-          npm run build
-
-      - name: Package 📦
-        run: |
-          npm run package:all
-          packages="$(ls -d distract_me_not-*.zip --format=across)"
-          # the following lines are only required for multi line
-          packages="${packages//'%'/'%25'}"
-          packages="${packages//$'\n'/'%0A'}"
-          packages="${packages//$'\r'/'%0D'}"
-          # end of optional handling for multi line
-          echo "::set-output name=PACKAGES::$packages"
-        id: package
-
-      - name: List packages 🔍
-        run: |
-          echo "Packages: ${{ steps.package.outputs.PACKAGES }}"
-
-      - name: Upload to release 💾
-        uses: meeDamian/github-release@2.0
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run quality checks 🔍
+        id: checks
+        run: |
+          echo "Running linting..."
+          npx eslint src --ext .js,.jsx
+          
+          echo "Running tests..."
+          npm test -- --coverage --watchAll=false --testResultsProcessor=jest-sonar-reporter
+          
+          echo "should-release=true" >> $GITHUB_OUTPUT
+        env:
+          CI: true
+
+  build-and-release:
+    needs: quality-checks
+    if: needs.quality-checks.outputs.should-release == 'true' || github.event.inputs.force_release == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        browser: [firefox, chrome, edge]
+    
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 🔨
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies 📦
+        run: npm ci
+
+      - name: Build for ${{ matrix.browser }} 🔧
+        run: npm run build:${{ matrix.browser }}
+
+      - name: Package ${{ matrix.browser }} extension 📦
+        run: npm run package:${{ matrix.browser }}
+
+      - name: Upload ${{ matrix.browser }} artifact 💾
+        uses: actions/upload-artifact@v4
+        with:
+          name: distract-me-not-${{ matrix.browser }}
+          path: distract_me_not-*-${{ matrix.browser }}.zip
+          retention-days: 30
+
+  create-release:
+    needs: [quality-checks, build-and-release]
+    if: needs.quality-checks.outputs.should-release == 'true' || github.event.inputs.force_release == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts 📥
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare release files 📋
+        run: |
+          mkdir -p release-files
+          find artifacts -name "*.zip" -exec cp {} release-files/ \;
+          ls -la release-files/
+
+      - name: Generate release notes 📝
+        id: release-notes
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          if [[ -z "$VERSION" ]]; then
+            VERSION="v$(date +%Y.%m.%d)-$(git rev-parse --short HEAD)"
+          fi
+          
+          cat > release-notes.md << EOF
+          ## Distract Me Not ${VERSION}
+          
+          ### Changes in this release:
+          $(git log --oneline --decorate --graph --since="$(git describe --tags --abbrev=0 2>/dev/null || echo '1 week ago')" --pretty="format:- %s" | head -20)
+          
+          ### Browser Support:
+          - 🦊 Firefox
+          - 🌐 Chrome
+          - 📘 Edge
+          
+          ### Installation:
+          Download the appropriate ZIP file for your browser and follow the installation instructions in the README.
+          EOF
+          
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release �
+        uses: ncipollo/create-release@v1
+        with:
+          tag: ${{ steps.release-notes.outputs.version }}
+          name: Release ${{ steps.release-notes.outputs.version }}
+          bodyFile: release-notes.md
+          artifacts: "release-files/*.zip"
           token: ${{ secrets.GITHUB_TOKEN }}
-          files: ${{ steps.package.outputs.PACKAGES }}
-          gzip: folders
-          allow_override: true
+          draft: false
+          prerelease: false
+          allowUpdates: true

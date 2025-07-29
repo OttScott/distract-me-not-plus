@@ -60,8 +60,8 @@ jobs:
           # Install SARIF formatter if not already available
           npm list @microsoft/eslint-formatter-sarif || npm install @microsoft/eslint-formatter-sarif --no-save
           
-          # Run ESLint with SARIF output
-          if npx eslint src --ext .js,.jsx --format=@microsoft/eslint-formatter-sarif --output-file eslint-results.sarif; then
+          # Run ESLint with SARIF output (.eslintignore will exclude backup files)
+          if npx eslint "src/**/*.{js,jsx}" --format=@microsoft/eslint-formatter-sarif --output-file eslint-results.sarif; then
             echo "✅ ESLint completed successfully"
           else
             echo "⚠️ ESLint found issues, but continuing..."

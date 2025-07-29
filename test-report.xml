@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testExecutions version="1">
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\components\shared\IconButton.test.js">
+    <testCase name="renders correctly" duration="49"/>
+    <testCase name="handles click" duration="10"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\components\shared\PasswordPrompt.test.js">
+    <testCase name="renders password input" duration="123"/>
+    <testCase name="fails when password is wrong" duration="159"/>
+    <testCase name="succeeds when password is correct" duration="93"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\components\shared\WebsiteList.test.js">
+    <testCase name="renders correctly" duration="223"/>
+    <testCase name="adds a url to list" duration="45"/>
+    <testCase name="edits a url" duration="716"/>
+    <testCase name="deletes a url" duration="153"/>
+    <testCase name="copies a url to clipboard" duration="132"/>
+    <testCase name="filters urls" duration="70"/>
+    <testCase name="sorts urls in ascending order" duration="152"/>
+    <testCase name="sorts urls in descending order" duration="133"/>
+    <testCase name="imports urls" duration="75"/>
+    <testCase name="exports urls" duration="134"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\components\shared\Header.test.js">
+    <testCase name="renders correctly" duration="13"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\helpers\block.test.js">
+    <testCase name="block helper detects accessible urls" duration="1"/>
+    <testCase name="block helper detects inaccessible urls" duration="1"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\helpers\syncStatusTracker.test.js">
+    <testCase name="Sync Status Tracker Recording Sync Success should record successful sync operation" duration="40"/>
+    <testCase name="Sync Status Tracker Recording Sync Success should reset consecutive errors on success" duration="1"/>
+    <testCase name="Sync Status Tracker Recording Sync Errors should record sync error with details" duration="2"/>
+    <testCase name="Sync Status Tracker Recording Sync Errors should handle string errors" duration="1"/>
+    <testCase name="Sync Status Tracker Recording Sync Errors should track consecutive errors and update health" duration="12"/>
+    <testCase name="Sync Status Tracker Recording Sync Errors should limit recent errors to 5" duration="6"/>
+    <testCase name="Sync Status Tracker Getting Sync Status should return default status when none exists" duration="0"/>
+    <testCase name="Sync Status Tracker Getting Sync Status should return existing status from storage" duration="0"/>
+    <testCase name="Sync Status Tracker Getting Sync Status should handle storage errors gracefully" duration="1"/>
+    <testCase name="Sync Status Tracker Clearing Sync Status should clear sync status from storage" duration="7"/>
+    <testCase name="Sync Status Tracker Edge Cases should handle missing error details" duration="1"/>
+    <testCase name="Sync Status Tracker Edge Cases should handle undefined operation parameter" duration="1"/>
+    <testCase name="Sync Status Tracker Edge Cases should handle concurrent status updates" duration="1"/>
+    <testCase name="Sync Status Tracker Integration with Storage should preserve existing sync status properties" duration="1"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\integration\keywordBlockingIntegration.test.js">
+    <testCase name="Keyword Blocking Integration Tests Complete Blocking Logic Integration should prioritize whitelist keywords over everything" duration="1"/>
+    <testCase name="Keyword Blocking Integration Tests Complete Blocking Logic Integration should use pattern blocking when no keywords match" duration="1"/>
+    <testCase name="Keyword Blocking Integration Tests Complete Blocking Logic Integration should fall back to blacklist keywords when patterns do not match" duration="1"/>
+    <testCase name="Keyword Blocking Integration Tests Complete Blocking Logic Integration should allow URLs when no rules match" duration="1"/>
+    <testCase name="Keyword Blocking Integration Tests Real-world Scenarios should handle LinkedIn work pages correctly" duration="1"/>
+    <testCase name="Keyword Blocking Integration Tests Real-world Scenarios should allow work-related LinkedIn pages" duration="0"/>
+    <testCase name="Keyword Blocking Integration Tests Real-world Scenarios should handle gaming sites with educational content" duration="0"/>
+    <testCase name="Keyword Blocking Integration Tests Real-world Scenarios should block social media during work hours scenario" duration="2"/>
+    <testCase name="Keyword Blocking Integration Tests Real-world Scenarios should handle news sites correctly" duration="1"/>
+    <testCase name="Keyword Blocking Integration Tests Complex Pattern and Keyword Combinations should handle patterns that conflict with keywords" duration="0"/>
+    <testCase name="Keyword Blocking Integration Tests Complex Pattern and Keyword Combinations should handle whitelist patterns vs blacklist keywords" duration="1"/>
+    <testCase name="Keyword Blocking Integration Tests Complex Pattern and Keyword Combinations should handle complex subdomain scenarios" duration="1"/>
+    <testCase name="Keyword Blocking Integration Tests Performance and Edge Cases should handle large numbers of keywords efficiently" duration="1"/>
+    <testCase name="Keyword Blocking Integration Tests Performance and Edge Cases should handle malformed keyword objects" duration="1"/>
+    <testCase name="Keyword Blocking Integration Tests Performance and Edge Cases should handle special characters in URLs and keywords" duration="1"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\helpers\url.test.js">
+    <testCase name="url helper accepts valid urls" duration="2"/>
+    <testCase name="url helper rejects invalid urls" duration="1"/>
+    <testCase name="url helper detects urls with a valid protocol" duration="1"/>
+    <testCase name="url helper detects urls with an invalid protocol" duration="1"/>
+    <testCase name="url helper resolves urls hostnames correctly" duration="7"/>
+    <testCase name="url helper resolves favicon links correctly" duration="1"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\helpers\syncTestSuite.test.js">
+    <testCase name="Sync Functionality - Complete Test Suite All sync test suites should be imported and ready" duration="1"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\helpers\keywordBlocking.test.js">
+    <testCase name="Keyword Blocking Functionality Blacklist/Deny Keywords should block URLs containing blacklist keywords in path" duration="1"/>
+    <testCase name="Keyword Blocking Functionality Blacklist/Deny Keywords should block URLs when keyword is in domain" duration="0"/>
+    <testCase name="Keyword Blocking Functionality Blacklist/Deny Keywords should block URLs when keyword is in subdomain" duration="1"/>
+    <testCase name="Keyword Blocking Functionality Blacklist/Deny Keywords should be case insensitive for blacklist keywords" duration="0"/>
+    <testCase name="Keyword Blocking Functionality Blacklist/Deny Keywords should handle multiple blacklist keywords" duration="1"/>
+    <testCase name="Keyword Blocking Functionality Blacklist/Deny Keywords should handle keyword objects with pattern property" duration="0"/>
+    <testCase name="Keyword Blocking Functionality Whitelist/Allow Keywords should allow URLs with whitelist keywords even if they contain blacklist keywords" duration="0"/>
+    <testCase name="Keyword Blocking Functionality Whitelist/Allow Keywords should prioritize whitelist keywords over blacklist keywords" duration="0"/>
+    <testCase name="Keyword Blocking Functionality Whitelist/Allow Keywords should allow URLs with whitelist keywords in domain" duration="1"/>
+    <testCase name="Keyword Blocking Functionality Whitelist/Allow Keywords should be case insensitive for whitelist keywords" duration="0"/>
+    <testCase name="Keyword Blocking Functionality Whitelist/Allow Keywords should handle multiple whitelist keywords" duration="1"/>
+    <testCase name="Keyword Blocking Functionality Whitelist/Allow Keywords should handle whitelist keyword objects with pattern property" duration="0"/>
+    <testCase name="Keyword Blocking Functionality No Keyword Matches should allow URLs with no matching keywords" duration="0"/>
+    <testCase name="Keyword Blocking Functionality No Keyword Matches should allow URLs when keywords are empty arrays" duration="1"/>
+    <testCase name="Keyword Blocking Functionality No Keyword Matches should handle URLs that partially match but do not contain full keywords" duration="0"/>
+    <testCase name="Keyword Blocking Functionality Edge Cases should handle malformed URL objects gracefully" duration="1"/>
+    <testCase name="Keyword Blocking Functionality Edge Cases should handle empty or null keyword patterns" duration="0"/>
+    <testCase name="Keyword Blocking Functionality Edge Cases should handle keyword objects with missing pattern property" duration="0"/>
+    <testCase name="Keyword Blocking Functionality Edge Cases should handle very long URLs with keywords" duration="2"/>
+    <testCase name="Keyword Blocking Functionality Edge Cases should handle special characters in keywords" duration="0"/>
+    <testCase name="Keyword Blocking Functionality Complex Scenarios should handle multiple overlapping keywords correctly" duration="4"/>
+    <testCase name="Keyword Blocking Functionality Complex Scenarios should check both domain and path for keywords" duration="0"/>
+    <testCase name="Keyword Blocking Functionality Complex Scenarios should handle priority order: whitelist keywords &gt; URL patterns &gt; blacklist keywords" duration="1"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\helpers\regex.test.js">
+    <testCase name="regex helper exposes needed functions" duration="1"/>
+    <testCase name="regex helper transforms urls to regular expressions" duration="1"/>
+    <testCase name="regex helper returns the exact url as a regular expression if the url starts with a circumflex accent (^)" duration="0"/>
+    <testCase name="regex helper returns case insensitive regular expressions" duration="0"/>
+    <testCase name="regex helper transforms keywords to regular expressions" duration="0"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\helpers\syncStorage.test.js">
+    <testCase name="Sync Storage Functionality Storage Operations should handle sync storage get operations" duration="1"/>
+    <testCase name="Sync Storage Functionality Storage Operations should handle sync storage set operations" duration="0"/>
+    <testCase name="Sync Storage Functionality Fresh Install Detection should detect fresh install when no install time exists" duration="1"/>
+    <testCase name="Sync Storage Functionality Fresh Install Detection should not detect fresh install when install time exists" duration="1"/>
+    <testCase name="Sync Storage Functionality Data Protection Logic should validate storage data structure" duration="1"/>
+    <testCase name="Sync Storage Functionality Data Protection Logic should handle sync conflict scenarios" duration="0"/>
+    <testCase name="Sync Storage Functionality Data Protection Logic should prevent overwriting cloud data on fresh install" duration="0"/>
+    <testCase name="Sync Storage Functionality Sync Protection Mechanisms should track install time for protection logic" duration="1"/>
+    <testCase name="Sync Storage Functionality Sync Protection Mechanisms should handle storage fallback scenarios" duration="0"/>
+    <testCase name="Sync Storage Advanced Tests Fresh Install Detection should detect fresh install when no install time is set" duration="0"/>
+    <testCase name="Sync Storage Advanced Tests Fresh Install Detection should not detect fresh install when install time exists" duration="0"/>
+    <testCase name="Sync Storage Advanced Tests Fresh Install Detection should set install time on first run" duration="0"/>
+    <testCase name="Sync Storage Advanced Tests Sync Protection Logic should prevent sync writes during fresh install period" duration="0"/>
+    <testCase name="Sync Storage Advanced Tests Sync Protection Logic should allow sync writes after protection period" duration="1"/>
+    <testCase name="Sync Storage Advanced Tests Sync Protection Logic should enable aggressive sync checking during critical periods" duration="0"/>
+    <testCase name="Sync Storage Advanced Tests Sync Protection Logic should disable aggressive sync checking after protection period" duration="0"/>
+    <testCase name="Sync Storage Advanced Tests Data Import Protection should protect against importing over cloud data on fresh install" duration="12"/>
+    <testCase name="Sync Storage Advanced Tests Data Import Protection should allow import after protection period expires" duration="2"/>
+    <testCase name="Sync Storage Advanced Tests Fallback to Local Storage should fallback to local storage when sync fails" duration="2"/>
+    <testCase name="Sync Storage Advanced Tests Cloud Data Priority should prioritize cloud data over local data when both exist" duration="1"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\helpers\serviceWorker.test.js">
+    <testCase name="Service Worker Functionality Chrome Extension API Structure should have access to chrome extension APIs" duration="1"/>
+    <testCase name="Service Worker Functionality Chrome Extension API Structure should handle message passing structure" duration="0"/>
+    <testCase name="Service Worker Functionality Storage Operations should handle storage data structure" duration="0"/>
+    <testCase name="Service Worker Functionality Storage Operations should handle sync storage operations" duration="0"/>
+    <testCase name="Service Worker Functionality Blocking Logic should validate URL patterns" duration="1"/>
+    <testCase name="Service Worker Functionality Blocking Logic should handle wildcard patterns" duration="0"/>
+    <testCase name="Service Worker Integration Tests Installation Handling should set install time on fresh install" duration="1"/>
+    <testCase name="Service Worker Integration Tests Installation Handling should not overwrite existing install time" duration="0"/>
+    <testCase name="Service Worker Integration Tests Blocking Rules Management should update blocking rules when settings change" duration="1"/>
+    <testCase name="Service Worker Integration Tests Blocking Rules Management should clear blocking rules when extension is disabled" duration="0"/>
+    <testCase name="Service Worker Integration Tests Blocking Rules Management should handle whitelist mode correctly" duration="0"/>
+    <testCase name="Service Worker Integration Tests Navigation Processing should process navigation events correctly" duration="0"/>
+    <testCase name="Service Worker Integration Tests Navigation Processing should not block navigation when extension is disabled" duration="1"/>
+    <testCase name="Service Worker Integration Tests Message Handling should handle settings update messages" duration="0"/>
+    <testCase name="Service Worker Integration Tests Message Handling should handle sync protection messages" duration="0"/>
+    <testCase name="Service Worker Integration Tests Blocking Status Check should correctly check if a URL should be blocked" duration="0"/>
+    <testCase name="Service Worker Integration Tests Blocking Status Check should handle subdomain blocking correctly" duration="0"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\components\pages\Blocked.test.js">
+    <testCase name="renders blocked page when isBlank prop is true" duration="78"/>
+    <testCase name="renders the provided text in the message prop" duration="18"/>
+    <testCase name="renders blocked link input when enabled" duration="62"/>
+    <testCase name="renders blocked page when hasUnblockButton is enabled" duration="50"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\components\shared\PasswordField.test.js">
+    <testCase name="renders correctly" duration="73"/>
+    <testCase name="handles value change" duration="21"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\components\shared\TooltipLabel.test.js">
+    <testCase name="renders correctly" duration="24"/>
+    <testCase name="renders correctly when tooltip prop is set" duration="11"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\components\Diagnostics\__tests__\Diagnostics.test.js">
+    <testCase name="Diagnostics Component should render diagnostics interface correctly" duration="236"/>
+    <testCase name="Diagnostics Component should display sync status information correctly" duration="57"/>
+    <testCase name="Diagnostics Component should show appropriate status badges" duration="105"/>
+    <testCase name="Diagnostics Component should handle duplicate cleanup correctly" duration="109"/>
+    <testCase name="Diagnostics Component should handle array optimization correctly" duration="91"/>
+    <testCase name="Diagnostics Component should handle errors gracefully" duration="50"/>
+    <testCase name="Diagnostics Component should show loading states correctly" duration="57"/>
+    <testCase name="Diagnostics Component should refresh diagnostics when run diagnostics is clicked" duration="89"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\components\shared\TextField.test.js">
+    <testCase name="renders correctly" duration="52"/>
+    <testCase name="handles value change" duration="66"/>
+    <testCase name="handles submit using both enter key press &amp; button click" duration="72"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\components\shared\RawHTML.test.js">
+    <testCase name="renders correctly" duration="13"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\components\shared\SwitchField.test.js">
+    <testCase name="renders correctly" duration="78"/>
+    <testCase name="handles value change" duration="62"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\components\shared\SegmentedControlField.test.js">
+    <testCase name="renders correctly" duration="82"/>
+    <testCase name="handles selected option change" duration="82"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\components\shared\NumberField.test.js">
+    <testCase name="renders correctly" duration="38"/>
+    <testCase name="handles value change" duration="48"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\components\shared\OuterPane.test.js">
+    <testCase name="renders correctly" duration="16"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\components\shared\NumberInput.test.js">
+    <testCase name="renders correctly" duration="15"/>
+    <testCase name="handles value change" duration="46"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\components\shared\TimeField.test.js">
+    <testCase name="renders correctly" duration="26"/>
+    <testCase name="handles value change" duration="11"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\components\App.test.js">
+    <testCase name="renders nothing when accessAllowed prop is not defined" duration="44"/>
+    <testCase name="renders appName header when access is allowed" duration="294"/>
+    <testCase name="renders password prompt when access is not allowed" duration="74"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\components\shared\SettingsButton.test.js">
+    <testCase name="renders correctly" duration="53"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\components\shared\PasswordInput.test.js">
+    <testCase name="renders correctly" duration="60"/>
+    <testCase name="handles value change" duration="14"/>
+    <testCase name="toggles password visibility" duration="61"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\components\shared\MultiSelectField.test.js">
+    <testCase name="renders correctly" duration="60"/>
+    <testCase name="handles selection change" duration="116"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\components\shared\AnimatedIconButton.test.js">
+    <testCase name="renders correctly" duration="62"/>
+    <testCase name="handles click" duration="7"/>
+    <testCase name="hides on click when hideOnClick prop is set" duration="351"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\components\pages\Panel.test.js">
+    <testCase name="renders panel correctly" duration="261"/>
+    <testCase name="updates status when toggled" duration="141"/>
+    <testCase name="updates mode when changed to allow list" duration="143"/>
+    <testCase name="updates mode when changed to deny list" duration="141"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\components\shared\WordList.test.js">
+    <testCase name="renders correctly" duration="207"/>
+    <testCase name="adds a keyword to list" duration="39"/>
+    <testCase name="edits a keyword" duration="594"/>
+    <testCase name="deletes a keyword" duration="71"/>
+    <testCase name="copies a keyword to clipboard" duration="72"/>
+    <testCase name="filters keywords" duration="36"/>
+    <testCase name="sorts keywords in ascending order" duration="78"/>
+    <testCase name="sorts keywords in descending order" duration="59"/>
+    <testCase name="imports keywords" duration="31"/>
+    <testCase name="exports keywords" duration="65"/>
+  </file>
+  <file path="F:\src\Repos\distract-me-not\src\__tests__\components\pages\Settings.test.js">
+    <testCase name="renders all tabs" duration="3224"/>
+    <testCase name="renders save button" duration="1770"/>
+    <testCase name="saves settings on save button click" duration="1297"/>
+    <testCase name="accepts only passwords that contains at least 8 characters" duration="1695"/>
+  </file>
+</testExecutions>

@@ -102,7 +102,7 @@ describe('Service Worker Functionality', () => {
   });
 });
 
-describe('Service Worker Functionality', () => {
+describe('Service Worker Integration Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     chromeMock.storage.sync.get.mockClear();

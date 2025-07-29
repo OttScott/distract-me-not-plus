@@ -4,7 +4,6 @@ import '@testing-library/jest-dom';
 
 // Now import the component after mocking
 import Diagnostics from '../index';
-import { toaster } from 'evergreen-ui';
 import { diagnostics } from 'helpers/syncDiagnostics';
 
 // Mock evergreen-ui components and utilities
@@ -100,17 +99,15 @@ describe('Diagnostics Component', () => {
 
     // Wait for the component to finish initial loading and check if we can find any heading
     await waitFor(() => {
-      // Try to find the heading text in various ways
+      // Always check for essential buttons to verify component rendered
+      expect(screen.getByText('Run Diagnostics')).toBeInTheDocument();
+
+      // Try to find and verify heading (using specific text, not generic role)
       const headingElement =
         screen.queryByText('Sync Diagnostics') ||
-        screen.queryByText(/sync.*diagnostics/i) ||
-        screen.queryByRole('heading', { level: 2 });
+        screen.queryByText(/sync.*diagnostics/i);
 
-      // If we can't find the heading text, let's just verify the component structure is there
-      if (!headingElement) {
-        // Make sure we have the main buttons which indicates the component rendered
-        expect(screen.getByText('Run Diagnostics')).toBeInTheDocument();
-      } else {
+      if (headingElement) {
         expect(headingElement).toBeInTheDocument();
       }
     });

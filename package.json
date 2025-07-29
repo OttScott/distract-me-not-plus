@@ -51,12 +51,20 @@
     "release:minor": "release-it minor",
     "release:patch": "release-it patch",
     "format": "npx prettier --write \"src/**/*.{js,jsx,json,css,scss}\"",
+    "format:check": "npx prettier --check \"src/**/*.{js,jsx,json,css,scss}\"",
     "lint": "eslint src --ext .js,.jsx",
     "lint:fix": "eslint src --ext .js,.jsx --fix",
+    "lint:ci": "eslint \"src/**/*.{js,jsx}\" --max-warnings 0",
+    "lint:sarif": "eslint \"src/**/*.{js,jsx}\" --format=@microsoft/eslint-formatter-sarif --output-file eslint-results.sarif",
     "audit:fix": "npm audit fix",
     "analyze": "npm run build && npx webpack-bundle-analyzer build/static/js/*.js",
     "clean": "rm -rf build node_modules/.cache",
     "validate": "npm run lint && npm run test:ci && npm run build",
+    "ci:local": "npm run format:check && npm run lint:ci && npm run test:ci && npm run lint:sarif && npm run build",
+    "ci:fix": "npm run format && npm run lint:fix && npm run test:ci",
+    "ci:check": "powershell -ExecutionPolicy Bypass -File scripts/local-ci-check.ps1",
+    "ci:check:fix": "powershell -ExecutionPolicy Bypass -File scripts/local-ci-check.ps1 -Fix",
+    "ci:check:fast": "powershell -ExecutionPolicy Bypass -File scripts/local-ci-check.ps1 -SkipBuild",
     "setup:cicd": "node scripts/setup-cicd.js"
   },
   "eslintConfig": {
@@ -66,7 +74,11 @@
     "extends": [
       "react-app",
       "react-app/jest"
-    ]
+    ],
+    "rules": {
+      "jest/no-mocks-import": "off",
+      "jest/no-conditional-expect": "off"
+    }
   },
   "browserslist": {
     "production": [

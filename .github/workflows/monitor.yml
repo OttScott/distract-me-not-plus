@@ -143,7 +143,6 @@ jobs:
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        if: env.SLACK_WEBHOOK_URL != ''
 
   weekly-health-report:
     name: Weekly Health Report
@@ -231,4 +230,3 @@ jobs:
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        if: env.SLACK_WEBHOOK_URL != ''

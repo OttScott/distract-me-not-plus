@@ -1,13 +1,17 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`renders correctly 1`] = `
+exports[`renders correctly with safe HTML 1`] = `
 <DocumentFragment>
   <span
     class=""
   >
-    <span>
-      Hello world!
-    </span>
+    Use 
+    <b>
+      bold text
+    </b>
+     and line breaks
+    <br />
+    for formatting
   </span>
 </DocumentFragment>
 `;

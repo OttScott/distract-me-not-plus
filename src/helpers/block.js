@@ -6,9 +6,9 @@ import { sendMessage, storage, getActiveTab, createWindow, indexUrl } from './we
 export const Mode = {
   // Primary mode constants - these match the service worker exactly
   denylist: 'denylist',
-  allowlist: 'allowlist', 
+  allowlist: 'allowlist',
   combined: 'combined',
-  
+
   // Legacy constants for backward compatibility - maps to same values
   blacklist: 'denylist',
   whitelist: 'allowlist',
@@ -100,11 +100,12 @@ export function isAccessible(url) {
 }
 
 export function isExtensionsPage(url) {
-  return !!url && [
-    'about:addons',
-    'chrome://extensions',
-    'edge://extensions',
-  ].some((prefix) => url.startsWith(prefix));
+  return (
+    !!url &&
+    ['about:addons', 'chrome://extensions', 'edge://extensions'].some((prefix) =>
+      url.startsWith(prefix),
+    )
+  );
 }
 
 export function isPageReloaded() {
@@ -187,7 +188,11 @@ export async function addCurrentWebsite(mode, isPrompt = false, exactUrl = false
           return true;
         }
       } else {
-        createWindow(`${indexUrl}#addWebsitePrompt?url=${encodeURIComponent(url)}&mode=${mode}&tabId=${tab.id}`, 600, 140);
+        createWindow(
+          `${indexUrl}#addWebsitePrompt?url=${encodeURIComponent(url)}&mode=${mode}&tabId=${tab.id}`,
+          600,
+          140,
+        );
       }
     } else {
       blockUrl(url, mode, tab.id);
@@ -209,7 +214,7 @@ export async function isActiveTabBlockable(mode) {
 export async function isTabBlockable(
   tab,
   mode,
-  { isBlacklistedCallback, isWhitelistedCallback } = {}
+  { isBlacklistedCallback, isWhitelistedCallback } = {},
 ) {
   if (!tab || !isAccessible(tab.url)) {
     return false;

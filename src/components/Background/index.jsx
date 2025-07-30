@@ -454,7 +454,7 @@ export class Background extends Component {
               // See: https://developer.mozilla.org/en-US/Firefox/The_about_protocol
               response = this.redirectTab(
                 sender.tab.id,
-                `${indexUrl}#pastebin?url=${encodeURIComponent(url)}`
+                `${indexUrl}#pastebin?url=${encodeURIComponent(url)}`,
               );
             } else {
               response = this.redirectTab(sender.tab.id, url);
@@ -550,7 +550,7 @@ export class Background extends Component {
               // get latest tab infos (url)
               this.redirectTab(
                 tab.id,
-                `${indexUrl}#blocked?url=${encodeURIComponent(tab.url)}`
+                `${indexUrl}#blocked?url=${encodeURIComponent(tab.url)}`,
               );
             });
           }
@@ -701,19 +701,19 @@ export class Background extends Component {
         // FIX: Change this to check blacklist first, but allow whitelist to override
         // Original: return !this.isWhitelisted(url) && this.isBlacklisted(url);
         // This logic is incorrect because it requires an item to be both not whitelisted AND blacklisted
-        
+
         // If URL is whitelisted, don't block regardless of blacklist
         if (this.isWhitelisted(url)) {
           this.debug('URL is whitelisted in combined mode, allowing:', url);
           return false;
         }
-        
+
         // If URL is blacklisted and not whitelisted, block it
         if (this.isBlacklisted(url)) {
           this.debug('URL is blacklisted in combined mode, blocking:', url);
           return true;
         }
-        
+
         // Not in either list
         return false;
       default:
@@ -880,7 +880,7 @@ export class Background extends Component {
       this.checkTab(
         { ...changeInfo, url, tabId },
         'onUpdatedHandler',
-        this.handleTabEvent
+        this.handleTabEvent,
       );
     }
   };
@@ -891,7 +891,7 @@ export class Background extends Component {
         this.checkTab(
           { url: tab.url, tabId: tab.id },
           'onReplacedHandler',
-          this.handleTabEvent
+          this.handleTabEvent,
         );
       }
     });
@@ -920,7 +920,7 @@ export class Background extends Component {
           urls: ['*://*/*'],
           types: this.framesType || defaultFramesType,
         },
-        ['blocking']
+        ['blocking'],
       );
       browser.tabs.onUpdated.addListener(this.onUpdatedHandler);
       browser.tabs.onReplaced.addListener(this.onReplacedHandler);

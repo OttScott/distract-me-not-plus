@@ -1,0 +1,23 @@
+{
+  "ignore-dirs": [
+    "node_modules",
+    "build",
+    "dist",
+    "archive",
+    "snapshots",
+    "screenshots",
+    ".git"
+  ],
+  "ignore-patterns": [
+    "**/*.bak*",
+    "**/*.backup*",
+    "**/archive/**",
+    "**/build/**",
+    "**/snapshots/**",
+    "**/*.min.js",
+    "**/.github/**",
+    "**/public/**",
+    "**/scripts/**",
+    "**/__snapshots__/**"
+  ]
+}

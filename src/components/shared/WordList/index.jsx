@@ -181,7 +181,7 @@ export class WordList extends Component {
     } else {
       // Edit word
       const list = this.state.list.map((item) =>
-        item.id === row.id ? { id: item.id, word: value } : item
+        item.id === row.id ? { id: item.id, word: value } : item,
       );
       this.setState({ list: list });
       // Close edit dialog

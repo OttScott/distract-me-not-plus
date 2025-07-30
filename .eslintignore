@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+build/
+dist/
+
+# Generated files
+coverage/
+
+# Backup and temporary files
+src/components/Blocked/index.bak*.jsx
+src/components/Blocked/index.clean.jsx
+src/components/Blocked/index.debug.jsx
+src/components/Blocked/index.highcontrast.jsx
+src/components/Blocked/index.simplified.jsx
+src/components/Blocked/index.subtle.jsx
+src/components/Blocked/index.terminology.jsx

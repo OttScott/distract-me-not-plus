@@ -42,7 +42,7 @@ it('edits a url', async () => {
   fireEvent.click(editButton);
   // change url value
   const editDialog = await waitFor(() =>
-    screen.getByRole('dialog', { selector: '[data-state="entered"]' })
+    screen.getByRole('dialog', { selector: '[data-state="entered"]' }),
   );
   const editInput = within(editDialog).getByPlaceholderText('urlExample');
   fireEvent.change(editInput, { target: { value: url.replacement } });
@@ -64,7 +64,7 @@ it('deletes a url', async () => {
   fireEvent.click(moreButton);
   // click on delete button
   const deleteButton = await waitFor(() =>
-    screen.getByRole('menuitem', { name: /delete/i })
+    screen.getByRole('menuitem', { name: /delete/i }),
   );
   fireEvent.click(deleteButton);
   // verify
@@ -108,7 +108,7 @@ it('sorts urls in ascending order', async () => {
   fireEvent.click(sortButton);
   // choose asc order
   const ascButton = await waitFor(() =>
-    screen.getByRole('menuitemradio', { name: /ascending/i })
+    screen.getByRole('menuitemradio', { name: /ascending/i }),
   );
   fireEvent.click(ascButton);
   // verify
@@ -127,7 +127,7 @@ it('sorts urls in descending order', async () => {
   fireEvent.click(sortButton);
   // choose desc order
   const descButton = await waitFor(() =>
-    screen.getByRole('menuitemradio', { name: /descending/i })
+    screen.getByRole('menuitemradio', { name: /descending/i }),
   );
   fireEvent.click(descButton);
   // verify
@@ -171,7 +171,7 @@ it('exports urls', async () => {
   fireEvent.click(moreButton);
   // click on export button
   const exportButton = await waitFor(() =>
-    screen.getByRole('menuitem', { name: /export/i })
+    screen.getByRole('menuitem', { name: /export/i }),
   );
   fireEvent.click(exportButton);
   // verify
@@ -182,6 +182,6 @@ it('exports urls', async () => {
         type: 'text/plain',
       },
     },
-    exportFilename
+    exportFilename,
   );
 });

@@ -1,0 +1,230 @@
+name: Pipeline Health Monitor
+
+on:
+  workflow_run:
+    workflows: 
+      - "Continuous Integration"
+      - "Test Pull Requests"
+      - "Build and Release"
+      - "Security Scanning"
+      - "Code Quality"
+    types: [completed]
+  
+  schedule:
+    # Weekly pipeline health report on Fridays
+    - cron: '0 17 * * 5'
+
+jobs:
+  monitor-pipeline-health:
+    name: Monitor Pipeline Health
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion != 'skipped'
+    
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Analyze workflow results 📊
+        id: analyze
+        env:
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+          WORKFLOW_STATUS: ${{ github.event.workflow_run.conclusion }}
+          WORKFLOW_URL: ${{ github.event.workflow_run.html_url }}
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+          UPDATED_AT: ${{ github.event.workflow_run.updated_at }}
+        run: |
+          echo "workflow_name=${WORKFLOW_NAME}" >> $GITHUB_OUTPUT
+          echo "workflow_status=${WORKFLOW_STATUS}" >> $GITHUB_OUTPUT
+          echo "workflow_url=${WORKFLOW_URL}" >> $GITHUB_OUTPUT
+          echo "branch=${BRANCH}" >> $GITHUB_OUTPUT
+          echo "updated_at=${UPDATED_AT}" >> $GITHUB_OUTPUT
+          
+          # Create status emoji
+          if [ "${WORKFLOW_STATUS}" = "success" ]; then
+            echo "status_emoji=✅" >> $GITHUB_OUTPUT
+            echo "status_color=good" >> $GITHUB_OUTPUT
+          elif [ "${WORKFLOW_STATUS}" = "failure" ]; then
+            echo "status_emoji=❌" >> $GITHUB_OUTPUT
+            echo "status_color=danger" >> $GITHUB_OUTPUT
+          else
+            echo "status_emoji=⚠️" >> $GITHUB_OUTPUT
+            echo "status_color=warning" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create issue for failed critical workflows 🚨
+        if: github.event.workflow_run.conclusion == 'failure' && contains('["Continuous Integration", "Build and Release", "Security Scanning"]', github.event.workflow_run.name)
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const workflowName = '${{ steps.analyze.outputs.workflow_name }}';
+            const workflowUrl = '${{ steps.analyze.outputs.workflow_url }}';
+            const branch = '${{ steps.analyze.outputs.branch }}';
+            
+            // Check if an issue already exists for this workflow failure
+            const existingIssues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'ci/cd,automated,critical-failure',
+              state: 'open'
+            });
+            
+            const issueTitle = `[CRITICAL] ${workflowName} pipeline failure on ${branch}`;
+            const existingIssue = existingIssues.data.find(issue => 
+              issue.title.includes(workflowName) && issue.title.includes(branch)
+            );
+            
+            if (!existingIssue) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: issueTitle,
+                body: `## 🚨 Critical Pipeline Failure
+                
+                **Workflow:** ${workflowName}
+                **Branch:** ${branch}
+                **Status:** Failed
+                **Run URL:** ${workflowUrl}
+                **Time:** ${new Date().toISOString()}
+                
+                This issue was automatically created because a critical CI/CD workflow failed.
+                
+                ### Action Required
+                - [ ] Investigate the failure cause
+                - [ ] Fix the underlying issue
+                - [ ] Verify the fix by re-running the workflow
+                - [ ] Close this issue once resolved
+                
+                ### Quick Links
+                - [View workflow run](${workflowUrl})
+                - [CI/CD Documentation](./CI-CD-DOCUMENTATION.md)
+                - [Troubleshooting Guide](./CI-CD-DOCUMENTATION.md#-troubleshooting)`,
+                labels: ['ci/cd', 'automated', 'critical-failure', 'priority:high']
+              });
+            }
+
+      - name: Slack notification for critical failures 📢
+        if: github.event.workflow_run.conclusion == 'failure' && contains('["Continuous Integration", "Build and Release", "Security Scanning"]', github.event.workflow_run.name)
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          channel: '#alerts'
+          username: 'Pipeline Monitor'
+          icon_emoji: ':rotating_light:'
+          custom_payload: |
+            {
+              "attachments": [{
+                "color": "${{ steps.analyze.outputs.status_color }}",
+                "title": "${{ steps.analyze.outputs.status_emoji }} Critical Pipeline Failure",
+                "fields": [{
+                  "title": "Workflow",
+                  "value": "${{ steps.analyze.outputs.workflow_name }}",
+                  "short": true
+                }, {
+                  "title": "Branch",
+                  "value": "${{ steps.analyze.outputs.branch }}",
+                  "short": true
+                }, {
+                  "title": "Repository",
+                  "value": "${{ github.repository }}",
+                  "short": true
+                }, {
+                  "title": "Status",
+                  "value": "${{ steps.analyze.outputs.workflow_status }}",
+                  "short": true
+                }],
+                "actions": [{
+                  "type": "button",
+                  "text": "View Run",
+                  "url": "${{ steps.analyze.outputs.workflow_url }}"
+                }],
+                "footer": "GitHub Actions",
+                "ts": ${{ steps.analyze.outputs.updated_at }}
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: env.SLACK_WEBHOOK_URL != ''
+
+  weekly-health-report:
+    name: Weekly Health Report
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Generate health report 📋
+        env:
+          REPO_NAME: ${{ github.repository }}
+        run: |
+          echo "# Weekly CI/CD Pipeline Health Report" > health-report.md
+          echo "" >> health-report.md
+          echo "**Report Date:** $(date)" >> health-report.md
+          echo "" >> health-report.md
+          echo "## 📊 Pipeline Status Overview" >> health-report.md
+          echo "" >> health-report.md
+          echo "This report provides an overview of the CI/CD pipeline health for the past week." >> health-report.md
+          echo "" >> health-report.md
+          echo "### 🔍 Key Metrics to Monitor:" >> health-report.md
+          echo "- Build success rate" >> health-report.md
+          echo "- Test coverage trends" >> health-report.md
+          echo "- Security scan results" >> health-report.md
+          echo "- Deployment frequency" >> health-report.md
+          echo "- Time to deployment" >> health-report.md
+          echo "" >> health-report.md
+          echo "### 📈 Recommendations:" >> health-report.md
+          echo "1. Review any failing workflows in GitHub Actions" >> health-report.md
+          echo "2. Check for outdated dependencies in dependency update PRs" >> health-report.md
+          echo "3. Monitor security alerts and address vulnerabilities" >> health-report.md
+          echo "4. Review code quality trends in SonarCloud" >> health-report.md
+          echo "" >> health-report.md
+          echo "### 🔗 Quick Links:" >> health-report.md
+          echo "- [GitHub Actions](https://github.com/$REPO_NAME/actions)" >> health-report.md
+          echo "- [CI/CD Documentation](./CI-CD-DOCUMENTATION.md)" >> health-report.md
+          echo "- [Security Alerts](https://github.com/$REPO_NAME/security)" >> health-report.md
+
+      - name: Upload health report 📤
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-health-report
+          path: health-report.md
+          retention-days: 90
+
+      - name: Weekly Slack summary 📢
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          channel: '#dev-reports'
+          username: 'Pipeline Health Monitor'
+          icon_emoji: ':chart_with_upward_trend:'
+          custom_payload: |
+            {
+              "attachments": [{
+                "color": "good",
+                "title": "📊 Weekly CI/CD Pipeline Health Report",
+                "text": "Your weekly pipeline health report is ready!",
+                "fields": [{
+                  "title": "Repository",
+                  "value": "${{ github.repository }}",
+                  "short": true
+                }, {
+                  "title": "Report Date",
+                  "value": "$(date +%Y-%m-%d)",
+                  "short": true
+                }],
+                "actions": [{
+                  "type": "button",
+                  "text": "View Actions",
+                  "url": "https://github.com/${{ github.repository }}/actions"
+                }, {
+                  "type": "button",
+                  "text": "Security Alerts",
+                  "url": "https://github.com/${{ github.repository }}/security"
+                }],
+                "footer": "Pipeline Health Monitor"
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: env.SLACK_WEBHOOK_URL != ''

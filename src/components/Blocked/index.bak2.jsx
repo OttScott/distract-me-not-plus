@@ -37,13 +37,15 @@ export class Blocked extends Component {
     if (isDevEnv && !finalUrl) {
       finalUrl = 'https://www.example.com'; // Dev fallback
     }
-    
-    const finalReason = parsedReason ? decodeURIComponent(parsedReason) : 'REASON_NOT_IN_URL_PARAMS';
+
+    const finalReason = parsedReason
+      ? decodeURIComponent(parsedReason)
+      : 'REASON_NOT_IN_URL_PARAMS';
     debug.log('[Blocked Page] Initial Parsed - URL:', finalUrl, 'Reason:', finalReason);
 
-    this.setState({ 
-      url: finalUrl, 
-      reason: finalReason 
+    this.setState({
+      url: finalUrl,
+      reason: finalReason,
     });
 
     if (isPageReloaded()) {
@@ -56,23 +58,30 @@ export class Blocked extends Component {
         });
       }
     }
-    
+
     // Retrieve stored settings
-    storage.get({
-      message: translate('defaultBlockingMessage'),
-      displayBlockedLink: true,
-    }).then((items) => {
-      if (items) {
-        this.setState({
-          message: items.message.length ? items.message : translate('defaultBlockingMessage'),
-          displayBlockedLink: items.displayBlockedLink !== false,
-        }, () => {
-          debug.log('[Blocked Page] State after storage.get:', this.state);
-        });
-      }
-    });
+    storage
+      .get({
+        message: translate('defaultBlockingMessage'),
+        displayBlockedLink: true,
+      })
+      .then((items) => {
+        if (items) {
+          this.setState(
+            {
+              message: items.message.length
+                ? items.message
+                : translate('defaultBlockingMessage'),
+              displayBlockedLink: items.displayBlockedLink !== false,
+            },
+            () => {
+              debug.log('[Blocked Page] State after storage.get:', this.state);
+            },
+          );
+        }
+      });
   }
-  
+
   copyBlockedLink = () => {
     if (copy(this.state.url)) {
       toaster.success(translate('copiedToClipboard'), {
@@ -80,18 +89,18 @@ export class Blocked extends Component {
       });
     }
   };
-  
+
   render() {
     debug.log('[Blocked Render] Rendering block page with state:', {
       url: this.state.url,
       reason: this.state.reason,
       displayBlockedLink: this.state.displayBlockedLink,
-      message: this.state.message
+      message: this.state.message,
     });
-    
+
     // Always use a default message if none is available
     const blockMessage = this.state.message || translate('defaultBlockingMessage');
-    
+
     return (
       <Fragment>
         {/* Always show the black page with the block message */}
@@ -101,7 +110,7 @@ export class Blocked extends Component {
               <span className="distract-cursor distract-select distract-overlay-top-text">
                 {blockMessage}
               </span>
-              
+
               {/* Show the blocked link if enabled */}
               {this.state.displayBlockedLink && (
                 <span className="distract-blocked-link">
@@ -115,13 +124,13 @@ export class Blocked extends Component {
                   </button>
                 </span>
               )}
-              
+
               <div className="distract-cursor distract-select distract-overlay-img"></div>
               {/* No unblock button */}
             </div>
           </div>
         </div>
-        
+
         {/* Development mode reason display */}
         {isDevEnv && (
           <div className="reason-container">

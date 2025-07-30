@@ -86,7 +86,7 @@ export class PasswordPrompt extends Component {
     sendMessage('getLogsSettings').then((logs) =>
       this.setState({
         enableLogs: (logs || defaultLogsSettings).isEnabled,
-      })
+      }),
     );
     sendMessage('getTimerSettings').then((timer) => {
       const settings = timer || defaultTimerSettings;

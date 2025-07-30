@@ -6,6 +6,17 @@
  * which didn't work with Chrome's Content Security Policy.
  */
 
+// Polyfill for Node.js 16 compatibility
+if (typeof ReadableStream === 'undefined' && parseInt(process.version.slice(1)) < 18) {
+  try {
+    const { ReadableStream } = require('web-streams-polyfill/ponyfill');
+    global.ReadableStream = ReadableStream;
+  } catch (e) {
+    // If polyfill isn't available, continue anyway
+    console.warn('Warning: ReadableStream polyfill not available for Node.js 16');
+  }
+}
+
 const fs = require('fs');
 const path = require('path');
 const cheerio = require('cheerio');

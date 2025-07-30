@@ -86,31 +86,33 @@ async function main() {
   if (semver.lt(nodeVersion, '17.0.0')) {
     console.log('🔧 Node.js 16 detected, using direct node commands...');
     
-    // For Node.js 16, use direct node command with legacy provider
+    // For Node.js 16, don't use --openssl-legacy-provider (not supported)
+    // Node.js 16 needs polyfills for ReadableStream and other Web APIs
     strategies.push({
-      name: 'Node.js 16 with legacy OpenSSL (direct command)',
-      command: 'node',
-      args: ['--openssl-legacy-provider', 'node_modules/.bin/craco', cracoCommand],
-      env: {
-        ...baseEnv,
-        NODE_OPTIONS: '--experimental-global-webcrypto --experimental-fetch'
-      }
-    });
-
-    // Fallback without legacy provider
-    strategies.push({
-      name: 'Node.js 16 with polyfills only',
+      name: 'Node.js 16 with Web polyfills',
       command: 'npx',
-      args: ['cross-env', `INLINE_RUNTIME_CHUNK=${baseEnv.INLINE_RUNTIME_CHUNK}`, `GENERATE_SOURCEMAP=${baseEnv.GENERATE_SOURCEMAP}`, `CI=${baseEnv.CI}`, `NODE_OPTIONS=--experimental-global-webcrypto --experimental-fetch`, 'craco', cracoCommand],
+      args: ['cross-env', `INLINE_RUNTIME_CHUNK=${baseEnv.INLINE_RUNTIME_CHUNK}`, `GENERATE_SOURCEMAP=${baseEnv.GENERATE_SOURCEMAP}`, `CI=${baseEnv.CI}`, `NODE_OPTIONS=--experimental-global-webcrypto`, 'craco', cracoCommand],
       env: {}
     });
 
-    // Minimal fallback
+    // Fallback with minimal options
     strategies.push({
       name: 'Node.js 16 minimal setup',
       command: 'npx',
       args: ['cross-env', `INLINE_RUNTIME_CHUNK=${baseEnv.INLINE_RUNTIME_CHUNK}`, `GENERATE_SOURCEMAP=${baseEnv.GENERATE_SOURCEMAP}`, `CI=${baseEnv.CI}`, 'craco', cracoCommand],
       env: {}
+    });
+
+    // Last resort - try to polyfill ReadableStream manually (if polyfill file exists)
+    strategies.push({
+      name: 'Node.js 16 with manual polyfills',
+      command: 'npx',
+      args: ['cross-env', `INLINE_RUNTIME_CHUNK=${baseEnv.INLINE_RUNTIME_CHUNK}`, `GENERATE_SOURCEMAP=${baseEnv.GENERATE_SOURCEMAP}`, `CI=${baseEnv.CI}`, 'craco', cracoCommand],
+      env: {
+        // Only add polyfill if the file exists
+        ...(require('fs').existsSync('./scripts/node16-polyfills.js') ? 
+           { NODE_OPTIONS: '--require ./scripts/node16-polyfills.js' } : {})
+      }
     });
 
   } else if (semver.gte(nodeVersion, '20.0.0')) {

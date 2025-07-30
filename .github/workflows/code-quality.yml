@@ -143,28 +143,12 @@ jobs:
           EOF
           fi
 
-      - name: Serve application 🌐
-        run: |
-          npm install -g serve
-          echo "Starting server on port 3000..."
-          serve -s build -p 3000 &
-          sleep 10
-          
-          # Test if server is responding
-          if curl -f http://localhost:3000 > /dev/null 2>&1; then
-            echo "✅ Server is running and responding"
-          else
-            echo "❌ Server failed to start or not responding"
-            # Try to see what's in the build directory
-            echo "Build directory contents:"
-            ls -la build/ || echo "No build directory found"
-          fi
+      - name: Install serve globally 🌐
+        run: npm install -g serve
         
       - name: Run Lighthouse 🏮
-        uses: treosh/lighthouse-ci-action@v9
+        uses: treosh/lighthouse-ci-action@v11
         with:
-          urls: |
-            http://localhost:3000
           configPath: './lighthouserc.json'
           uploadArtifacts: true
           temporaryPublicStorage: true

@@ -19,7 +19,6 @@ if (typeof ReadableStream === 'undefined' && parseInt(process.version.slice(1)) 
 
 const fs = require('fs');
 const path = require('path');
-const cheerio = require('cheerio');
 
 // Check if cheerio is available, if not suggest installing it or use fallback
 let cheerio;

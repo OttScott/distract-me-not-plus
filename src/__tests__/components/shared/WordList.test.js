@@ -43,7 +43,7 @@ it('edits a keyword', async () => {
   fireEvent.click(editButton);
   // change keyword value
   const editDialog = await waitFor(() =>
-    screen.getByRole('dialog', { selector: '[data-state="entered"]' })
+    screen.getByRole('dialog', { selector: '[data-state="entered"]' }),
   );
   const editInput = within(editDialog).getByPlaceholderText('keywordExample');
   fireEvent.change(editInput, {
@@ -67,7 +67,7 @@ it('deletes a keyword', async () => {
   fireEvent.click(moreButton);
   // click on delete button
   const deleteButton = await waitFor(() =>
-    screen.getByRole('menuitem', { name: /delete/i })
+    screen.getByRole('menuitem', { name: /delete/i }),
   );
   fireEvent.click(deleteButton);
   // verify
@@ -111,7 +111,7 @@ it('sorts keywords in ascending order', async () => {
   fireEvent.click(sortButton);
   // choose asc order
   const ascButton = await waitFor(() =>
-    screen.getByRole('menuitemradio', { name: /ascending/i })
+    screen.getByRole('menuitemradio', { name: /ascending/i }),
   );
   fireEvent.click(ascButton);
   // verify
@@ -130,7 +130,7 @@ it('sorts keywords in descending order', async () => {
   fireEvent.click(sortButton);
   // choose desc order
   const descButton = await waitFor(() =>
-    screen.getByRole('menuitemradio', { name: /descending/i })
+    screen.getByRole('menuitemradio', { name: /descending/i }),
   );
   fireEvent.click(descButton);
   // verify
@@ -174,7 +174,7 @@ it('exports keywords', async () => {
   fireEvent.click(moreButton);
   // click on export button
   const exportButton = await waitFor(() =>
-    screen.getByRole('menuitem', { name: /export/i })
+    screen.getByRole('menuitem', { name: /export/i }),
   );
   fireEvent.click(exportButton);
   // verify
@@ -185,6 +185,6 @@ it('exports keywords', async () => {
         type: 'text/plain',
       },
     },
-    exportFilename
+    exportFilename,
   );
 });

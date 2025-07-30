@@ -161,7 +161,9 @@ export class WebsiteList extends Component {
       toaster.danger(translate('urlIsNotValid'), {
         id: 'settings-toaster',
       });
-    } else if (this.state.list.find((item) => item.url.toLowerCase() === url.toLowerCase())) {
+    } else if (
+      this.state.list.find((item) => item.url.toLowerCase() === url.toLowerCase())
+    ) {
       toaster.danger(translate('urlAlreadyExists'), {
         id: 'settings-toaster',
       });
@@ -213,7 +215,7 @@ export class WebsiteList extends Component {
     } else {
       // Edit url
       const list = this.state.list.map((item) =>
-        item.id === row.id ? { id: item.id, url: value } : item
+        item.id === row.id ? { id: item.id, url: value } : item,
       );
       this.setState({ list: list });
       // Get favicon

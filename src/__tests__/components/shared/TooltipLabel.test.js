@@ -11,7 +11,7 @@ it('renders correctly', () => {
 
 it('renders correctly when tooltip prop is set', () => {
   const { asFragment } = render(
-    <TooltipLabel text="some text" tooltip="this is a tooltip" />
+    <TooltipLabel text="some text" tooltip="this is a tooltip" />,
   );
   expect(asFragment()).toMatchSnapshot();
 });

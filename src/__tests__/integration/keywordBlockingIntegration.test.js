@@ -8,7 +8,7 @@ import chromeMock from '../../__mocks__/chrome';
 // Mock the service worker functions
 const mockServiceWorkerFunctions = {
   checkUrlShouldBeBlockedLocal: null, // Will be loaded from service worker file
-  checkUrlShouldBeBlocked: null
+  checkUrlShouldBeBlocked: null,
 };
 
 describe('Keyword Blocking Integration Tests', () => {
@@ -16,69 +16,81 @@ describe('Keyword Blocking Integration Tests', () => {
     // Load service worker functions for testing
     // Note: In a real test environment, you'd load the actual service worker file
     // For now, we'll create mock implementations based on the fixed logic
-    
-    mockServiceWorkerFunctions.checkUrlShouldBeBlockedLocal = function(
-      url, 
-      blacklistRules = [], 
-      whitelistRules = [], 
-      blacklistKeywords = [], 
-      whitelistKeywords = []
+
+    mockServiceWorkerFunctions.checkUrlShouldBeBlockedLocal = function (
+      url,
+      blacklistRules = [],
+      whitelistRules = [],
+      blacklistKeywords = [],
+      whitelistKeywords = [],
     ) {
       const normalizedUrl = url.toLowerCase();
-      let hostname = "";
-      
+      let hostname = '';
+
       try {
         const urlObj = new URL(url);
         hostname = urlObj.hostname.toLowerCase();
       } catch (e) {
         // Continue without hostname if URL parsing fails
       }
-        // Step 1: Check whitelist keywords first
+      // Step 1: Check whitelist keywords first
       for (const keyword of whitelistKeywords) {
         const pattern = typeof keyword === 'string' ? keyword : keyword?.pattern;
         if (!pattern || typeof pattern !== 'string') continue;
-        
+
         const normalizedPattern = pattern.toLowerCase();
-        if (normalizedUrl.includes(normalizedPattern) || 
-            (hostname && hostname.includes(normalizedPattern))) {
-          return { 
-            blocked: false, 
-            reason: `Allowed by whitelist keyword: ${pattern}` 
+        if (
+          normalizedUrl.includes(normalizedPattern) ||
+          (hostname && hostname.includes(normalizedPattern))
+        ) {
+          return {
+            blocked: false,
+            reason: `Allowed by whitelist keyword: ${pattern}`,
           };
         }
-      }      // Step 2: Check URL patterns (simplified for tests)
+      } // Step 2: Check URL patterns (simplified for tests)
       // This would call the actual pattern matching function
-      const patternResult = this.checkUrlShouldBeBlocked(url, blacklistRules, whitelistRules);
+      const patternResult = this.checkUrlShouldBeBlocked(
+        url,
+        blacklistRules,
+        whitelistRules,
+      );
       if (patternResult.blocked) {
         return patternResult;
       }
-      
+
       // If pattern matched and allowed, return that result (don't check blacklist keywords)
       if (patternResult.reason && patternResult.reason.includes('whitelist pattern')) {
         return patternResult;
       }
-      
+
       // Step 3: Check blacklist keywords (only if pattern matching didn't allow)
       for (const keyword of blacklistKeywords) {
         const pattern = typeof keyword === 'string' ? keyword : keyword?.pattern;
         if (!pattern || typeof pattern !== 'string') continue;
-        
+
         const normalizedPattern = pattern.toLowerCase();
-        if (normalizedUrl.includes(normalizedPattern) || 
-            (hostname && hostname.includes(normalizedPattern))) {
-          return { 
-            blocked: true, 
-            reason: `Blocked by blacklist keyword: ${pattern}` 
+        if (
+          normalizedUrl.includes(normalizedPattern) ||
+          (hostname && hostname.includes(normalizedPattern))
+        ) {
+          return {
+            blocked: true,
+            reason: `Blocked by blacklist keyword: ${pattern}`,
           };
         }
       }
-      
+
       return { blocked: false, reason: 'Not blocked' };
     };
-      mockServiceWorkerFunctions.checkUrlShouldBeBlocked = function(url, blacklistRules = [], whitelistRules = []) {
+    mockServiceWorkerFunctions.checkUrlShouldBeBlocked = function (
+      url,
+      blacklistRules = [],
+      whitelistRules = [],
+    ) {
       // Simplified pattern matching for tests
       const normalizedUrl = url.toLowerCase();
-      
+
       // Check whitelist patterns first
       for (const rule of whitelistRules) {
         const pattern = typeof rule === 'string' ? rule : rule?.pattern;
@@ -91,7 +103,7 @@ describe('Keyword Blocking Integration Tests', () => {
           }
         }
       }
-      
+
       // Check blacklist patterns
       for (const rule of blacklistRules) {
         const pattern = typeof rule === 'string' ? rule : rule?.pattern;
@@ -104,7 +116,7 @@ describe('Keyword Blocking Integration Tests', () => {
           }
         }
       }
-      
+
       return { blocked: false, reason: 'No pattern matches' };
     };
   });
@@ -122,11 +134,15 @@ describe('Keyword Blocking Integration Tests', () => {
       const whitelistRules = [];
       const blacklistKeywords = ['gaming', 'social'];
       const whitelistKeywords = ['work'];
-      
+
       const result = mockServiceWorkerFunctions.checkUrlShouldBeBlockedLocal(
-        url, blacklistRules, whitelistRules, blacklistKeywords, whitelistKeywords
+        url,
+        blacklistRules,
+        whitelistRules,
+        blacklistKeywords,
+        whitelistKeywords,
       );
-      
+
       expect(result.blocked).toBe(false);
       expect(result.reason).toContain('work');
     });
@@ -137,11 +153,15 @@ describe('Keyword Blocking Integration Tests', () => {
       const whitelistRules = [];
       const blacklistKeywords = ['social'];
       const whitelistKeywords = ['work'];
-      
+
       const result = mockServiceWorkerFunctions.checkUrlShouldBeBlockedLocal(
-        url, blacklistRules, whitelistRules, blacklistKeywords, whitelistKeywords
+        url,
+        blacklistRules,
+        whitelistRules,
+        blacklistKeywords,
+        whitelistKeywords,
       );
-      
+
       expect(result.blocked).toBe(true);
       expect(result.reason).toContain('pattern');
     });
@@ -152,11 +172,15 @@ describe('Keyword Blocking Integration Tests', () => {
       const whitelistRules = [];
       const blacklistKeywords = ['gaming'];
       const whitelistKeywords = [];
-      
+
       const result = mockServiceWorkerFunctions.checkUrlShouldBeBlockedLocal(
-        url, blacklistRules, whitelistRules, blacklistKeywords, whitelistKeywords
+        url,
+        blacklistRules,
+        whitelistRules,
+        blacklistKeywords,
+        whitelistKeywords,
       );
-      
+
       expect(result.blocked).toBe(true);
       expect(result.reason).toContain('gaming');
     });
@@ -167,11 +191,15 @@ describe('Keyword Blocking Integration Tests', () => {
       const whitelistRules = [];
       const blacklistKeywords = ['gaming'];
       const whitelistKeywords = [];
-      
+
       const result = mockServiceWorkerFunctions.checkUrlShouldBeBlockedLocal(
-        url, blacklistRules, whitelistRules, blacklistKeywords, whitelistKeywords
+        url,
+        blacklistRules,
+        whitelistRules,
+        blacklistKeywords,
+        whitelistKeywords,
       );
-      
+
       expect(result.blocked).toBe(false);
     });
   });
@@ -183,11 +211,15 @@ describe('Keyword Blocking Integration Tests', () => {
       const whitelistRules = [];
       const blacklistKeywords = ['linkedin'];
       const whitelistKeywords = ['work', 'professional'];
-      
+
       const result = mockServiceWorkerFunctions.checkUrlShouldBeBlockedLocal(
-        url, blacklistRules, whitelistRules, blacklistKeywords, whitelistKeywords
+        url,
+        blacklistRules,
+        whitelistRules,
+        blacklistKeywords,
+        whitelistKeywords,
       );
-      
+
       // Should be blocked because 'linkedin' is in blacklist and no whitelist keywords match
       expect(result.blocked).toBe(true);
       expect(result.reason).toContain('linkedin');
@@ -199,11 +231,15 @@ describe('Keyword Blocking Integration Tests', () => {
       const whitelistRules = [];
       const blacklistKeywords = ['linkedin'];
       const whitelistKeywords = ['work'];
-      
+
       const result = mockServiceWorkerFunctions.checkUrlShouldBeBlockedLocal(
-        url, blacklistRules, whitelistRules, blacklistKeywords, whitelistKeywords
+        url,
+        blacklistRules,
+        whitelistRules,
+        blacklistKeywords,
+        whitelistKeywords,
       );
-      
+
       // Should be allowed because 'work' is in whitelist
       expect(result.blocked).toBe(false);
       expect(result.reason).toContain('work');
@@ -215,11 +251,15 @@ describe('Keyword Blocking Integration Tests', () => {
       const whitelistRules = [];
       const blacklistKeywords = ['gaming'];
       const whitelistKeywords = ['educational', 'programming'];
-      
+
       const result = mockServiceWorkerFunctions.checkUrlShouldBeBlockedLocal(
-        url, blacklistRules, whitelistRules, blacklistKeywords, whitelistKeywords
+        url,
+        blacklistRules,
+        whitelistRules,
+        blacklistKeywords,
+        whitelistKeywords,
       );
-      
+
       // Should be allowed because of whitelist keywords
       expect(result.blocked).toBe(false);
       expect(result.reason).toMatch(/educational|programming/);
@@ -230,19 +270,23 @@ describe('Keyword Blocking Integration Tests', () => {
         'https://facebook.com/feed',
         'https://twitter.com/home',
         'https://instagram.com/explore',
-        'https://tiktok.com/trending'
+        'https://tiktok.com/trending',
       ];
-      
+
       const blacklistRules = [];
       const whitelistRules = [];
       const blacklistKeywords = ['facebook', 'twitter', 'instagram', 'tiktok', 'social'];
       const whitelistKeywords = [];
-      
-      socialUrls.forEach(url => {
+
+      socialUrls.forEach((url) => {
         const result = mockServiceWorkerFunctions.checkUrlShouldBeBlockedLocal(
-          url, blacklistRules, whitelistRules, blacklistKeywords, whitelistKeywords
+          url,
+          blacklistRules,
+          whitelistRules,
+          blacklistKeywords,
+          whitelistKeywords,
         );
-        
+
         expect(result.blocked).toBe(true);
         expect(result.reason).toMatch(/facebook|twitter|instagram|tiktok/);
       });
@@ -252,19 +296,23 @@ describe('Keyword Blocking Integration Tests', () => {
       const newsUrls = [
         'https://cnn.com/politics',
         'https://bbc.com/news',
-        'https://reuters.com/world'
+        'https://reuters.com/world',
       ];
-      
+
       const blacklistRules = [];
       const whitelistRules = [];
       const blacklistKeywords = ['social', 'gaming'];
       const whitelistKeywords = ['news', 'politics'];
-      
-      newsUrls.forEach(url => {
+
+      newsUrls.forEach((url) => {
         const result = mockServiceWorkerFunctions.checkUrlShouldBeBlockedLocal(
-          url, blacklistRules, whitelistRules, blacklistKeywords, whitelistKeywords
+          url,
+          blacklistRules,
+          whitelistRules,
+          blacklistKeywords,
+          whitelistKeywords,
         );
-        
+
         // Should be allowed (not blocked by keywords, and no pattern matches)
         expect(result.blocked).toBe(false);
       });
@@ -278,25 +326,34 @@ describe('Keyword Blocking Integration Tests', () => {
       const whitelistRules = [];
       const blacklistKeywords = ['facebook'];
       const whitelistKeywords = ['work'];
-      
+
       const result = mockServiceWorkerFunctions.checkUrlShouldBeBlockedLocal(
-        url, blacklistRules, whitelistRules, blacklistKeywords, whitelistKeywords
+        url,
+        blacklistRules,
+        whitelistRules,
+        blacklistKeywords,
+        whitelistKeywords,
       );
-      
+
       // Whitelist keyword should override pattern blocking
       expect(result.blocked).toBe(false);
       expect(result.reason).toContain('work');
-    });    it('should handle whitelist patterns vs blacklist keywords', async () => {
+    });
+    it('should handle whitelist patterns vs blacklist keywords', async () => {
       const url = 'https://gaming.example.com/news';
       const blacklistRules = [];
       const whitelistRules = ['*.example.com'];
       const blacklistKeywords = ['gaming'];
       const whitelistKeywords = [];
-      
+
       const result = mockServiceWorkerFunctions.checkUrlShouldBeBlockedLocal(
-        url, blacklistRules, whitelistRules, blacklistKeywords, whitelistKeywords
+        url,
+        blacklistRules,
+        whitelistRules,
+        blacklistKeywords,
+        whitelistKeywords,
       );
-      
+
       // Pattern matching should happen before keyword blacklist, so should be allowed
       expect(result.blocked).toBe(false);
       expect(result.reason).toContain('pattern');
@@ -309,29 +366,33 @@ describe('Keyword Blocking Integration Tests', () => {
           blacklistKeywords: ['social'],
           whitelistKeywords: ['work'],
           expectedBlocked: false,
-          description: 'Work subdomain should override social keyword'
+          description: 'Work subdomain should override social keyword',
         },
         {
           url: 'https://gaming.entertainment.com/reviews',
           blacklistKeywords: ['gaming', 'entertainment'],
           whitelistKeywords: [],
           expectedBlocked: true,
-          description: 'Multiple blacklist keywords should block'
+          description: 'Multiple blacklist keywords should block',
         },
         {
           url: 'https://educational.gaming.research.com/study',
           blacklistKeywords: ['gaming'],
           whitelistKeywords: ['educational', 'research'],
           expectedBlocked: false,
-          description: 'Multiple whitelist keywords should allow'
-        }
+          description: 'Multiple whitelist keywords should allow',
+        },
       ];
 
-      testCases.forEach(testCase => {
+      testCases.forEach((testCase) => {
         const result = mockServiceWorkerFunctions.checkUrlShouldBeBlockedLocal(
-          testCase.url, [], [], testCase.blacklistKeywords, testCase.whitelistKeywords
+          testCase.url,
+          [],
+          [],
+          testCase.blacklistKeywords,
+          testCase.whitelistKeywords,
         );
-        
+
         expect(result.blocked).toBe(testCase.expectedBlocked);
       });
     });
@@ -340,16 +401,20 @@ describe('Keyword Blocking Integration Tests', () => {
   describe('Performance and Edge Cases', () => {
     it('should handle large numbers of keywords efficiently', async () => {
       const url = 'https://example.com/target-keyword';
-      const blacklistKeywords = Array.from({length: 1000}, (_, i) => `keyword${i}`);
+      const blacklistKeywords = Array.from({ length: 1000 }, (_, i) => `keyword${i}`);
       blacklistKeywords.push('target-keyword');
       const whitelistKeywords = [];
-      
+
       const startTime = Date.now();
       const result = mockServiceWorkerFunctions.checkUrlShouldBeBlockedLocal(
-        url, [], [], blacklistKeywords, whitelistKeywords
+        url,
+        [],
+        [],
+        blacklistKeywords,
+        whitelistKeywords,
       );
       const endTime = Date.now();
-      
+
       expect(result.blocked).toBe(true);
       expect(result.reason).toContain('target-keyword');
       expect(endTime - startTime).toBeLessThan(100); // Should be fast
@@ -364,13 +429,17 @@ describe('Keyword Blocking Integration Tests', () => {
         { pattern: '' },
         { pattern: null },
         { pattern: 'gaming' },
-        { notPattern: 'invalid' }
+        { notPattern: 'invalid' },
       ];
       const whitelistKeywords = [];
-      
+
       expect(() => {
         const result = mockServiceWorkerFunctions.checkUrlShouldBeBlockedLocal(
-          url, [], [], blacklistKeywords, whitelistKeywords
+          url,
+          [],
+          [],
+          blacklistKeywords,
+          whitelistKeywords,
         );
         expect(result.blocked).toBe(true);
         expect(result.reason).toContain('gaming');
@@ -382,30 +451,34 @@ describe('Keyword Blocking Integration Tests', () => {
         {
           url: 'https://example.com/path-with-dashes',
           keyword: 'path-with-dashes',
-          shouldMatch: true
+          shouldMatch: true,
         },
         {
           url: 'https://example.com/path_with_underscores',
           keyword: 'path_with_underscores',
-          shouldMatch: true
+          shouldMatch: true,
         },
         {
           url: 'https://example.com/path%20with%20spaces',
           keyword: 'path with spaces',
-          shouldMatch: false // URL encoding vs plain text
+          shouldMatch: false, // URL encoding vs plain text
         },
         {
           url: 'https://example.com/path.with.dots',
           keyword: 'path.with.dots',
-          shouldMatch: true
-        }
+          shouldMatch: true,
+        },
       ];
 
-      testCases.forEach(testCase => {
+      testCases.forEach((testCase) => {
         const result = mockServiceWorkerFunctions.checkUrlShouldBeBlockedLocal(
-          testCase.url, [], [], [testCase.keyword], []
+          testCase.url,
+          [],
+          [],
+          [testCase.keyword],
+          [],
         );
-        
+
         expect(result.blocked).toBe(testCase.shouldMatch);
       });
     });

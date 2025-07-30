@@ -16,7 +16,8 @@ export class Blocked extends Component {
       url: '', // Initialize url in state
       reason: '', // Initialize reason state
       message: props.message || translate('defaultBlockingMessage'),
-      displayBlockedLink: props.displayBlockedLink !== undefined ? props.displayBlockedLink : true, // Default to showing it
+      displayBlockedLink:
+        props.displayBlockedLink !== undefined ? props.displayBlockedLink : true, // Default to showing it
     };
   }
 
@@ -37,21 +38,32 @@ export class Blocked extends Component {
     if (isDevEnv && !finalUrl) {
       finalUrl = 'https://www.example.com'; // Dev fallback
     }
-    
-    const finalReason = parsedReason ? decodeURIComponent(parsedReason) : 'REASON_NOT_IN_URL_PARAMS'; // Default if not found
+
+    const finalReason = parsedReason
+      ? decodeURIComponent(parsedReason)
+      : 'REASON_NOT_IN_URL_PARAMS'; // Default if not found
     debug.log('[Blocked Page] Initial Parsed - URL:', finalUrl, 'Reason:', finalReason);
 
-    this.setState({ 
-      url: finalUrl, 
-      reason: finalReason 
-    }, () => {
-      // Log state after URL params are set
-      debug.log('[Blocked Page] State after URL parse - URL:', this.state.url, 'Reason:', this.state.reason);
-    });
+    this.setState(
+      {
+        url: finalUrl,
+        reason: finalReason,
+      },
+      () => {
+        // Log state after URL params are set
+        debug.log(
+          '[Blocked Page] State after URL parse - URL:',
+          this.state.url,
+          'Reason:',
+          this.state.reason,
+        );
+      },
+    );
 
     if (isPageReloaded()) {
       debug.log('page reloaded!');
-      if (finalUrl) { // Use the parsed finalUrl
+      if (finalUrl) {
+        // Use the parsed finalUrl
         sendMessage('isUrlStillBlocked', finalUrl).then((isUrlStillBlocked) => {
           if (isUrlStillBlocked === false) {
             sendMessage('redirectSenderTab', finalUrl);
@@ -60,7 +72,7 @@ export class Blocked extends Component {
         });
       }
     }
-    
+
     storage
       .get({
         message: translate('defaultBlockingMessage'),
@@ -68,16 +80,31 @@ export class Blocked extends Component {
       })
       .then((items) => {
         if (items) {
-          this.setState({
-            message: items.message.length ? items.message : translate('defaultBlockingMessage'),
-            // Make sure the blocked URL is shown if enabled in settings
-            displayBlockedLink: items.displayBlockedLink
-          }, () => {
-            // Log state after storage items are applied
-            debug.log('[Blocked Page] State after storage.get - URL:', this.state.url, 'Reason:', this.state.reason);
-          });
+          this.setState(
+            {
+              message: items.message.length
+                ? items.message
+                : translate('defaultBlockingMessage'),
+              // Make sure the blocked URL is shown if enabled in settings
+              displayBlockedLink: items.displayBlockedLink,
+            },
+            () => {
+              // Log state after storage items are applied
+              debug.log(
+                '[Blocked Page] State after storage.get - URL:',
+                this.state.url,
+                'Reason:',
+                this.state.reason,
+              );
+            },
+          );
         } else {
-          debug.log('[Blocked Page] storage.get returned no items. State remains - URL:', this.state.url, 'Reason:', this.state.reason);
+          debug.log(
+            '[Blocked Page] storage.get returned no items. State remains - URL:',
+            this.state.url,
+            'Reason:',
+            this.state.reason,
+          );
         }
       });
   }
@@ -95,12 +122,12 @@ export class Blocked extends Component {
       url: this.state.url,
       reason: this.state.reason,
       displayBlockedLink: this.state.displayBlockedLink,
-      message: this.state.message
+      message: this.state.message,
     });
-    
+
     // Always use a default message if none is available
     const blockMessage = this.state.message || translate('defaultBlockingMessage');
-    
+
     return (
       <Fragment>
         {/* Always show the block page with the block message */}
@@ -128,12 +155,15 @@ export class Blocked extends Component {
             </div>
           </div>
         </div>
-        
+
         {/* Development mode reason display */}
         {isDevEnv && (
           <div className="reason-container">
             <p className="text-lg text-red-500 font-bold">
-              Displaying Reason: {this.state.reason ? this.state.reason : 'No specific reason provided in state.'}
+              Displaying Reason:{' '}
+              {this.state.reason
+                ? this.state.reason
+                : 'No specific reason provided in state.'}
             </p>
           </div>
         )}

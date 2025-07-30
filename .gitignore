@@ -14,6 +14,7 @@ old-src
 
 # testing
 /coverage
+test-report.xml
 
 # production
 /build

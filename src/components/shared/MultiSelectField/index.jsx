@@ -102,7 +102,7 @@ export class MultiSelectField extends Component {
               onDeselect={(item) => {
                 const deselectedItemIndex = this.state.selected.indexOf(item.value);
                 const selectedItems = this.state.selected.filter(
-                  (_item, i) => i !== deselectedItemIndex
+                  (_item, i) => i !== deselectedItemIndex,
                 );
                 this.handleChange(selectedItems);
               }}

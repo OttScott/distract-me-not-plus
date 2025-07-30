@@ -62,25 +62,25 @@ export class Panel extends Component {
   componentDidMount() {
     Promise.all([
       sendMessage('getIsEnabled').then(
-        (isEnabled) => this.setState({ isEnabled: !!isEnabled }) // !! used to cast null to boolean
+        (isEnabled) => this.setState({ isEnabled: !!isEnabled }), // !! used to cast null to boolean
       ),
       sendMessage('getSchedule').then((schedule) =>
-        this.setState({ schedule: schedule || defaultSchedule })
+        this.setState({ schedule: schedule || defaultSchedule }),
       ),
       sendMessage('getUnblockSettings').then((unblock) =>
         this.setState({
           enableUnblock: isDevEnv || (unblock || defaultUnblockSettings).isEnabled,
-        })
+        }),
       ),
       sendMessage('getLogsSettings').then((logs) =>
         this.setState({
           enableLogs: isDevEnv || (logs || defaultLogsSettings).isEnabled,
-        })
+        }),
       ),
       sendMessage('getTimerSettings').then((timer) =>
         this.setState({
           enableTimer: (timer || defaultTimerSettings).isEnabled,
-        })
+        }),
       ),
       sendMessage('getMode').then((mode) => {
         this.setState({ mode });

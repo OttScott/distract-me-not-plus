@@ -574,6 +574,18 @@
   "forceSyncSettings": {
     "message": "Force Sync All Data"
   },
+  "forceSyncSuccess": {
+    "message": "Successfully synced all settings to cloud storage"
+  },
+  "forceSyncError": {
+    "message": "Failed to force sync: $error$",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "Network error"
+      }
+    }
+  },
   "refreshRulesFromCloud": {
     "message": "Refresh Rules from Cloud"
   },

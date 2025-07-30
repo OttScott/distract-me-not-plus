@@ -32,7 +32,7 @@ export const syncTestUtils = {
         getBytesInUse: jest.fn(),
         MAX_ITEMS: 512,
         QUOTA_BYTES: 102400,
-        QUOTA_BYTES_PER_ITEM: 8192
+        QUOTA_BYTES_PER_ITEM: 8192,
       },
       local: {
         data: {},
@@ -40,12 +40,12 @@ export const syncTestUtils = {
         set: jest.fn(),
         remove: jest.fn(),
         clear: jest.fn(),
-        getBytesInUse: jest.fn()
+        getBytesInUse: jest.fn(),
       },
       onChanged: {
         addListener: jest.fn(),
-        removeListener: jest.fn()
-      }
+        removeListener: jest.fn(),
+      },
     };
   },
 
@@ -63,7 +63,7 @@ export const syncTestUtils = {
       }
       if (Array.isArray(keys)) {
         const result = {};
-        keys.forEach(key => {
+        keys.forEach((key) => {
           if (mockStorage.sync.data[key] !== undefined) {
             result[key] = mockStorage.sync.data[key];
           }
@@ -72,42 +72,43 @@ export const syncTestUtils = {
       }
       if (typeof keys === 'object') {
         const result = {};
-        Object.keys(keys).forEach(key => {
-          result[key] = mockStorage.sync.data[key] !== undefined 
-            ? mockStorage.sync.data[key] 
-            : keys[key];
+        Object.keys(keys).forEach((key) => {
+          result[key] =
+            mockStorage.sync.data[key] !== undefined
+              ? mockStorage.sync.data[key]
+              : keys[key];
         });
         return Promise.resolve(result);
       }
       return Promise.resolve({ ...mockStorage.sync.data });
     });
-    
+
     mockStorage.sync.set.mockImplementation((data) => {
       Object.assign(mockStorage.sync.data, data);
       return Promise.resolve();
     });
-    
+
     mockStorage.sync.remove.mockImplementation((keys) => {
       const keysArray = Array.isArray(keys) ? keys : [keys];
-      keysArray.forEach(key => {
+      keysArray.forEach((key) => {
         delete mockStorage.sync.data[key];
       });
       return Promise.resolve();
     });
-    
+
     mockStorage.sync.clear.mockImplementation(() => {
       mockStorage.sync.data = {};
       return Promise.resolve();
     });
-    
+
     mockStorage.sync.getBytesInUse.mockImplementation((keys) => {
       let totalSize = 0;
       if (keys) {
         const keysArray = Array.isArray(keys) ? keys : [keys];
-        keysArray.forEach(key => {
+        keysArray.forEach((key) => {
           if (mockStorage.sync.data[key] !== undefined) {
             totalSize += JSON.stringify({
-              [key]: mockStorage.sync.data[key]
+              [key]: mockStorage.sync.data[key],
             }).length;
           }
         });
@@ -127,7 +128,7 @@ export const syncTestUtils = {
       }
       if (Array.isArray(keys)) {
         const result = {};
-        keys.forEach(key => {
+        keys.forEach((key) => {
           if (mockStorage.local.data[key] !== undefined) {
             result[key] = mockStorage.local.data[key];
           }
@@ -136,42 +137,43 @@ export const syncTestUtils = {
       }
       if (typeof keys === 'object') {
         const result = {};
-        Object.keys(keys).forEach(key => {
-          result[key] = mockStorage.local.data[key] !== undefined 
-            ? mockStorage.local.data[key] 
-            : keys[key];
+        Object.keys(keys).forEach((key) => {
+          result[key] =
+            mockStorage.local.data[key] !== undefined
+              ? mockStorage.local.data[key]
+              : keys[key];
         });
         return Promise.resolve(result);
       }
       return Promise.resolve({ ...mockStorage.local.data });
     });
-    
+
     mockStorage.local.set.mockImplementation((data) => {
       Object.assign(mockStorage.local.data, data);
       return Promise.resolve();
     });
-    
+
     mockStorage.local.remove.mockImplementation((keys) => {
       const keysArray = Array.isArray(keys) ? keys : [keys];
-      keysArray.forEach(key => {
+      keysArray.forEach((key) => {
         delete mockStorage.local.data[key];
       });
       return Promise.resolve();
     });
-    
+
     mockStorage.local.clear.mockImplementation(() => {
       mockStorage.local.data = {};
       return Promise.resolve();
     });
-    
+
     mockStorage.local.getBytesInUse.mockImplementation((keys) => {
       let totalSize = 0;
       if (keys) {
         const keysArray = Array.isArray(keys) ? keys : [keys];
-        keysArray.forEach(key => {
+        keysArray.forEach((key) => {
           if (mockStorage.local.data[key] !== undefined) {
             totalSize += JSON.stringify({
-              [key]: mockStorage.local.data[key]
+              [key]: mockStorage.local.data[key],
             }).length;
           }
         });
@@ -195,12 +197,12 @@ export const syncTestUtils = {
       whitelistKeywords: ['important', 'work'],
       schedule: {
         isEnabled: false,
-        days: {}
+        days: {},
       },
       misc: {
         hideReportIssueButton: false,
-        showAddWebsitePrompt: true
-      }
+        showAddWebsitePrompt: true,
+      },
     };
   },
 
@@ -215,7 +217,7 @@ export const syncTestUtils = {
       lastSyncOperation: options.lastSyncOperation || 'test',
       recentErrors: options.recentErrors || [],
       consecutiveErrors: options.consecutiveErrors || 0,
-      syncHealth: options.syncHealth || 'good'
+      syncHealth: options.syncHealth || 'good',
     };
   },
 
@@ -229,7 +231,7 @@ export const syncTestUtils = {
         timestamp: new Date(Date.now() - (count - i + 1) * 60000).toISOString(), // 1 minute apart
         operation: `test-operation-${i}`,
         message: `Test sync error ${i}`,
-        stack: `Error stack trace ${i}`
+        stack: `Error stack trace ${i}`,
       });
     }
     return errors;
@@ -239,6 +241,6 @@ export const syncTestUtils = {
    * Wait for async operations to complete
    */
   async waitForAsync(ms = 10) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  },
 };

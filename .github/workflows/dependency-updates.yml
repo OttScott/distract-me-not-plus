@@ -1,0 +1,81 @@
+name: Dependency Updates
+
+on:
+  schedule:
+    # Run every Monday at 09:00 UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  update-dependencies:
+    name: Update Dependencies
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install npm-check-updates
+        run: npm install -g npm-check-updates
+
+      - name: Update dependencies 📦
+        run: |
+          echo "Current package.json:"
+          cat package.json
+          
+          echo "Checking for updates..."
+          ncu -u --target minor
+          
+          echo "Updated package.json:"
+          cat package.json
+
+      - name: Install updated dependencies
+        run: npm install
+
+      - name: Run tests 🧪
+        run: npm test -- --watchAll=false --ci
+        env:
+          CI: true
+
+      - name: Run build test 🔧
+        run: |
+          npm run build:firefox
+          npm run build:chrome
+          npm run build:edge
+
+      - name: Create Pull Request 🔄
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: update dependencies'
+          title: 'chore: automated dependency updates'
+          body: |
+            ## Automated Dependency Updates 🤖
+            
+            This PR contains automated dependency updates to keep the project secure and up-to-date.
+            
+            ### Changes:
+            - Updated minor and patch versions of dependencies
+            - All tests passing ✅
+            - All build processes verified ✅
+            
+            ### Review Checklist:
+            - [ ] Check for any breaking changes in updated packages
+            - [ ] Verify extension functionality in all supported browsers
+            - [ ] Test critical user flows
+            
+            _This PR was created automatically by the dependency update workflow._
+          branch: automated/dependency-updates
+          delete-branch: true
+          labels: |
+            dependencies
+            automated
+            chore

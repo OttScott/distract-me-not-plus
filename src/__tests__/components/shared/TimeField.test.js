@@ -10,7 +10,7 @@ it('renders correctly', () => {
 it('handles value change', () => {
   const handleChange = jest.fn();
   const { container } = render(
-    <TimeField label="time" value="12:00" onChange={handleChange} />
+    <TimeField label="time" value="12:00" onChange={handleChange} />,
   );
   const input = container.querySelector('input[type="time"]');
   fireEvent.change(input, { target: { value: '13:00' } });

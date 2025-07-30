@@ -15,7 +15,7 @@ import {
   CleanIcon,
   SettingsIcon,
   UploadIcon,
-  DownloadIcon
+  DownloadIcon,
 } from 'evergreen-ui';
 import { diagnostics } from 'helpers/syncDiagnostics';
 import { translate } from 'helpers/i18n';
@@ -27,13 +27,13 @@ import { translate } from 'helpers/i18n';
 export default class Diagnostics extends Component {
   constructor(props) {
     super(props);
-    
+
     this.state = {
       isLoading: false,
       diagnosticsData: null,
       lastUpdated: null,
       cleanupResults: null,
-      optimizationResults: null
+      optimizationResults: null,
     };
   }
 
@@ -47,13 +47,13 @@ export default class Diagnostics extends Component {
    */
   runDiagnostics = async () => {
     this.setState({ isLoading: true });
-    
+
     try {
       const results = await diagnostics.checkSyncStatus();
       this.setState({
         diagnosticsData: results,
         lastUpdated: new Date().toLocaleString(),
-        isLoading: false
+        isLoading: false,
       });
     } catch (error) {
       console.error('Diagnostics failed:', error);
@@ -68,19 +68,19 @@ export default class Diagnostics extends Component {
    */
   cleanupDuplicates = async () => {
     this.setState({ isLoading: true });
-    
+
     try {
       const results = await diagnostics.cleanupDuplicateSettings();
       this.setState({
         cleanupResults: results,
-        isLoading: false
+        isLoading: false,
       });
-      
+
       if (results.success) {
         toaster.success('Cleanup completed successfully');
         // Refresh diagnostics after cleanup
         setTimeout(() => this.runDiagnostics(), 1000);
-        
+
         // Refresh rules if callback provided (Open/Closed Principle)
         if (this.props.onRefreshRules) {
           this.props.onRefreshRules();
@@ -101,14 +101,14 @@ export default class Diagnostics extends Component {
    */
   optimizeArrays = async () => {
     this.setState({ isLoading: true });
-    
+
     try {
       const results = await diagnostics.optimizeLargeArrays();
       this.setState({
         optimizationResults: results,
-        isLoading: false
+        isLoading: false,
       });
-      
+
       toaster.success('Array analysis completed');
     } catch (error) {
       console.error('Optimization analysis failed:', error);
@@ -125,7 +125,7 @@ export default class Diagnostics extends Component {
     try {
       this.setState({ isLoading: true });
       const results = await diagnostics.forceSyncUp();
-      
+
       if (results.success) {
         toaster.success(results.message || 'Successfully synced settings to cloud');
         this.runDiagnostics(); // Refresh diagnostics
@@ -148,11 +148,11 @@ export default class Diagnostics extends Component {
     try {
       this.setState({ isLoading: true });
       const results = await diagnostics.forceSyncDown();
-      
+
       if (results.success) {
         toaster.success(results.message || 'Successfully synced settings from cloud');
         this.runDiagnostics(); // Refresh diagnostics
-        
+
         // Notify parent component to refresh rules if callback is available
         if (this.props.onRefreshRules) {
           this.props.onRefreshRules();
@@ -174,15 +174,15 @@ export default class Diagnostics extends Component {
    */
   renderStatusBadge = (status) => {
     const { syncAvailable, errors } = status || {};
-    
+
     if (!syncAvailable) {
       return <Badge color="red">Sync Unavailable</Badge>;
     }
-    
+
     if (errors && errors.length > 0) {
       return <Badge color="orange">Issues Found</Badge>;
     }
-    
+
     return <Badge color="green">Healthy</Badge>;
   };
 
@@ -192,12 +192,14 @@ export default class Diagnostics extends Component {
    */
   renderSyncInfo = () => {
     const { diagnosticsData } = this.state;
-    
+
     if (!diagnosticsData) return null;
 
     return (
       <Card elevation={1} padding={16} marginBottom={16}>
-        <Heading size={600} marginBottom={12}>Sync Status</Heading>
+        <Heading size={600} marginBottom={12}>
+          Sync Status
+        </Heading>
         <Table>
           <Table.Body>
             <Table.Row>
@@ -209,61 +211,83 @@ export default class Diagnostics extends Component {
             <Table.Row>
               <Table.TextCell>Storage Quota</Table.TextCell>
               <Table.TextCell>
-                {diagnosticsData.storageQuota ? 
-                  `${diagnosticsData.storageUsed} / ${diagnosticsData.storageQuota} bytes` : 
-                  'Unknown'
-                }
+                {diagnosticsData.storageQuota
+                  ? `${diagnosticsData.storageUsed} / ${diagnosticsData.storageQuota} bytes`
+                  : 'Unknown'}
               </Table.TextCell>
             </Table.Row>
             <Table.Row>
               <Table.TextCell>Sync Settings</Table.TextCell>
-              <Table.TextCell>{diagnosticsData.syncableSettingsFound?.length || 0} found</Table.TextCell>
-            </Table.Row>
-            <Table.Row>
-              <Table.TextCell>Local Settings</Table.TextCell>
-              <Table.TextCell>{diagnosticsData.localOnlySettingsFound?.length || 0} found</Table.TextCell>
-            </Table.Row>
-            
-            {/* Enhanced rule counts - separated by type for clarity */}
-            <Table.Row>
-              <Table.TextCell><strong>Cloud Rules</strong></Table.TextCell>
               <Table.TextCell>
-                Deny-List: {diagnosticsData.syncRuleCounts?.blacklist || 0}, 
-                Allow-List: {diagnosticsData.syncRuleCounts?.whitelist || 0}
+                {diagnosticsData.syncableSettingsFound?.length || 0} found
               </Table.TextCell>
             </Table.Row>
             <Table.Row>
-              <Table.TextCell><strong>Cloud Keywords</strong></Table.TextCell>
+              <Table.TextCell>Local Settings</Table.TextCell>
               <Table.TextCell>
-                Deny Keywords: {diagnosticsData.syncRuleCounts?.blacklistKeywords || 0}, 
+                {diagnosticsData.localOnlySettingsFound?.length || 0} found
+              </Table.TextCell>
+            </Table.Row>
+
+            {/* Enhanced rule counts - separated by type for clarity */}
+            <Table.Row>
+              <Table.TextCell>
+                <strong>Cloud Rules</strong>
+              </Table.TextCell>
+              <Table.TextCell>
+                Deny-List: {diagnosticsData.syncRuleCounts?.blacklist || 0}, Allow-List:{' '}
+                {diagnosticsData.syncRuleCounts?.whitelist || 0}
+              </Table.TextCell>
+            </Table.Row>
+            <Table.Row>
+              <Table.TextCell>
+                <strong>Cloud Keywords</strong>
+              </Table.TextCell>
+              <Table.TextCell>
+                Deny Keywords: {diagnosticsData.syncRuleCounts?.blacklistKeywords || 0},
                 Allow Keywords: {diagnosticsData.syncRuleCounts?.whitelistKeywords || 0}
               </Table.TextCell>
             </Table.Row>
             <Table.Row>
-              <Table.TextCell><strong>Local Rules</strong></Table.TextCell>
               <Table.TextCell>
-                Deny-List: {diagnosticsData.localRuleCounts?.blacklist || 0}, 
-                Allow-List: {diagnosticsData.localRuleCounts?.whitelist || 0}
+                <strong>Local Rules</strong>
+              </Table.TextCell>
+              <Table.TextCell>
+                Deny-List: {diagnosticsData.localRuleCounts?.blacklist || 0}, Allow-List:{' '}
+                {diagnosticsData.localRuleCounts?.whitelist || 0}
               </Table.TextCell>
             </Table.Row>
             <Table.Row>
-              <Table.TextCell><strong>Local Keywords</strong></Table.TextCell>
               <Table.TextCell>
-                Deny Keywords: {diagnosticsData.localRuleCounts?.blacklistKeywords || 0}, 
+                <strong>Local Keywords</strong>
+              </Table.TextCell>
+              <Table.TextCell>
+                Deny Keywords: {diagnosticsData.localRuleCounts?.blacklistKeywords || 0},
                 Allow Keywords: {diagnosticsData.localRuleCounts?.whitelistKeywords || 0}
               </Table.TextCell>
             </Table.Row>
-            
+
             {/* Sync metadata */}
-            {(diagnosticsData.lastSyncInfo?.lastSyncUp || diagnosticsData.lastSyncInfo?.lastSyncDown) && (
+            {(diagnosticsData.lastSyncInfo?.lastSyncUp ||
+              diagnosticsData.lastSyncInfo?.lastSyncDown) && (
               <Table.Row>
-                <Table.TextCell><strong>Last Sync</strong></Table.TextCell>
+                <Table.TextCell>
+                  <strong>Last Sync</strong>
+                </Table.TextCell>
                 <Table.TextCell>
                   {diagnosticsData.lastSyncInfo.lastSyncUp && (
-                    <div>↑ Up: {new Date(diagnosticsData.lastSyncInfo.lastSyncUp).toLocaleString()}</div>
+                    <div>
+                      ↑ Up:{' '}
+                      {new Date(diagnosticsData.lastSyncInfo.lastSyncUp).toLocaleString()}
+                    </div>
                   )}
                   {diagnosticsData.lastSyncInfo.lastSyncDown && (
-                    <div>↓ Down: {new Date(diagnosticsData.lastSyncInfo.lastSyncDown).toLocaleString()}</div>
+                    <div>
+                      ↓ Down:{' '}
+                      {new Date(
+                        diagnosticsData.lastSyncInfo.lastSyncDown,
+                      ).toLocaleString()}
+                    </div>
                   )}
                 </Table.TextCell>
               </Table.Row>
@@ -280,12 +304,14 @@ export default class Diagnostics extends Component {
    */
   renderCleanupResults = () => {
     const { cleanupResults } = this.state;
-    
+
     if (!cleanupResults) return null;
 
     return (
       <Card elevation={1} padding={16} marginBottom={16}>
-        <Heading size={600} marginBottom={12}>Cleanup Results</Heading>
+        <Heading size={600} marginBottom={12}>
+          Cleanup Results
+        </Heading>
         {cleanupResults.cleanedUp.map((item, index) => (
           <Paragraph key={index} color={cleanupResults.success ? 'success' : 'warning'}>
             ✓ {item}
@@ -306,12 +332,14 @@ export default class Diagnostics extends Component {
    */
   renderOptimizationResults = () => {
     const { optimizationResults } = this.state;
-    
+
     if (!optimizationResults) return null;
 
     return (
       <Card elevation={1} padding={16} marginBottom={16}>
-        <Heading size={600} marginBottom={12}>Array Optimization Analysis</Heading>
+        <Heading size={600} marginBottom={12}>
+          Array Optimization Analysis
+        </Heading>
         {optimizationResults.analyzed.map((analysis, index) => (
           <Card key={index} elevation={0} border padding={12} marginBottom={8}>
             <Text fontWeight={600}>{analysis.key}</Text>
@@ -319,13 +347,24 @@ export default class Diagnostics extends Component {
               Count: {analysis.count} | Size: {analysis.sizeBytes} bytes
               {analysis.duplicates && ` | Duplicates: ${analysis.duplicates}`}
             </Paragraph>
-            <Paragraph color={analysis.priority === 'high' ? 'danger' : analysis.priority === 'medium' ? 'warning' : 'muted'}>
+            <Paragraph
+              color={
+                analysis.priority === 'high'
+                  ? 'danger'
+                  : analysis.priority === 'medium'
+                    ? 'warning'
+                    : 'muted'
+              }
+            >
               {analysis.recommendation}
             </Paragraph>
           </Card>
         ))}
         {optimizationResults.potentialSavings > 0 && (
-          <Alert intent="success" title={`Potential space savings: ${optimizationResults.potentialSavings} bytes`} />
+          <Alert
+            intent="success"
+            title={`Potential space savings: ${optimizationResults.potentialSavings} bytes`}
+          />
         )}
       </Card>
     );
@@ -358,7 +397,7 @@ export default class Diagnostics extends Component {
           >
             {isLoading ? 'Running...' : 'Run Diagnostics'}
           </Button>
-          
+
           <Button
             iconBefore={CleanIcon}
             onClick={this.cleanupDuplicates}
@@ -367,7 +406,7 @@ export default class Diagnostics extends Component {
           >
             Cleanup Duplicates
           </Button>
-          
+
           <Button
             iconBefore={SettingsIcon}
             onClick={this.optimizeArrays}
@@ -375,7 +414,7 @@ export default class Diagnostics extends Component {
           >
             Analyze Arrays
           </Button>
-          
+
           <Button
             iconBefore={UploadIcon}
             onClick={this.forceSyncUp}
@@ -384,7 +423,7 @@ export default class Diagnostics extends Component {
           >
             Force Sync Up
           </Button>
-          
+
           <Button
             iconBefore={DownloadIcon}
             onClick={this.forceSyncDown}
@@ -403,7 +442,9 @@ export default class Diagnostics extends Component {
 
         {diagnosticsData?.errors && diagnosticsData.errors.length > 0 && (
           <Card elevation={1} padding={16} background="redTint">
-            <Heading size={600} marginBottom={12}>Errors</Heading>
+            <Heading size={600} marginBottom={12}>
+              Errors
+            </Heading>
             {diagnosticsData.errors.map((error, index) => (
               <Paragraph key={index} color="danger">
                 ❌ {error.message || error}

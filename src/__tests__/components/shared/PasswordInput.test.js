@@ -15,7 +15,7 @@ it('renders correctly', () => {
 it('handles value change', () => {
   const handleChange = jest.fn();
   const { container } = render(
-    <PasswordInput value={password.value} onChange={handleChange} />
+    <PasswordInput value={password.value} onChange={handleChange} />,
   );
   const passwordInput = container.querySelector('input[type="password"]');
   expect(passwordInput.value).toBe(password.value);

@@ -11,12 +11,25 @@ const semver = require('semver');
 // Check if we're in dev mode
 const isDevMode = process.argv.includes('--dev');
 
-function runBuildCommand(command, args, env = {}) {
+// Allowlist of safe commands for security
+const ALLOWED_COMMANDS = {
+  'npx': 'npx',
+  'node': 'node'
+};
+
+function runBuildCommand(commandKey, args, env = {}) {
   return new Promise((resolve, reject) => {
-    console.log(`Running: ${command} ${args.join(' ')}`);
+    // Validate command against allowlist
+    const safeCommand = ALLOWED_COMMANDS[commandKey];
+    if (!safeCommand) {
+      reject(new Error(`Unsafe command attempted: ${commandKey}`));
+      return;
+    }
     
-    // Spawn the process
-    const child = spawn(command, args, {
+    console.log(`Running: ${safeCommand} ${args.join(' ')}`);
+    
+    // Spawn the process with validated command
+    const child = spawn(safeCommand, args, {
       stdio: 'inherit',
       shell: true,
       env: {

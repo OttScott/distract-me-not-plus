@@ -26,16 +26,18 @@ jobs:
 
       - name: Analyze workflow results 📊
         id: analyze
+        env:
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+          WORKFLOW_STATUS: ${{ github.event.workflow_run.conclusion }}
+          WORKFLOW_URL: ${{ github.event.workflow_run.html_url }}
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+          UPDATED_AT: ${{ github.event.workflow_run.updated_at }}
         run: |
-          WORKFLOW_NAME="${{ github.event.workflow_run.name }}"
-          WORKFLOW_STATUS="${{ github.event.workflow_run.conclusion }}"
-          WORKFLOW_URL="${{ github.event.workflow_run.html_url }}"
-          BRANCH="${{ github.event.workflow_run.head_branch }}"
-          
           echo "workflow_name=${WORKFLOW_NAME}" >> $GITHUB_OUTPUT
           echo "workflow_status=${WORKFLOW_STATUS}" >> $GITHUB_OUTPUT
           echo "workflow_url=${WORKFLOW_URL}" >> $GITHUB_OUTPUT
           echo "branch=${BRANCH}" >> $GITHUB_OUTPUT
+          echo "updated_at=${UPDATED_AT}" >> $GITHUB_OUTPUT
           
           # Create status emoji
           if [ "${WORKFLOW_STATUS}" = "success" ]; then
@@ -127,7 +129,7 @@ jobs:
                   "short": true
                 }, {
                   "title": "Status",
-                  "value": "${{ github.event.workflow_run.conclusion }}",
+                  "value": "${{ steps.analyze.outputs.workflow_status }}",
                   "short": true
                 }],
                 "actions": [{
@@ -136,7 +138,7 @@ jobs:
                   "url": "${{ steps.analyze.outputs.workflow_url }}"
                 }],
                 "footer": "GitHub Actions",
-                "ts": ${{ github.event.workflow_run.updated_at }}
+                "ts": ${{ steps.analyze.outputs.updated_at }}
               }]
             }
         env:

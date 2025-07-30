@@ -194,19 +194,103 @@ jobs:
           CI=false npm run build || echo "Build completed with warnings"
           
           if [ -d "build/static/js" ] && ls build/static/js/*.js 1> /dev/null 2>&1; then
-            echo "✅ Build artifacts found, running bundle analyzer..."
-            npx webpack-bundle-analyzer build/static/js/*.js --report --mode static --report-filename bundle-report.html
+            echo "✅ Build artifacts found, creating bundle analysis..."
+            
+            # Create a simple but informative bundle report
+            cat > bundle-report.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Bundle Size Analysis</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 40px; background: #f5f5f5; }
+              .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+              h1 { color: #333; border-bottom: 2px solid #2196F3; padding-bottom: 10px; }
+              .file-list { margin: 20px 0; }
+              .file-item { display: flex; justify-content: space-between; padding: 10px; margin: 5px 0; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #2196F3; }
+              .filename { font-weight: 500; color: #333; }
+              .filesize { font-weight: bold; color: #2196F3; }
+              .summary { background: #e3f2fd; padding: 15px; border-radius: 4px; margin: 20px 0; }
+              .total-size { font-size: 1.2em; font-weight: bold; color: #1976d2; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>📊 Bundle Size Analysis</h1>
+          EOF
+            
+            echo "Analyzing bundle files..."
+            total_size=0
+            file_count=0
+            
+            echo '      <div class="file-list">' >> bundle-report.html
+            
+            for file in build/static/js/*.js; do
+              if [ -f "$file" ]; then
+                filename=$(basename "$file")
+                size_bytes=$(wc -c < "$file")
+                size_kb=$((size_bytes / 1024))
+                total_size=$((total_size + size_bytes))
+                file_count=$((file_count + 1))
+                
+                echo "        <div class=\"file-item\">" >> bundle-report.html
+                echo "          <span class=\"filename\">$filename</span>" >> bundle-report.html
+                echo "          <span class=\"filesize\">${size_kb} KB</span>" >> bundle-report.html
+                echo "        </div>" >> bundle-report.html
+                
+                echo "📁 $filename: ${size_kb} KB"
+              fi
+            done
+            
+            echo '      </div>' >> bundle-report.html
+            
+            total_kb=$((total_size / 1024))
+            
+            cat >> bundle-report.html << EOF
+              <div class="summary">
+                <div class="total-size">Total Bundle Size: ${total_kb} KB</div>
+                <div>Files Analyzed: ${file_count}</div>
+                <div>Generated: $(date)</div>
+              </div>
+              
+              <h2>📋 Analysis Summary</h2>
+              <ul>
+                <li><strong>Total Size:</strong> ${total_kb} KB (${total_size} bytes)</li>
+                <li><strong>Files:</strong> ${file_count} JavaScript bundles</li>
+                <li><strong>Status:</strong> ✅ Analysis completed successfully</li>
+              </ul>
+              
+              <p><em>This report shows the size of JavaScript bundles in your build output.</em></p>
+            </div>
+          </body>
+          </html>
+          EOF
+            
+            echo "📊 Bundle analysis complete: ${file_count} files, ${total_kb} KB total"
+            
           else
             echo "❌ No JS bundles found for analysis"
             echo "Creating placeholder bundle report..."
             cat > bundle-report.html << 'EOF'
           <!DOCTYPE html>
           <html>
-          <head><title>Bundle Analysis - Build Failed</title></head>
+          <head>
+            <title>Bundle Analysis - No Bundles Found</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+              .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+              .error { color: #d32f2f; background: #ffebee; padding: 15px; border-radius: 4px; border-left: 4px solid #d32f2f; }
+            </style>
+          </head>
           <body>
-            <h1>Bundle Analysis Unavailable</h1>
-            <p>Build process failed, unable to analyze bundle size.</p>
-            <p>Check build logs for more details.</p>
+            <div class="container">
+              <h1>❌ Bundle Analysis Unavailable</h1>
+              <div class="error">
+                <p><strong>No JavaScript bundles found for analysis.</strong></p>
+                <p>This could indicate a build failure or missing build artifacts.</p>
+                <p>Check the build logs above for more details.</p>
+              </div>
+            </div>
           </body>
           </html>
           EOF

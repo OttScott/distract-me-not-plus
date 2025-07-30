@@ -191,15 +191,24 @@ function updateHtmlFile() {
         const bodyMatch = modifiedContent.match(bodyRegex);
         
         if (bodyMatch) {
-          const scriptsToAdd = `
+          // Sanitize and validate the matched body tag
+          const bodyTag = bodyMatch[0];
+          
+          // Only proceed if the body tag looks valid (basic validation)
+          if (bodyTag.startsWith('<body') && bodyTag.endsWith('>')) {
+            const scriptsToAdd = `
       <script src="/static/js/bcrypt.min.js"></script>
       <script src="/static/js/browser-polyfill.min.js"></script>`;
-          
-          modifiedContent = modifiedContent.replace(bodyRegex, bodyMatch[0] + scriptsToAdd);
-          
-          // Write the modified HTML
-          fs.writeFileSync(INDEX_HTML, modifiedContent);
-          console.log('✓ Updated HTML file with script references using string replacement');
+            
+            modifiedContent = modifiedContent.replace(bodyRegex, bodyTag + scriptsToAdd);
+            
+            // Write the modified HTML
+            fs.writeFileSync(INDEX_HTML, modifiedContent);
+            console.log('✓ Updated HTML file with script references using string replacement');
+          } else {
+            console.warn('⚠️ Body tag validation failed, HTML file not modified');
+            return false;
+          }
         } else {
           console.warn('⚠️ Could not find body tag, HTML file not modified');
           return false;

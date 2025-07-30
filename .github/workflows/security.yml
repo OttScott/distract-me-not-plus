@@ -66,15 +66,28 @@ jobs:
       - name: Checkout 🛎️
         uses: actions/checkout@v4
 
-      - name: Run Semgrep 🔍
-        uses: returntocorp/semgrep-action@v1
+      - name: Setup Python �
+        uses: actions/setup-python@v5
         with:
-          config: >-
-            p/security-audit
-            p/secrets
-            p/owasp-top-ten
+          python-version: '3.11'
+
+      - name: Install Semgrep 🔍
+        run: |
+          python -m pip install --upgrade pip
+          pip install semgrep
+
+      - name: Run Semgrep Scan 🔍
+        run: |
+          semgrep ci --config=p/security-audit --config=p/secrets --config=p/owasp-top-ten --sarif --output=semgrep-results.sarif
         env:
           SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+
+      - name: Upload Semgrep SARIF 📊
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: semgrep-results.sarif
+          category: semgrep
 
   license-check:
     name: License Compliance

@@ -21,13 +21,22 @@ const fs = require('fs');
 const path = require('path');
 const cheerio = require('cheerio');
 
-// Check if cheerio is available, if not suggest installing it
+// Check if cheerio is available, if not suggest installing it or use fallback
+let cheerio;
 try {
-  require.resolve('cheerio');
+  cheerio = require('cheerio');
 } catch (e) {
   console.error('Error: cheerio package is required for this script.');
   console.error('Please install it using: npm install cheerio --save-dev');
-  process.exit(1);
+  console.error('Error details:', e.message);
+  
+  // If we're in Node.js 16 and cheerio fails, we might need to use a simpler approach
+  if (parseInt(process.version.slice(1)) < 18) {
+    console.log('Detected Node.js < 18, will try simple string replacement instead of cheerio');
+    cheerio = null; // We'll handle this in the updateHtmlFile function
+  } else {
+    process.exit(1);
+  }
 }
 
 // Paths
@@ -124,46 +133,81 @@ function updateHtmlFile() {
     // Read the HTML file
     const htmlContent = fs.readFileSync(INDEX_HTML, 'utf8');
     
-    // Load HTML into cheerio
-    const $ = cheerio.load(htmlContent);
-    
-    // Remove any existing script tags for these libraries
-    $('script').each(function() {
-      const src = $(this).attr('src');
-      if (
-        src &&
-        (
-          src.includes('browser-polyfill.min.js') ||
-          src.includes('bcrypt.min.js')
-        )
-      ) {
-        $(this).remove();
-      }
-    });
-    
-    // Remove any inlined libraries
-    $('script').each(function() {
-      const content = $(this).html();
-      if (
-        content &&
-        (
-          content.includes('webextension-polyfill') ||
-          content.includes('bcrypt.js')
-        )
-      ) {
-        $(this).remove();
-      }
-    });
-    
-    // Add new script tags at the beginning of body
-    $('body').prepend(`
+    if (cheerio) {
+      // Use cheerio for robust HTML manipulation
+      console.log('Using cheerio for HTML manipulation...');
+      
+      // Load HTML into cheerio
+      const $ = cheerio.load(htmlContent);
+      
+      // Remove any existing script tags for these libraries
+      $('script').each(function() {
+        const src = $(this).attr('src');
+        if (
+          src &&
+          (
+            src.includes('browser-polyfill.min.js') ||
+            src.includes('bcrypt.min.js')
+          )
+        ) {
+          $(this).remove();
+        }
+      });
+      
+      // Remove any inlined libraries
+      $('script').each(function() {
+        const content = $(this).html();
+        if (
+          content &&
+          (
+            content.includes('webextension-polyfill') ||
+            content.includes('bcrypt.js')
+          )
+        ) {
+          $(this).remove();
+        }
+      });
+      
+      // Add new script tags at the beginning of body
+      $('body').prepend(`
+        <script src="/static/js/bcrypt.min.js"></script>
+        <script src="/static/js/browser-polyfill.min.js"></script>
+      `);
+      
+      // Write the modified HTML
+      fs.writeFileSync(INDEX_HTML, $.html());
+      console.log('✓ Updated HTML file with script references using cheerio');
+      
+    } else {
+      // Fallback: Use simple string replacement
+      console.log('Using simple string replacement for HTML manipulation...');
+      
+      let modifiedContent = htmlContent;
+      
+      // Add script tags at the beginning of body if they don't already exist
+      if (!modifiedContent.includes('/static/js/bcrypt.min.js') && !modifiedContent.includes('/static/js/browser-polyfill.min.js')) {
+        // Find the opening body tag and add scripts after it
+        const bodyRegex = /<body[^>]*>/i;
+        const bodyMatch = modifiedContent.match(bodyRegex);
+        
+        if (bodyMatch) {
+          const scriptsToAdd = `
       <script src="/static/js/bcrypt.min.js"></script>
-      <script src="/static/js/browser-polyfill.min.js"></script>
-    `);
-    
-    // Write the modified HTML
-    fs.writeFileSync(INDEX_HTML, $.html());
-    console.log('✓ Updated HTML file with script references');
+      <script src="/static/js/browser-polyfill.min.js"></script>`;
+          
+          modifiedContent = modifiedContent.replace(bodyRegex, bodyMatch[0] + scriptsToAdd);
+          
+          // Write the modified HTML
+          fs.writeFileSync(INDEX_HTML, modifiedContent);
+          console.log('✓ Updated HTML file with script references using string replacement');
+        } else {
+          console.warn('⚠️ Could not find body tag, HTML file not modified');
+          return false;
+        }
+      } else {
+        console.log('✓ Script references already exist in HTML file');
+      }
+    }
     
     return true;
   } catch (error) {

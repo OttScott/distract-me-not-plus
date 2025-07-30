@@ -68,7 +68,7 @@ import { defaultLogsSettings } from 'helpers/logger';
 import { defaultTimerSettings } from 'helpers/timer';
 import { download, readFile } from 'helpers/file';
 import { isSmallDevice } from 'helpers/device';
-import { version } from '../../../package.json';
+import packageJson from '../../../package.json';
 import { set, cloneDeep, debounce } from 'lodash';
 import { format } from 'date-fns';
 import './styles.scss';
@@ -79,6 +79,8 @@ import {
   localOnlySettings,
   syncStatusTracker,
 } from 'helpers/syncDiagnostics';
+
+const { version } = packageJson;
 
 export class Settings extends Component {
   constructor(props) {

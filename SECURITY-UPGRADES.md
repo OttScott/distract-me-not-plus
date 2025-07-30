@@ -57,6 +57,39 @@ if (bodyTag.startsWith('<body') && bodyTag.endsWith('>')) {
 }
 ```
 
+## Expression Injection Fix
+
+### Problem
+- **Critical Vulnerability**: Expression injection in `monitor.yml` workflow
+- **Attack Vector**: Malicious branch names could execute arbitrary code
+- **Risk**: Remote code execution through workflow_run events
+- **CodeQL Alert**: "Potential injection from github.event.workflow_run.head_branch"
+
+### Solution
+- **Environment Variables**: Use `env:` block to sanitize inputs
+- **Secure Pattern**: env vars → shell vars → outputs
+- **Input Validation**: All user-controlled data properly escaped
+- **Defense in Depth**: Multiple layers of protection
+
+### Code Changes
+```yaml
+# Before (vulnerable):
+run: |
+  BRANCH="${{ github.event.workflow_run.head_branch }}"
+
+# After (secure):
+env:
+  BRANCH: ${{ github.event.workflow_run.head_branch }}
+run: |
+  echo "branch=${BRANCH}" >> $GITHUB_OUTPUT
+```
+
+### Attack Prevention
+- **Malicious Branch Names**: Names like `"; rm -rf / #"` are now safe
+- **Code Injection**: Cannot execute arbitrary commands
+- **Data Exfiltration**: Prevents information disclosure
+- **Privilege Escalation**: Blocks unauthorized access
+
 ## Security Benefits
 
 ### Enhanced Detection

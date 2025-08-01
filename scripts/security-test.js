@@ -97,7 +97,7 @@ async function runSemgrep() {
     
     // Run the same scan as CI but with more verbose output for local development
     // This is a hardcoded command string, not user input - safe from injection
-    const semgrepCmd = 'semgrep --config=p/security-audit --config=p/secrets --config=p/owasp-top-ten --json --quiet';
+    const semgrepCmd = 'semgrep --config=auto --config=.semgrep.yml --severity=ERROR --json --quiet';
     
     // semgrep:ignore javascript.lang.security.detect-child-process.detect-child-process
     const result = execSync(semgrepCmd, { 

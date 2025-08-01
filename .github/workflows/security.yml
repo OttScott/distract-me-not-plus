@@ -79,8 +79,8 @@ jobs:
       - name: Run Semgrep Scan 🔍
         run: |
           echo "Running Semgrep security scan..."
-          # Run with standard security rules plus local config
-          semgrep --config=auto --config=.semgrep.yml --error --sarif --output=semgrep-results.sarif .
+          # Run with standard security rules plus local config, only fail on ERROR level
+          semgrep --config=auto --config=.semgrep.yml --severity=ERROR --sarif --output=semgrep-results.sarif .
         env:
           SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
 

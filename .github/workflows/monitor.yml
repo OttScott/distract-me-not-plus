@@ -60,39 +60,40 @@ jobs:
             const workflowUrl = '${{ steps.analyze.outputs.workflow_url }}';
             const branch = '${{ steps.analyze.outputs.branch }}';
             
-            // Check if an issue already exists for this workflow failure
-            const existingIssues = await github.rest.issues.listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              labels: 'ci/cd,automated,critical-failure',
-              state: 'open'
-            });
-            
-            const issueTitle = `[CRITICAL] ${workflowName} pipeline failure on ${branch}`;
-            const existingIssue = existingIssues.data.find(issue => 
-              issue.title.includes(workflowName) && issue.title.includes(branch)
-            );
-            
-            if (!existingIssue) {
-              await github.rest.issues.create({
+            try {
+              // Check if an issue already exists for this workflow failure
+              const existingIssues = await github.rest.issues.listForRepo({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                title: issueTitle,
-                body: `## 🚨 Critical Pipeline Failure
-                
-                **Workflow:** ${workflowName}
-                **Branch:** ${branch}
-                **Status:** Failed
-                **Run URL:** ${workflowUrl}
-                **Time:** ${new Date().toISOString()}
-                
-                This issue was automatically created because a critical CI/CD workflow failed.
-                
-                ### Action Required
-                - [ ] Investigate the failure cause
-                - [ ] Fix the underlying issue
-                - [ ] Verify the fix by re-running the workflow
-                - [ ] Close this issue once resolved
+                labels: 'ci/cd,automated,critical-failure',
+                state: 'open'
+              });
+              
+              const issueTitle = `[CRITICAL] ${workflowName} pipeline failure on ${branch}`;
+              const existingIssue = existingIssues.data.find(issue => 
+                issue.title.includes(workflowName) && issue.title.includes(branch)
+              );
+              
+              if (!existingIssue) {
+                await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: issueTitle,
+                  body: `## 🚨 Critical Pipeline Failure
+                  
+                  **Workflow:** ${workflowName}
+                  **Branch:** ${branch}
+                  **Status:** Failed
+                  **Run URL:** ${workflowUrl}
+                  **Time:** ${new Date().toISOString()}
+                  
+                  This issue was automatically created because a critical CI/CD workflow failed.
+                  
+                  ### Action Required
+                  - [ ] Investigate the failure cause
+                  - [ ] Fix the underlying issue
+                  - [ ] Verify the fix by re-running the workflow
+                  - [ ] Close this issue once resolved
                 
                 ### Quick Links
                 - [View workflow run](${workflowUrl})
@@ -100,6 +101,19 @@ jobs:
                 - [Troubleshooting Guide](./CI-CD-DOCUMENTATION.md#-troubleshooting)`,
                 labels: ['ci/cd', 'automated', 'critical-failure', 'priority:high']
               });
+              console.log('✅ Critical failure issue created successfully');
+            } else {
+              console.log('ℹ️ Issue already exists for this workflow failure');
+            }
+            } catch (error) {
+              // Handle case where issues are disabled or other GitHub API errors
+              if (error.status === 410) {
+                console.log('⚠️ Issues are disabled for this repository - skipping issue creation');
+                console.log(`Pipeline failure details: ${workflowName} on ${branch} - ${workflowUrl}`);
+              } else {
+                console.error('❌ Failed to create issue:', error.message);
+                throw error;
+              }
             }
 
       - name: Slack notification for critical failures 📢

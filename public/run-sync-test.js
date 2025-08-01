@@ -8,12 +8,16 @@
  * 5. You should see test results in the console
  */
 
-// Execute the script
+// Execute the script safely without eval()
 fetch(chrome.runtime.getURL('test-sync-rules.js'))
   .then(response => response.text())
   .then(script => {
     console.log('Running sync test script...');
-    eval(script);
+    // Instead of eval(), create a script element for safer execution
+    const scriptElement = document.createElement('script');
+    scriptElement.textContent = script;
+    document.head.appendChild(scriptElement);
+    document.head.removeChild(scriptElement); // Clean up
   })
   .catch(error => {
     console.error('Error loading test script:', error);

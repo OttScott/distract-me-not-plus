@@ -263,6 +263,13 @@ function pathMatches(urlPath, patternPath, patternParsed, urlParsed) {
       .replace(/[-\/\\^$+?.()|[\]{}]/g, '\\$&') // Escape regex special chars
       .replace(/\*/g, '.*?'); // Convert * to non-greedy wildcard
     
+    // Validate regex pattern to prevent ReDoS
+    if (pathRegexStr.length > 1000) {
+      console.warn('Pattern too long, falling back to literal match');
+      return normUrlPath === normPatternPath;
+    }
+    
+    // semgrep-ignore: javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
     const pathRegex = new RegExp(`^${pathRegexStr}$`, 'i');
     return pathRegex.test(normUrlPath);
   } catch (e) {

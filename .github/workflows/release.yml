@@ -95,13 +95,15 @@ jobs:
 
       - name: Bump version 📈
         id: version
+        env:
+          RELEASE_TYPE: ${{ github.event.inputs.release_type }}
         run: |
           # Get current version from package.json
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           echo "Current version: $CURRENT_VERSION"
           
-          # Bump version using npm
-          npm version ${{ github.event.inputs.release_type }} --no-git-tag-version
+          # Bump version using npm (using environment variable to prevent injection)
+          npm version "$RELEASE_TYPE" --no-git-tag-version
           
           # Get new version
           NEW_VERSION=$(node -p "require('./package.json').version")

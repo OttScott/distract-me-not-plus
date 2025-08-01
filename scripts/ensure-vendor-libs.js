@@ -37,8 +37,19 @@ function copyFileToMultipleDestinations(srcPath, filename, destinations) {
     if (fs.existsSync(srcPath)) {
       console.log(`Copying ${filename} to multiple destinations...`);
       
+      // Sanitize filename to prevent path traversal
+      const safeFilename = path.basename(filename);
+      
       destinations.forEach(destDir => {
-        const destPath = path.join(destDir, filename);
+        // Resolve and validate destination directory
+        const resolvedDestDir = path.resolve(destDir);
+        const destPath = path.join(resolvedDestDir, safeFilename);
+        
+        // Ensure the destination path is within the expected directory
+        if (!destPath.startsWith(resolvedDestDir)) {
+          throw new Error(`Invalid destination path: ${destPath}`);
+        }
+        
         fs.copyFileSync(srcPath, destPath);
         console.log(`✓ Copied to ${destPath}`);
       });

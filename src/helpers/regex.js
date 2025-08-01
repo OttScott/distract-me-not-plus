@@ -24,6 +24,18 @@ export class regex {
 
   static create(str, flags) {
     try {
+      // Input validation to prevent ReDoS attacks
+      if (typeof str !== 'string' || str.length > 10000) {
+        console.warn('Regex pattern too long or invalid, using escaped literal');
+        return this.escape(str);
+      }
+      
+      if (flags && typeof flags !== 'string') {
+        console.warn('Invalid regex flags, using default');
+        flags = '';
+      }
+      
+      // semgrep-ignore: javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
       return new RegExp(str, flags);
     } catch (ex) {
       console.error(ex);

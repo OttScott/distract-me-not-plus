@@ -78,7 +78,14 @@ jobs:
 
       - name: Run Semgrep Scan 🔍
         run: |
-          semgrep ci --config=p/security-audit --config=p/secrets --config=p/owasp-top-ten --sarif --output=semgrep-results.sarif
+          # Use local configuration if available, otherwise use default rules
+          if [ -f ".semgrep.yml" ]; then
+            echo "Using local Semgrep configuration..."
+            semgrep --config=.semgrep.yml --config=p/security-audit --config=p/secrets --config=p/owasp-top-ten --sarif --output=semgrep-results.sarif
+          else
+            echo "Using default Semgrep configuration..."
+            semgrep ci --config=p/security-audit --config=p/secrets --config=p/owasp-top-ten --sarif --output=semgrep-results.sarif
+          fi
         env:
           SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
 

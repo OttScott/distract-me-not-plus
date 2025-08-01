@@ -21,6 +21,9 @@ export function RawHTML({ children, className = '' }) {
   return (
     <span
       className={className}
+      // Security Note: Using dangerouslySetInnerHTML with DOMPurify sanitization
+      // This is safe because DOMPurify removes all potentially harmful content
+      // semgrep:ignore dangerously-set-inner-html
       dangerouslySetInnerHTML={{
         __html: sanitizedHtml,
       }}

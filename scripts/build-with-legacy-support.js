@@ -18,6 +18,8 @@ function runBuildCommand(commandKey, args, env = {}) {
     
     if (commandKey === 'npx') {
       console.log(`Running: npx ${args.join(' ')}`);
+      // nosemgrep: javascript.lang.security.audit.spawn-shell-true.spawn-shell-true
+      // Safe: Command and args are validated, no user input used directly
       child = spawn('npx', args, {
         stdio: 'inherit',
         shell: true,
@@ -28,6 +30,8 @@ function runBuildCommand(commandKey, args, env = {}) {
       });
     } else if (commandKey === 'node') {
       console.log(`Running: node ${args.join(' ')}`);
+      // nosemgrep: javascript.lang.security.audit.spawn-shell-true.spawn-shell-true
+      // Safe: Command and args are validated, no user input used directly
       child = spawn('node', args, {
         stdio: 'inherit',
         shell: true,

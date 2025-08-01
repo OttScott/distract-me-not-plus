@@ -58,6 +58,8 @@
     "lint:ci": "eslint \"src/**/*.{js,jsx}\" --max-warnings 0",
     "lint:sarif": "eslint \"src/**/*.{js,jsx}\" --format=@microsoft/eslint-formatter-sarif --output-file eslint-results.sarif",
     "audit:fix": "npm audit fix",
+    "security:test": "node scripts/security-test.js",
+    "security:scan": "npm run security:test",
     "upgrade:status": "node scripts/upgrade-manager.js status",
     "upgrade:list": "node scripts/upgrade-manager.js list",
     "upgrade:security": "node scripts/upgrade-manager.js upgrade security-critical",

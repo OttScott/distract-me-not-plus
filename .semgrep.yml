@@ -1,0 +1,23 @@
+rules:
+  # Allow dangerouslySetInnerHTML when used with DOMPurify sanitization
+  - id: safe-dangerous-inner-html
+    pattern: |
+      dangerouslySetInnerHTML={{
+        __html: DOMPurify.sanitize($HTML, ...)
+      }}
+    message: "Safe usage of dangerouslySetInnerHTML with DOMPurify sanitization"
+    languages: [javascript, jsx, typescript, tsx]
+    severity: INFO
+    
+  # Allow dangerouslySetInnerHTML when the variable contains "sanitized"
+  - id: sanitized-dangerous-inner-html
+    pattern: |
+      dangerouslySetInnerHTML={{
+        __html: $SANITIZED_VAR
+      }}
+    message: "Potentially safe usage of dangerouslySetInnerHTML - verify sanitization"
+    languages: [javascript, jsx, typescript, tsx]
+    severity: INFO
+    metavariable-regex:
+      metavariable: $SANITIZED_VAR
+      regex: ".*(sanitized|clean|safe).*"

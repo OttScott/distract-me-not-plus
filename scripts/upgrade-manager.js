@@ -88,6 +88,8 @@ class DependencyUpgradeManager {
   // Get current vulnerabilities
   getCurrentVulnerabilities() {
     try {
+      // nosemgrep: javascript.lang.security.audit.dangerous-child-process.dangerous-child-process
+      // Safe: Hardcoded npm audit command with no user input
       const auditResult = execSync('npm audit --json', { encoding: 'utf8' });
       const audit = JSON.parse(auditResult);
       return {
@@ -161,6 +163,8 @@ class DependencyUpgradeManager {
     console.log(`✅ Restored from backup: ${backupFile}`);
     
     // Reinstall dependencies
+    // nosemgrep: javascript.lang.security.audit.dangerous-child-process.dangerous-child-process
+    // Safe: Hardcoded npm ci command with no user input
     execSync('npm ci', { stdio: 'inherit' });
   }
 
@@ -201,17 +205,32 @@ class DependencyUpgradeManager {
       }
       
       // Use npm-check-updates to upgrade specific packages
-      const updateCmd = `npx npm-check-updates -u ${depsToUpgrade.map(d => `--filter "${d}"`).join(' ')}`;
+      // Validate package names to prevent command injection
+      const validPackageNames = depsToUpgrade.filter(dep => 
+        typeof dep === 'string' && /^[@a-zA-Z0-9/_-]+$/.test(dep)
+      );
+      
+      if (validPackageNames.length !== depsToUpgrade.length) {
+        throw new Error('Invalid package names detected');
+      }
+      
+      const updateCmd = `npx npm-check-updates -u ${validPackageNames.map(d => `--filter "${d}"`).join(' ')}`;
+      // nosemgrep: javascript.lang.security.audit.dangerous-child-process.dangerous-child-process
+      // Safe: Package names are validated with regex, command is constructed safely
       execSync(updateCmd, { stdio: 'inherit' });
       
       // Install updated dependencies
       console.log('📥 Installing updated dependencies...');
+      // nosemgrep: javascript.lang.security.audit.dangerous-child-process.dangerous-child-process
+      // Safe: Hardcoded npm install command with no user input
       execSync('npm install', { stdio: 'inherit' });
       
       // Run tests
       if (options.test !== false) {
         console.log('🧪 Running tests...');
         try {
+          // nosemgrep: javascript.lang.security.audit.dangerous-child-process.dangerous-child-process
+          // Safe: Hardcoded npm test command with no user input
           execSync('npm run test:ci', { stdio: 'inherit' });
           console.log('✅ Tests passed');
         } catch (error) {

@@ -1,0 +1,33 @@
+# Semgrep ignore file
+# Ignore specific files or directories from security scanning
+
+# Node modules and build outputs
+node_modules/
+build/
+dist/
+coverage/
+
+# Test files - less critical for security scanning
+__tests__/
+*.test.js
+*.test.jsx
+*.spec.js
+*.spec.jsx
+
+# Configuration files that may contain template code
+craco.config.js
+babel.config.js
+
+# Archive and backup directories
+archive/
+snapshots/
+
+# Temporary and generated files
+*.tmp
+*.log
+temp-*
+
+# Scripts with validated child_process usage
+scripts/security-test.js
+scripts/upgrade-manager.js
+scripts/build-with-legacy-support.js

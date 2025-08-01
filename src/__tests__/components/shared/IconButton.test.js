@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react';
+import { render, fireEvent, screen } from '@testing-library/react';
 import { CrossIcon } from 'evergreen-ui';
 import { IconButton } from 'components';
 
@@ -10,7 +10,7 @@ it('renders correctly', () => {
 
 it('handles click', () => {
   const handleClick = jest.fn();
-  const { getByRole } = render(<IconButton icon={CrossIcon} onClick={handleClick} />);
-  fireEvent.click(getByRole('button'));
+  render(<IconButton icon={CrossIcon} onClick={handleClick} />);
+  fireEvent.click(screen.getByRole('button'));
   expect(handleClick).toHaveBeenCalledTimes(1);
 });

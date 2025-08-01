@@ -2,9 +2,9 @@ name: Continuous Integration
 
 on:
   push:
-    branches: [master, Features, develop]
+    branches: [master, Features, develop, 'feature/*', 'fix/*', 'hotfix/*', cicd-pipeline]
   pull_request:
-    branches: [master, Features]
+    branches: [master, Features, develop]
   schedule:
     # Run CI daily at 06:00 UTC
     - cron: '0 6 * * *'

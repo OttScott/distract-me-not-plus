@@ -2,9 +2,9 @@ name: Security Scanning
 
 on:
   push:
-    branches: [master, Features]
+    branches: [master, Features, develop, 'feature/*', 'fix/*', 'hotfix/*', cicd-pipeline]
   pull_request:
-    branches: [master, Features]
+    branches: [master, Features, develop]
   schedule:
     # Run security scans daily at 02:00 UTC
     - cron: '0 2 * * *'

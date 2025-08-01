@@ -1,0 +1,122 @@
+name: Feature Branch CI
+
+on:
+  push:
+    branches:
+      - 'feature/*'
+      - 'fix/*'
+      - 'hotfix/*'
+      - 'chore/*'
+      - develop
+      - cicd-pipeline
+  pull_request:
+    branches:
+      - master
+      - Features
+      - develop
+
+jobs:
+  quick-checks:
+    name: Quick Quality Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint code 🔍
+        run: npm run lint
+
+      - name: Run unit tests 🧪
+        run: npm test -- --coverage --watchAll=false
+
+      - name: Build application 🏗️
+        run: npm run build
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Setup Python 🐍
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Semgrep 🔍
+        run: |
+          python -m pip install --upgrade pip
+          pip install semgrep
+
+      - name: Run Security Scan 🔒
+        run: |
+          echo "Running Semgrep security scan..."
+          semgrep --config=auto --config=.semgrep.yml --error --json --output=semgrep-results.json .
+
+      - name: Upload security results 📊
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-scan-results
+          path: semgrep-results.json
+          retention-days: 7
+
+  dependency-check:
+    name: Dependency Security
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit 🔒
+        run: npm audit --audit-level=moderate
+        continue-on-error: true
+
+  feature-summary:
+    name: Feature Branch Summary
+    needs: [quick-checks, security-scan, dependency-check]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Generate summary 📋
+        run: |
+          echo "# Feature Branch CI Summary" > feature-summary.md
+          echo "" >> feature-summary.md
+          echo "## Results:" >> feature-summary.md
+          echo "- Quality Checks: ${{ needs.quick-checks.result }}" >> feature-summary.md
+          echo "- Security Scan: ${{ needs.security-scan.result }}" >> feature-summary.md
+          echo "- Dependency Check: ${{ needs.dependency-check.result }}" >> feature-summary.md
+          echo "" >> feature-summary.md
+          echo "Branch: ${{ github.ref_name }}" >> feature-summary.md
+          echo "Commit: ${{ github.sha }}" >> feature-summary.md
+          echo "Scan completed at: $(date)" >> feature-summary.md
+
+      - name: Upload summary 📤
+        uses: actions/upload-artifact@v4
+        with:
+          name: feature-branch-summary
+          path: feature-summary.md
+          retention-days: 7

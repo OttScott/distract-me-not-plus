@@ -29,12 +29,12 @@ export class regex {
         console.warn('Regex pattern too long or invalid, using escaped literal');
         return this.escape(str);
       }
-      
+
       if (flags && typeof flags !== 'string') {
         console.warn('Invalid regex flags, using default');
         flags = '';
       }
-      
+
       // semgrep-ignore: javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
       return new RegExp(str, flags);
     } catch (ex) {

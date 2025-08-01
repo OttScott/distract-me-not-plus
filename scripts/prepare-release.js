@@ -129,7 +129,18 @@ async function main() {
     
   } catch (error) {
     log('\n❌ Release preparation failed!', colors.red);
-    log(error.message, colors.red);
+    if (error.message.includes('Command failed')) {
+      log('\nThis could be due to:', colors.yellow);
+      log('- Build compilation errors (check imports/exports)', colors.reset);
+      log('- Test snapshot mismatches (run: npm test -- -u)', colors.reset);
+      log('- Dependencies conflicts (try: npm ci)', colors.reset);
+      log('\nTo fix build issues:', colors.yellow);
+      log('1. Check src/ files for import/export errors', colors.reset);
+      log('2. Update snapshots if needed: npm test -- -u', colors.reset);
+      log('3. Clean install: npm ci && npm run build', colors.reset);
+    } else {
+      log(error.message, colors.red);
+    }
     process.exit(1);
   }
 }

@@ -5,7 +5,7 @@ import { Blocked } from 'components';
 it('renders blocked page when isBlank prop is true', () => {
   const { container } = render(<Blocked isBlank={true} />);
   // The component should still render content even with isBlank prop
-  expect(container.firstChild).toBeTruthy();
+  expect(container).toBeTruthy();
   expect(container.textContent).toContain('defaultBlockingMessage');
 });
 

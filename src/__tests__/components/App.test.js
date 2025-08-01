@@ -4,7 +4,7 @@ import App from 'App';
 
 it('renders nothing when accessAllowed prop is not defined', () => {
   const { container } = render(<App />);
-  expect(container.firstChild).toBeEmptyDOMElement();
+  expect(container).toBeEmptyDOMElement();
 });
 
 it('renders appName header when access is allowed', () => {

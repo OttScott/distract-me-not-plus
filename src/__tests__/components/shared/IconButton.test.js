@@ -10,7 +10,7 @@ it('renders correctly', () => {
 
 it('handles click', () => {
   const handleClick = jest.fn();
-  const { container } = render(<IconButton icon={CrossIcon} onClick={handleClick} />);
-  fireEvent.click(container.firstChild);
+  const { getByRole } = render(<IconButton icon={CrossIcon} onClick={handleClick} />);
+  fireEvent.click(getByRole('button'));
   expect(handleClick).toHaveBeenCalledTimes(1);
 });

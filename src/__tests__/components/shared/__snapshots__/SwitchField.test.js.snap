@@ -19,7 +19,8 @@ exports[`renders correctly 1`] = `
         class="ub-dspl_block ub-w_36px ub-pst_relative ub-box-szg_border-box"
       >
         <input
-          class="css-mo4r8n ub-b-btm_0 ub-b-lft_0 ub-b-rgt_0 ub-b-top_0 ub-h_1px ub-ovflw-x_hidden ub-ovflw-y_hidden ub-pb_0 ub-pl_0 ub-pr_0 ub-pt_0 ub-pst_absolute ub-wht-spc_nowrap ub-w_1px ub-opct_0 ub-dspl_none_1uptbf1 ub-tstn_w7alrr_12xuja4 ub-box-szg_border-box"
+          class="ub-b-btm_0 ub-b-lft_0 ub-b-rgt_0 ub-b-top_0 ub-h_1px ub-ovflw-x_hidden ub-ovflw-y_hidden ub-pb_0 ub-pl_0 ub-pr_0 ub-pt_0 ub-pst_absolute ub-wht-spc_nowrap ub-w_1px ub-opct_0 ub-dspl_none_1uptbf1 ub-color_white_12xuja4 ub-bg-clr_d8dae5_12xuja4 ub-crsr_not-allowed_1gap7lq ub-opct_0-5_1gap7lq ub-bg-clr_c1c4d6_1lr2cg6 ub-bs_1k4fra3_8opzv2 ub-bg-clr_8f95b2_1i0maef ub-bg-clr_3366FF_1bvcdyp ub-color_white_1bvcdyp ub-bg-clr_2952CC_1edi4f ub-color_white_1edi4f ub-bg-clr_1F3D99_1fdqdpd ub-color_white_1fdqdpd ub-box-szg_border-box"
+          style="clip: rect(1px, 1px, 1px, 1px);"
           type="checkbox"
         />
         <div

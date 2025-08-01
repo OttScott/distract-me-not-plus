@@ -94,6 +94,29 @@ async function main() {
     const currentVersion = require('./package.json').version;
     log(`Current version: ${currentVersion}`, colors.cyan);
     
+    // Check manifest version sync
+    const fs = require('fs');
+    let manifestsInSync = true;
+    if (fs.existsSync('public/manifest.json')) {
+      const manifest = JSON.parse(fs.readFileSync('public/manifest.json', 'utf8'));
+      if (manifest.version !== currentVersion) {
+        log(`⚠️  manifest.json version (${manifest.version}) doesn't match package.json (${currentVersion})`, colors.yellow);
+        manifestsInSync = false;
+      }
+    }
+    if (fs.existsSync('public/manifest.firefox.json')) {
+      const firefoxManifest = JSON.parse(fs.readFileSync('public/manifest.firefox.json', 'utf8'));
+      if (firefoxManifest.version !== currentVersion) {
+        log(`⚠️  manifest.firefox.json version (${firefoxManifest.version}) doesn't match package.json (${currentVersion})`, colors.yellow);
+        manifestsInSync = false;
+      }
+    }
+    if (manifestsInSync) {
+      log('✅ All version files are synchronized', colors.green);
+    } else {
+      log('⚠️  Version sync issues detected - GitHub workflow will fix this', colors.yellow);
+    }
+    
     // Calculate next version (simplified)
     const versionParts = currentVersion.split('.').map(Number);
     if (releaseType === 'major') {
@@ -124,8 +147,10 @@ async function main() {
     log(`   2. Click "Run workflow"`, colors.cyan);
     log(`   3. Select release type: ${releaseType}`, colors.cyan);
     log(`   4. Click "Run workflow" button`, colors.cyan);
+    log(`   📝 GitHub will automatically update all manifest versions to match`, colors.reset);
     log('\n   Or push a tag:', colors.cyan);
     log(`   git tag v${nextVersion} && git push origin v${nextVersion}`, colors.cyan);
+    log(`   📝 This will also sync all version files automatically`, colors.reset);
     
   } catch (error) {
     log('\n❌ Release preparation failed!', colors.red);

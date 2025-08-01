@@ -2,6 +2,18 @@
 
 This guide covers how to create releases for the Distract Me Not browser extension.
 
+## 🎯 What Gets Updated Automatically
+
+The release system automatically synchronizes versions across:
+- 📦 `package.json` - NPM package version
+- 🌐 `public/manifest.json` - Chrome/Edge extension manifest  
+- 🦊 `public/manifest.firefox.json` - Firefox extension manifest
+
+Plus automatic:
+- 📝 Changelog generation from commits
+- 🏗️ Multi-browser builds (Chrome, Edge, Firefox)
+- 🏷️ Git tagging and GitHub releases
+
 ## 📋 Quick Release (Recommended)
 
 ### Option 1: GitHub UI (Easiest)

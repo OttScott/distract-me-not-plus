@@ -110,10 +110,24 @@ jobs:
           echo "New version: $NEW_VERSION"
           echo "Version tag: $VERSION_TAG"
           
+          # Update manifest.json version
+          if [ -f "public/manifest.json" ]; then
+            sed -i "s/\"version\": \".*\"/\"version\": \"$NEW_VERSION\"/" public/manifest.json
+            echo "✅ Updated public/manifest.json to version $NEW_VERSION"
+            git add public/manifest.json
+          fi
+          
+          # Update manifest.firefox.json version  
+          if [ -f "public/manifest.firefox.json" ]; then
+            sed -i "s/\"version\": \".*\"/\"version\": \"$NEW_VERSION\"/" public/manifest.firefox.json
+            echo "✅ Updated public/manifest.firefox.json to version $NEW_VERSION"
+            git add public/manifest.firefox.json
+          fi
+          
           echo "new-version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "version-tag=$VERSION_TAG" >> $GITHUB_OUTPUT
           
-          # Commit version bump
+          # Commit version bump (including manifests)
           git add package.json package-lock.json
           git commit -m "chore: bump version to $NEW_VERSION"
           git tag $VERSION_TAG

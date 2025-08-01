@@ -3,7 +3,7 @@
 exports[`renders correctly 1`] = `
 <DocumentFragment>
   <div
-    class="ub-b-btm_1px-solid-E6E8F0 ub-dspl_flex ub-algn-itms_center ub-just-cnt_center ub-h_62px ub-box-szg_border-box"
+    class="ub-b-btm_1px-solid-E6E8F0  ub-dspl_flex ub-algn-itms_center ub-just-cnt_center ub-h_62px ub-box-szg_border-box"
   >
     <img
       alt="logo"

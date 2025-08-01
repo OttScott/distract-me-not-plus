@@ -3,13 +3,13 @@
 exports[`renders correctly 1`] = `
 <DocumentFragment>
   <div
-    class="ub-b-top_1px-solid-E6E8F0 ub-b-rgt_1px-solid-E6E8F0 ub-b-btm_1px-solid-E6E8F0 ub-b-lft_1px-solid-E6E8F0 ub-bblr_4px ub-bbrr_4px ub-btlr_4px ub-btrr_4px ub-box-szg_border-box"
+    class="ub-b-top_1px-solid-E6E8F0 ub-b-rgt_1px-solid-E6E8F0 ub-b-btm_1px-solid-E6E8F0 ub-b-lft_1px-solid-E6E8F0  ub-bblr_4px ub-bbrr_4px ub-btlr_4px ub-btrr_4px ub-box-szg_border-box"
   >
     <div
-      class="css-ytz3eb ub-bg_wivy90 ub-b-btm_1px-solid-E6E8F0 ub-pr_0px ub-h_32px ub-dspl_flex ub-flx-srnk_0 ub-fnt-sze_12px ub-f-wght_600 ub-ln-ht_16px ub-ltr-spc_0 ub-fnt-fam_b77syt ub-color_696f8c ub-txt-trns_uppercase ub-pb_0px ub-pl_0px ub-pt_0px ub-box-szg_border-box"
+      class="ub-bg_wivy90 ub-b-btm_1px-solid-E6E8F0 ub-btlr_4px_mqs7mi ub-btrr_4px_mqs7mi ub-pr_0px ub-h_32px ub-dspl_flex ub-flx-srnk_0 ub-fnt-sze_12px ub-f-wght_600 ub-ln-ht_16px ub-ltr-spc_0 ub-fnt-fam_b77syt ub-color_696f8c ub-txt-trns_uppercase ub-pb_0px ub-pl_0px ub-pt_0px ub-box-szg_border-box"
     >
       <div
-        class="css-ber32g ub-box-szg_border-box ub-flx_1 ub-dspl_flex ub-algn-itms_center ub-flx-srnk_0 ub-ovflw-x_visible ub-ovflw-y_visible ub-pl_12px ub-pr_12px"
+        class="ub-otln_iu2jf4_1849h0v ub-bg_2u3whs_1849h0v ub-bs_iarjze_1849h0v ub-box-szg_border-box ub-flx_1 ub-dspl_flex ub-algn-itms_center ub-flx-srnk_0 ub-ovflw-x_visible ub-ovflw-y_visible ub-pl_12px ub-pr_12px"
       >
         <div
           class="ub-dspl_inline-flex ub-ml_2px ub-mr_10px ub-box-szg_border-box"
@@ -34,11 +34,11 @@ exports[`renders correctly 1`] = `
         />
       </div>
       <div
-        class="css-ber32g ub-box-szg_border-box ub-flx_none ub-dspl_flex ub-algn-itms_center ub-flx-srnk_0 ub-ovflw-x_visible ub-ovflw-y_visible ub-pl_12px ub-pr_12px"
+        class="ub-otln_iu2jf4_1849h0v ub-bg_2u3whs_1849h0v ub-bs_iarjze_1849h0v ub-box-szg_border-box ub-flx_none ub-dspl_flex ub-algn-itms_center ub-flx-srnk_0 ub-ovflw-x_visible ub-ovflw-y_visible ub-pl_12px ub-pr_12px"
       >
         <button
           aria-haspopup="true"
-          class="css-m3k0tf ub-pst_relative ub-f-wght_500 ub-dspl_inline-flex ub-algn-itms_center ub-flx-wrap_nowrap ub-just-cnt_center ub-txt-deco_none ub-ver-algn_middle ub-b-btm_none ub-b-lft_none ub-b-rgt_none ub-b-top_none ub-otln_iu2jf4 ub-usr-slct_none ub-crsr_pointer ub-wht-spc_nowrap ub-fnt-fam_b77syt ub-bg-clr_transparent ub-bblr_4px ub-bbrr_4px ub-btlr_4px ub-btrr_4px ub-pl_4px ub-pr_4px ub-ml_-4px ub-mr_-4px ub-pb_2px ub-pt_2px ub-mb_-2px ub-mt_-2px ub-color_474d66 ub-fnt-sze_12px ub-ln-ht_16px ub-box-szg_border-box"
+          class="ub-pst_relative ub-f-wght_500 ub-dspl_inline-flex ub-algn-itms_center ub-flx-wrap_nowrap ub-just-cnt_center ub-txt-deco_none ub-ver-algn_middle ub-b-btm_none ub-b-lft_none ub-b-rgt_none ub-b-top_none ub-otln_iu2jf4 ub-usr-slct_none ub-crsr_pointer ub-wht-spc_nowrap ub-fnt-fam_b77syt ub-bg-clr_transparent ub-bblr_4px ub-bbrr_4px ub-btlr_4px ub-btrr_4px ub-pl_4px ub-pr_4px ub-ml_-4px ub-mr_-4px ub-pb_2px ub-pt_2px ub-mb_-2px ub-mt_-2px ub-color_474d66 ub-fnt-sze_12px ub-ln-ht_16px ub-crsr_not-allowed_yzzm16 ub-ptr-evts_none_yzzm16 ub-bs_13po50p_xpy5ci ub-box-szg_border-box"
           data-testid="sort-button"
           role="button"
           type="button"
@@ -60,11 +60,11 @@ exports[`renders correctly 1`] = `
         </button>
       </div>
       <div
-        class="css-ber32g ub-box-szg_border-box ub-flx_none ub-dspl_flex ub-algn-itms_center ub-flx-srnk_0 ub-ovflw-x_visible ub-ovflw-y_visible ub-pl_12px ub-pr_12px ub-w_48px"
+        class="ub-otln_iu2jf4_1849h0v ub-bg_2u3whs_1849h0v ub-bs_iarjze_1849h0v ub-box-szg_border-box ub-flx_none ub-dspl_flex ub-algn-itms_center ub-flx-srnk_0 ub-ovflw-x_visible ub-ovflw-y_visible ub-pl_12px ub-pr_12px ub-w_48px"
       >
         <button
           aria-haspopup="true"
-          class="css-1tyjqqv ub-pst_relative ub-f-wght_400 ub-dspl_inline-flex ub-algn-itms_center ub-flx-wrap_nowrap ub-just-cnt_center ub-txt-deco_none ub-ver-algn_middle ub-b-btm_1px-solid-transparent ub-b-lft_1px-solid-transparent ub-b-rgt_1px-solid-transparent ub-b-top_1px-solid-transparent ub-otln_iu2jf4 ub-usr-slct_none ub-crsr_pointer ub-wht-spc_nowrap ub-fnt-fam_b77syt ub-bblr_4px ub-bbrr_4px ub-btlr_4px ub-btrr_4px ub-color_474d66 ub-tstn_n1akt6 ub-h_24px ub-min-w_24px ub-fnt-sze_12px ub-ln-ht_16px ub-pl_0px ub-pr_0px ub-bg-clr_transparent ub-flx_none ub-w_24px ub-ltr-spc_0 ub-box-szg_border-box"
+          class="ub-pst_relative ub-f-wght_400 ub-dspl_inline-flex ub-algn-itms_center ub-flx-wrap_nowrap ub-just-cnt_center ub-txt-deco_none ub-ver-algn_middle ub-b-btm_1px-solid-transparent ub-b-lft_1px-solid-transparent ub-b-rgt_1px-solid-transparent ub-b-top_1px-solid-transparent ub-otln_iu2jf4 ub-usr-slct_none ub-crsr_pointer ub-wht-spc_nowrap ub-fnt-fam_b77syt ub-bblr_4px ub-bbrr_4px ub-btlr_4px ub-btrr_4px ub-color_474d66 ub-tstn_n1akt6 ub-h_24px ub-min-w_24px ub-fnt-sze_12px ub-ln-ht_16px ub-pl_0px ub-pr_0px ub-bg-clr_transparent ub-bs_13po50p_xpy5ci ub-crsr_not-allowed_yzzm16 ub-ptr-evts_none_yzzm16 ub-color_c1c4d6_yzzm16 ub-opct_0-6_yzzm16 ub-bg-clr_F4F5F9_vmhk7m ub-bg-clr_edeff5_hxa9p6 ub-flx_none ub-w_24px ub-ltr-spc_0 ub-box-szg_border-box"
           data-testid="list-more-button"
           role="button"
         >
@@ -103,11 +103,11 @@ exports[`renders correctly 1`] = `
           style="position: relative; width: 100%; min-height: 100%; height: 144px;"
         >
           <div
-            class="css-15su02r ub-b-btm_1px-solid-edeff5 ub-h_64px ub-dspl_flex ub-otln_iu2jf4 ub-txt-deco_none ub-bg-clr_white ub-box-szg_border-box"
+            class="ub-b-btm_1px-solid-edeff5 ub-b-btm_none_1e6nxnc ub-bblr_4px_1e6nxnc ub-bbrr_4px_1e6nxnc ub-crsr_pointer_1mw91nf ub-bg-clr_F9FAFC_ths97z ub-bg-clr_F9FAFC_ofcquw ub-bg-clr_F3F6FF_1cxkzxs ub-bg-clr_F3F6FF_tayb1d ub-h_64px ub-dspl_flex ub-otln_iu2jf4 ub-txt-deco_none ub-bg-clr_white ub-box-szg_border-box"
             style="position: absolute; top: 0px; left: 0px; width: 100%; height: 48px;"
           >
             <div
-              class="css-ber32g ub-box-szg_border-box ub-flx_1 ub-dspl_flex ub-algn-itms_center ub-flx-srnk_0 ub-ovflw-x_hidden ub-ovflw-y_hidden ub-pl_12px ub-pr_12px"
+              class="ub-otln_iu2jf4_1849h0v ub-bg_2u3whs_1849h0v ub-bs_iarjze_1849h0v ub-box-szg_border-box ub-flx_1 ub-dspl_flex ub-algn-itms_center ub-flx-srnk_0 ub-ovflw-x_hidden ub-ovflw-y_hidden ub-pl_12px ub-pr_12px"
             >
               <span
                 class="ub-fnt-sze_12px ub-f-wght_500 ub-ln-ht_16px ub-ltr-spc_0 ub-fnt-fam_b77syt ub-color_474d66 ub-ml_8px ub-box-szg_border-box"
@@ -117,11 +117,11 @@ exports[`renders correctly 1`] = `
               </span>
             </div>
             <div
-              class="css-ber32g ub-box-szg_border-box ub-flx_none ub-dspl_flex ub-algn-itms_center ub-flx-srnk_0 ub-ovflw-x_hidden ub-ovflw-y_hidden ub-pl_12px ub-pr_12px ub-w_48px"
+              class="ub-otln_iu2jf4_1849h0v ub-bg_2u3whs_1849h0v ub-bs_iarjze_1849h0v ub-box-szg_border-box ub-flx_none ub-dspl_flex ub-algn-itms_center ub-flx-srnk_0 ub-ovflw-x_hidden ub-ovflw-y_hidden ub-pl_12px ub-pr_12px ub-w_48px"
             >
               <button
                 aria-haspopup="true"
-                class="css-1tyjqqv ub-pst_relative ub-f-wght_400 ub-dspl_inline-flex ub-algn-itms_center ub-flx-wrap_nowrap ub-just-cnt_center ub-txt-deco_none ub-ver-algn_middle ub-b-btm_1px-solid-transparent ub-b-lft_1px-solid-transparent ub-b-rgt_1px-solid-transparent ub-b-top_1px-solid-transparent ub-otln_iu2jf4 ub-usr-slct_none ub-crsr_pointer ub-wht-spc_nowrap ub-fnt-fam_b77syt ub-bblr_4px ub-bbrr_4px ub-btlr_4px ub-btrr_4px ub-color_474d66 ub-tstn_n1akt6 ub-h_24px ub-min-w_24px ub-fnt-sze_12px ub-ln-ht_16px ub-pl_0px ub-pr_0px ub-bg-clr_transparent ub-flx_none ub-w_24px ub-ltr-spc_0 ub-box-szg_border-box"
+                class="ub-pst_relative ub-f-wght_400 ub-dspl_inline-flex ub-algn-itms_center ub-flx-wrap_nowrap ub-just-cnt_center ub-txt-deco_none ub-ver-algn_middle ub-b-btm_1px-solid-transparent ub-b-lft_1px-solid-transparent ub-b-rgt_1px-solid-transparent ub-b-top_1px-solid-transparent ub-otln_iu2jf4 ub-usr-slct_none ub-crsr_pointer ub-wht-spc_nowrap ub-fnt-fam_b77syt ub-bblr_4px ub-bbrr_4px ub-btlr_4px ub-btrr_4px ub-color_474d66 ub-tstn_n1akt6 ub-h_24px ub-min-w_24px ub-fnt-sze_12px ub-ln-ht_16px ub-pl_0px ub-pr_0px ub-bg-clr_transparent ub-bs_13po50p_xpy5ci ub-crsr_not-allowed_yzzm16 ub-ptr-evts_none_yzzm16 ub-color_c1c4d6_yzzm16 ub-opct_0-6_yzzm16 ub-bg-clr_F4F5F9_vmhk7m ub-bg-clr_edeff5_hxa9p6 ub-flx_none ub-w_24px ub-ltr-spc_0 ub-box-szg_border-box"
                 data-testid="more-button"
                 role="button"
               >
@@ -143,11 +143,11 @@ exports[`renders correctly 1`] = `
             </div>
           </div>
           <div
-            class="css-15su02r ub-b-btm_1px-solid-edeff5 ub-h_64px ub-dspl_flex ub-otln_iu2jf4 ub-txt-deco_none ub-bg-clr_white ub-box-szg_border-box"
+            class="ub-b-btm_1px-solid-edeff5 ub-b-btm_none_1e6nxnc ub-bblr_4px_1e6nxnc ub-bbrr_4px_1e6nxnc ub-crsr_pointer_1mw91nf ub-bg-clr_F9FAFC_ths97z ub-bg-clr_F9FAFC_ofcquw ub-bg-clr_F3F6FF_1cxkzxs ub-bg-clr_F3F6FF_tayb1d ub-h_64px ub-dspl_flex ub-otln_iu2jf4 ub-txt-deco_none ub-bg-clr_white ub-box-szg_border-box"
             style="position: absolute; top: 48px; left: 0px; width: 100%; height: 48px;"
           >
             <div
-              class="css-ber32g ub-box-szg_border-box ub-flx_1 ub-dspl_flex ub-algn-itms_center ub-flx-srnk_0 ub-ovflw-x_hidden ub-ovflw-y_hidden ub-pl_12px ub-pr_12px"
+              class="ub-otln_iu2jf4_1849h0v ub-bg_2u3whs_1849h0v ub-bs_iarjze_1849h0v ub-box-szg_border-box ub-flx_1 ub-dspl_flex ub-algn-itms_center ub-flx-srnk_0 ub-ovflw-x_hidden ub-ovflw-y_hidden ub-pl_12px ub-pr_12px"
             >
               <span
                 class="ub-fnt-sze_12px ub-f-wght_500 ub-ln-ht_16px ub-ltr-spc_0 ub-fnt-fam_b77syt ub-color_474d66 ub-ml_8px ub-box-szg_border-box"
@@ -157,11 +157,11 @@ exports[`renders correctly 1`] = `
               </span>
             </div>
             <div
-              class="css-ber32g ub-box-szg_border-box ub-flx_none ub-dspl_flex ub-algn-itms_center ub-flx-srnk_0 ub-ovflw-x_hidden ub-ovflw-y_hidden ub-pl_12px ub-pr_12px ub-w_48px"
+              class="ub-otln_iu2jf4_1849h0v ub-bg_2u3whs_1849h0v ub-bs_iarjze_1849h0v ub-box-szg_border-box ub-flx_none ub-dspl_flex ub-algn-itms_center ub-flx-srnk_0 ub-ovflw-x_hidden ub-ovflw-y_hidden ub-pl_12px ub-pr_12px ub-w_48px"
             >
               <button
                 aria-haspopup="true"
-                class="css-1tyjqqv ub-pst_relative ub-f-wght_400 ub-dspl_inline-flex ub-algn-itms_center ub-flx-wrap_nowrap ub-just-cnt_center ub-txt-deco_none ub-ver-algn_middle ub-b-btm_1px-solid-transparent ub-b-lft_1px-solid-transparent ub-b-rgt_1px-solid-transparent ub-b-top_1px-solid-transparent ub-otln_iu2jf4 ub-usr-slct_none ub-crsr_pointer ub-wht-spc_nowrap ub-fnt-fam_b77syt ub-bblr_4px ub-bbrr_4px ub-btlr_4px ub-btrr_4px ub-color_474d66 ub-tstn_n1akt6 ub-h_24px ub-min-w_24px ub-fnt-sze_12px ub-ln-ht_16px ub-pl_0px ub-pr_0px ub-bg-clr_transparent ub-flx_none ub-w_24px ub-ltr-spc_0 ub-box-szg_border-box"
+                class="ub-pst_relative ub-f-wght_400 ub-dspl_inline-flex ub-algn-itms_center ub-flx-wrap_nowrap ub-just-cnt_center ub-txt-deco_none ub-ver-algn_middle ub-b-btm_1px-solid-transparent ub-b-lft_1px-solid-transparent ub-b-rgt_1px-solid-transparent ub-b-top_1px-solid-transparent ub-otln_iu2jf4 ub-usr-slct_none ub-crsr_pointer ub-wht-spc_nowrap ub-fnt-fam_b77syt ub-bblr_4px ub-bbrr_4px ub-btlr_4px ub-btrr_4px ub-color_474d66 ub-tstn_n1akt6 ub-h_24px ub-min-w_24px ub-fnt-sze_12px ub-ln-ht_16px ub-pl_0px ub-pr_0px ub-bg-clr_transparent ub-bs_13po50p_xpy5ci ub-crsr_not-allowed_yzzm16 ub-ptr-evts_none_yzzm16 ub-color_c1c4d6_yzzm16 ub-opct_0-6_yzzm16 ub-bg-clr_F4F5F9_vmhk7m ub-bg-clr_edeff5_hxa9p6 ub-flx_none ub-w_24px ub-ltr-spc_0 ub-box-szg_border-box"
                 data-testid="more-button"
                 role="button"
               >
@@ -183,11 +183,11 @@ exports[`renders correctly 1`] = `
             </div>
           </div>
           <div
-            class="css-15su02r ub-b-btm_1px-solid-edeff5 ub-h_64px ub-dspl_flex ub-otln_iu2jf4 ub-txt-deco_none ub-bg-clr_white ub-box-szg_border-box"
+            class="ub-b-btm_1px-solid-edeff5 ub-b-btm_none_1e6nxnc ub-bblr_4px_1e6nxnc ub-bbrr_4px_1e6nxnc ub-crsr_pointer_1mw91nf ub-bg-clr_F9FAFC_ths97z ub-bg-clr_F9FAFC_ofcquw ub-bg-clr_F3F6FF_1cxkzxs ub-bg-clr_F3F6FF_tayb1d ub-h_64px ub-dspl_flex ub-otln_iu2jf4 ub-txt-deco_none ub-bg-clr_white ub-box-szg_border-box"
             style="position: absolute; top: 96px; left: 0px; width: 100%; height: 48px;"
           >
             <div
-              class="css-ber32g ub-box-szg_border-box ub-flx_1 ub-dspl_flex ub-algn-itms_center ub-flx-srnk_0 ub-ovflw-x_hidden ub-ovflw-y_hidden ub-pl_12px ub-pr_12px"
+              class="ub-otln_iu2jf4_1849h0v ub-bg_2u3whs_1849h0v ub-bs_iarjze_1849h0v ub-box-szg_border-box ub-flx_1 ub-dspl_flex ub-algn-itms_center ub-flx-srnk_0 ub-ovflw-x_hidden ub-ovflw-y_hidden ub-pl_12px ub-pr_12px"
             >
               <span
                 class="ub-fnt-sze_12px ub-f-wght_500 ub-ln-ht_16px ub-ltr-spc_0 ub-fnt-fam_b77syt ub-color_474d66 ub-ml_8px ub-box-szg_border-box"
@@ -197,11 +197,11 @@ exports[`renders correctly 1`] = `
               </span>
             </div>
             <div
-              class="css-ber32g ub-box-szg_border-box ub-flx_none ub-dspl_flex ub-algn-itms_center ub-flx-srnk_0 ub-ovflw-x_hidden ub-ovflw-y_hidden ub-pl_12px ub-pr_12px ub-w_48px"
+              class="ub-otln_iu2jf4_1849h0v ub-bg_2u3whs_1849h0v ub-bs_iarjze_1849h0v ub-box-szg_border-box ub-flx_none ub-dspl_flex ub-algn-itms_center ub-flx-srnk_0 ub-ovflw-x_hidden ub-ovflw-y_hidden ub-pl_12px ub-pr_12px ub-w_48px"
             >
               <button
                 aria-haspopup="true"
-                class="css-1tyjqqv ub-pst_relative ub-f-wght_400 ub-dspl_inline-flex ub-algn-itms_center ub-flx-wrap_nowrap ub-just-cnt_center ub-txt-deco_none ub-ver-algn_middle ub-b-btm_1px-solid-transparent ub-b-lft_1px-solid-transparent ub-b-rgt_1px-solid-transparent ub-b-top_1px-solid-transparent ub-otln_iu2jf4 ub-usr-slct_none ub-crsr_pointer ub-wht-spc_nowrap ub-fnt-fam_b77syt ub-bblr_4px ub-bbrr_4px ub-btlr_4px ub-btrr_4px ub-color_474d66 ub-tstn_n1akt6 ub-h_24px ub-min-w_24px ub-fnt-sze_12px ub-ln-ht_16px ub-pl_0px ub-pr_0px ub-bg-clr_transparent ub-flx_none ub-w_24px ub-ltr-spc_0 ub-box-szg_border-box"
+                class="ub-pst_relative ub-f-wght_400 ub-dspl_inline-flex ub-algn-itms_center ub-flx-wrap_nowrap ub-just-cnt_center ub-txt-deco_none ub-ver-algn_middle ub-b-btm_1px-solid-transparent ub-b-lft_1px-solid-transparent ub-b-rgt_1px-solid-transparent ub-b-top_1px-solid-transparent ub-otln_iu2jf4 ub-usr-slct_none ub-crsr_pointer ub-wht-spc_nowrap ub-fnt-fam_b77syt ub-bblr_4px ub-bbrr_4px ub-btlr_4px ub-btrr_4px ub-color_474d66 ub-tstn_n1akt6 ub-h_24px ub-min-w_24px ub-fnt-sze_12px ub-ln-ht_16px ub-pl_0px ub-pr_0px ub-bg-clr_transparent ub-bs_13po50p_xpy5ci ub-crsr_not-allowed_yzzm16 ub-ptr-evts_none_yzzm16 ub-color_c1c4d6_yzzm16 ub-opct_0-6_yzzm16 ub-bg-clr_F4F5F9_vmhk7m ub-bg-clr_edeff5_hxa9p6 ub-flx_none ub-w_24px ub-ltr-spc_0 ub-box-szg_border-box"
                 data-testid="more-button"
                 role="button"
               >
@@ -237,7 +237,7 @@ exports[`renders correctly 1`] = `
       >
         <input
           aria-invalid="false"
-          class="css-12rdf6g ub-w_100prcnt ub-fnt-fam_b77syt ub-b-btm_1px-solid-transparent ub-b-lft_1px-solid-transparent ub-b-rgt_1px-solid-transparent ub-b-top_1px-solid-transparent ub-otln_iu2jf4 ub-txt-deco_none ub-bblr_4px ub-bbrr_0px ub-btlr_4px ub-btrr_0px ub-ln-ht_16px ub-fnt-sze_12px ub-color_474d66 ub-pl_12px ub-pr_12px ub-tstn_n1akt6 ub-h_32px ub-bg-clr_white ub-b-btm-clr_d8dae5 ub-b-lft-clr_d8dae5 ub-b-rgt-clr_d8dae5 ub-b-top-clr_d8dae5 ub-box-szg_border-box"
+          class="ub-w_100prcnt ub-fnt-fam_b77syt ub-otln_iu2jf4 ub-txt-deco_none ub-b-btm-clr_d8dae5 ub-b-lft-clr_d8dae5 ub-b-rgt-clr_d8dae5 ub-b-top-clr_d8dae5 ub-bblr_4px ub-bbrr_0px ub-btlr_4px ub-btrr_0px ub-b-btm-stl_solid ub-b-lft-stl_solid ub-b-rgt-stl_solid ub-b-top-stl_solid ub-b-btm-wdt_1px ub-b-lft-wdt_1px ub-b-rgt-wdt_1px ub-b-top-wdt_1px ub-color_474d66 ub-fnt-sze_12px ub-ln-ht_16px ub-pl_12px ub-pr_12px ub-tstn_n1akt6 ub-h_32px ub-bg-clr_white ub-color_8f95b2_1b2gqua ub-crsr_not-allowed_10nxvc1 ub-bg-clr_F4F5F9_10nxvc1 ub-color_696f8c_10nxvc1 ub-z-idx_2_1bcl2f4 ub-bs_13po50p_1bcl2f4 ub-b-btm-clr_ADC2FF_1bcl2f4 ub-b-lft-clr_ADC2FF_1bcl2f4 ub-b-rgt-clr_ADC2FF_1bcl2f4 ub-b-top-clr_ADC2FF_1bcl2f4 ub-b-btm-clr_D14343_fpx4do ub-b-lft-clr_D14343_fpx4do ub-b-rgt-clr_D14343_fpx4do ub-b-top-clr_D14343_fpx4do ub-box-szg_border-box"
           placeholder="keywordExample"
           required=""
           spellcheck="true"
@@ -249,7 +249,7 @@ exports[`renders correctly 1`] = `
         class="ub-dspl_flex ub-algn-itms_center ub-ml_-1px ub-box-szg_border-box"
       >
         <button
-          class="css-elp417 ub-pst_relative ub-f-wght_500 ub-dspl_inline-flex ub-algn-itms_center ub-flx-wrap_nowrap ub-just-cnt_center ub-txt-deco_none ub-ver-algn_middle ub-b-btm_1px-solid-transparent ub-b-lft_1px-solid-transparent ub-b-rgt_1px-solid-transparent ub-b-top_1px-solid-transparent ub-otln_iu2jf4 ub-usr-slct_none ub-crsr_pointer ub-wht-spc_nowrap ub-fnt-fam_b77syt ub-bblr_0px ub-bbrr_4px ub-btlr_0px ub-btrr_4px ub-color_white ub-tstn_n1akt6 ub-h_32px ub-min-w_32px ub-fnt-sze_12px ub-ln-ht_32px ub-pl_16px ub-pr_16px ub-bg-clr_3366FF ub-b-btm-clr_3366FF ub-b-lft-clr_3366FF ub-b-rgt-clr_3366FF ub-b-top-clr_3366FF ub-box-szg_border-box"
+          class="ub-pst_relative ub-f-wght_500 ub-dspl_inline-flex ub-algn-itms_center ub-flx-wrap_nowrap ub-just-cnt_center ub-txt-deco_none ub-ver-algn_middle ub-b-btm_1px-solid-transparent ub-b-lft_1px-solid-transparent ub-b-rgt_1px-solid-transparent ub-b-top_1px-solid-transparent ub-otln_iu2jf4 ub-usr-slct_none ub-crsr_pointer ub-wht-spc_nowrap ub-fnt-fam_b77syt ub-bblr_0px ub-bbrr_4px ub-btlr_0px ub-btrr_4px ub-color_white ub-tstn_n1akt6 ub-h_32px ub-min-w_32px ub-fnt-sze_12px ub-ln-ht_32px ub-pl_16px ub-pr_16px ub-bg-clr_3366FF ub-b-btm-clr_3366FF ub-b-lft-clr_3366FF ub-b-rgt-clr_3366FF ub-b-top-clr_3366FF ub-bs_13po50p_xpy5ci ub-bg-clr_3366FF_xpy5ci ub-b-btm-clr_3366FF_xpy5ci ub-b-lft-clr_3366FF_xpy5ci ub-b-rgt-clr_3366FF_xpy5ci ub-b-top-clr_3366FF_xpy5ci ub-crsr_not-allowed_yzzm16 ub-ptr-evts_none_yzzm16 ub-bg-clr_D6E0FF_yzzm16 ub-b-btm-clr_D6E0FF_yzzm16 ub-b-lft-clr_D6E0FF_yzzm16 ub-b-rgt-clr_D6E0FF_yzzm16 ub-b-top-clr_D6E0FF_yzzm16 ub-bg-clr_2952CC_vmhk7m ub-b-btm-clr_2952CC_vmhk7m ub-b-lft-clr_2952CC_vmhk7m ub-b-rgt-clr_2952CC_vmhk7m ub-b-top-clr_2952CC_vmhk7m ub-bg-clr_1F3D99_hxa9p6 ub-b-btm-clr_1F3D99_hxa9p6 ub-b-lft-clr_1F3D99_hxa9p6 ub-b-rgt-clr_1F3D99_hxa9p6 ub-b-top-clr_1F3D99_hxa9p6 ub-box-szg_border-box"
         >
           add
         </button>

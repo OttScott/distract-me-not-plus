@@ -94,17 +94,17 @@ jobs:
                   - [ ] Fix the underlying issue
                   - [ ] Verify the fix by re-running the workflow
                   - [ ] Close this issue once resolved
-                
-                ### Quick Links
-                - [View workflow run](${workflowUrl})
-                - [CI/CD Documentation](./CI-CD-DOCUMENTATION.md)
-                - [Troubleshooting Guide](./CI-CD-DOCUMENTATION.md#-troubleshooting)`,
-                labels: ['ci/cd', 'automated', 'critical-failure', 'priority:high']
-              });
-              console.log('✅ Critical failure issue created successfully');
-            } else {
-              console.log('ℹ️ Issue already exists for this workflow failure');
-            }
+                  
+                  ### Quick Links
+                  - [View workflow run](${workflowUrl})
+                  - [CI/CD Documentation](./CI-CD-DOCUMENTATION.md)
+                  - [Troubleshooting Guide](./CI-CD-DOCUMENTATION.md#-troubleshooting)`,
+                  labels: ['ci/cd', 'automated', 'critical-failure', 'priority:high']
+                });
+                console.log('✅ Critical failure issue created successfully');
+              } else {
+                console.log('ℹ️ Issue already exists for this workflow failure');
+              }
             } catch (error) {
               // Handle case where issues are disabled or other GitHub API errors
               if (error.status === 410) {
@@ -112,7 +112,8 @@ jobs:
                 console.log(`Pipeline failure details: ${workflowName} on ${branch} - ${workflowUrl}`);
               } else {
                 console.error('❌ Failed to create issue:', error.message);
-                throw error;
+                // Don't re-throw the error to prevent workflow failure
+                console.log('⚠️ Continuing without issue creation');
               }
             }
 

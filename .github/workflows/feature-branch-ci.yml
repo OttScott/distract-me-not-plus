@@ -7,6 +7,7 @@ on:
       - 'fix/*'
       - 'hotfix/*'
       - 'chore/*'
+      - Features
       - develop
       - cicd-pipeline
   pull_request:

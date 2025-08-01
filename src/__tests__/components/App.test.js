@@ -2,9 +2,9 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import App from 'App';
 
-it('renders nothing when accessAllowed prop is not defined', () => {
+it('renders router structure when accessAllowed prop is not defined', () => {
   const { container } = render(<App />);
-  expect(container).toBeEmptyDOMElement();
+  expect(container.querySelector('.page')).toBeInTheDocument();
 });
 
 it('renders appName header when access is allowed', () => {

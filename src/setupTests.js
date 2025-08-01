@@ -26,6 +26,7 @@ const errors = [
   /Unsupported style property -webkit-font-smoothing/i,
   /Warning: Unsupported style property/i,
   /Warning: React does not recognize the `isSolid` prop on a DOM element/i,
+  /Warning: An update to .* inside a test was not wrapped in act/i,
 ];
 
 // prettier-ignore

@@ -6,7 +6,7 @@ rules:
         __html: DOMPurify.sanitize($HTML, ...)
       }}
     message: "Safe usage of dangerouslySetInnerHTML with DOMPurify sanitization"
-    languages: [javascript, jsx, typescript, tsx]
+    languages: [javascript, typescript]
     severity: INFO
     
   # Allow dangerouslySetInnerHTML when the variable contains "sanitized"
@@ -16,7 +16,7 @@ rules:
         __html: $SANITIZED_VAR
       }}
     message: "Potentially safe usage of dangerouslySetInnerHTML - verify sanitization"
-    languages: [javascript, jsx, typescript, tsx]
+    languages: [javascript, typescript]
     severity: INFO
     metavariable-regex:
       metavariable: $SANITIZED_VAR

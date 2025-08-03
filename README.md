@@ -82,6 +82,18 @@ This extension can be built for different browsers with specific adaptations for
 - Chrome: `npm run build:chrome`
 - Edge: `npm run build:edge`
 
+#### Local Development Builds
+
+For local development and testing, you can use these enhanced commands that automatically copy the generated zip files to your Z:\ drive (local development only - CI builds are not affected):
+
+- **Edge (with local copy)**: `npm run build:edge:local`
+- **Package Edge only (with local copy)**: `npm run package:edge:local`
+
+These commands will:
+1. Build and package the extension for Edge
+2. Automatically copy the generated zip file to Z:\ drive (if accessible)
+3. Only run the copy step when building locally (skips in CI/CD)
+
 #### Browser-specific build notes
 
 - **Chrome** builds require special handling of external libraries due to Content Security Policy restrictions. The build process:

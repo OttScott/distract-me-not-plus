@@ -142,7 +142,7 @@ it('accepts only passwords that contains at least 8 characters', async () => {
   await waitFor(() => {
     expect(container.querySelector('input[type="password"]')).not.toBeNull();
   });
-  
+
   const passwordInput = container.querySelector('input[type="password"]');
   const saveButton = screen.getByRole('button', { name: 'save' });
 

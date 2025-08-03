@@ -9,9 +9,7 @@ it('renders correctly', () => {
 
 it('handles value change', () => {
   const handleChange = jest.fn();
-  render(
-    <TimeField label="time" value="12:00" onChange={handleChange} />,
-  );
+  render(<TimeField label="time" value="12:00" onChange={handleChange} />);
   const input = screen.getByDisplayValue('12:00');
   fireEvent.change(input, { target: { value: '13:00' } });
   expect(handleChange).toHaveBeenCalledTimes(1);

@@ -14,9 +14,7 @@ it('renders correctly', () => {
 
 it('handles value change', () => {
   const handleChange = jest.fn();
-  render(
-    <PasswordField value={password.value} onChange={handleChange} />,
-  );
+  render(<PasswordField value={password.value} onChange={handleChange} />);
   const passwordInput = screen.getByDisplayValue(password.value);
   expect(passwordInput.value).toBe(password.value);
   fireEvent.change(passwordInput, {

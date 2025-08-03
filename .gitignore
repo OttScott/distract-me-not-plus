@@ -30,3 +30,24 @@ screenshots/edge/*
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Temporary and development files
+temp-*.js
+test-report.xml
+eslint-results.sarif
+*.log
+
+# Build snapshots (keep only in snapshots/ directory)
+*.zip
+!snapshots/*.zip
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.temp
+
+# IDE and editor files
+.vscode/settings.json
+.idea/
+

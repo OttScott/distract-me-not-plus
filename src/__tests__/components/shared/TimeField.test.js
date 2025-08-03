@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react';
+import { render, fireEvent, screen } from '@testing-library/react';
 import { TimeField } from 'components';
 
 it('renders correctly', () => {
@@ -9,10 +9,10 @@ it('renders correctly', () => {
 
 it('handles value change', () => {
   const handleChange = jest.fn();
-  const { container } = render(
+  render(
     <TimeField label="time" value="12:00" onChange={handleChange} />,
   );
-  const input = container.querySelector('input[type="time"]');
+  const input = screen.getByDisplayValue('12:00');
   fireEvent.change(input, { target: { value: '13:00' } });
   expect(handleChange).toHaveBeenCalledTimes(1);
 });

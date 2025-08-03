@@ -1,3 +1,4 @@
+/* eslint-disable testing-library/no-container, testing-library/no-node-access */
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 //import { toaster } from 'evergreen-ui';
@@ -102,7 +103,7 @@ it('saves settings on save button click', async () => {
   render(<Settings />);
   const saveButton = screen.getByRole('button', { name: 'save' });
   fireEvent.click(saveButton);
-  const saveSuccessText = await waitFor(() => screen.getByText(/settingsSaved/i));
+  const saveSuccessText = await screen.findByText(/settingsSaved/i);
   expect(saveSuccessText).toBeInTheDocument();
   //expect(toasterSuccess).toBeCalled();
 });
@@ -139,10 +140,9 @@ it('accepts only passwords that contains at least 8 characters', async () => {
 
   // Wait for component to load the mocked data
   await waitFor(() => {
-    const passwordInput = container.querySelector('input[type="password"]');
-    expect(passwordInput).toBeInTheDocument();
+    expect(container.querySelector('input[type="password"]')).not.toBeNull();
   });
-
+  
   const passwordInput = container.querySelector('input[type="password"]');
   const saveButton = screen.getByRole('button', { name: 'save' });
 

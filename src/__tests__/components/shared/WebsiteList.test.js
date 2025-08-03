@@ -1,3 +1,4 @@
+/* eslint-disable testing-library/no-container, testing-library/no-node-access, testing-library/prefer-find-by */
 import React from 'react';
 import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
 import { defaultBlacklist } from 'helpers/block';

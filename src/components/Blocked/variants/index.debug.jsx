@@ -6,7 +6,7 @@ import { isDevEnv } from 'helpers/debug';
 import { getValidUrl } from 'helpers/url';
 import { isPageReloaded } from 'helpers/block';
 import copy from 'copy-to-clipboard';
-import './styles.scss';
+import '../styles.scss';
 
 export class Blocked extends Component {
   constructor(props) {

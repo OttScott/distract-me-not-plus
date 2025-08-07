@@ -1,6 +1,6 @@
 {
   "name": "distract-me-not",
-  "version": "3.1.1",
+  "version": "3.1.2",
   "private": true,
   "dependencies": {
     "@babel/core": "^7.16.0",
@@ -31,6 +31,7 @@
     "build:chrome": "node scripts/build-with-legacy-support.js && node scripts/generate-chrome-service-worker.js && node scripts/prepare-chrome-build.js && node scripts/fix-service-worker-syntax.js",
     "postbuild:chrome": "node -e \"const fs = require('fs'); if (fs.existsSync('./build/manifest.firefox.json')) fs.unlinkSync('./build/manifest.firefox.json')\"",
     "build:edge": "npm run build",
+    "build:edge:local": "npm run build:edge && npm run package:edge:local",
     "build:watch": "nodemon --watch src --watch src/components --exec npm run build",
     "postbuild:firefox": "node -e \"const fs = require('fs'); if (fs.existsSync('./build/manifest.firefox.json')) { fs.renameSync('./build/manifest.firefox.json', './build/manifest.json'); }\"",
     "postbuild:edge": "npm run postbuild:chrome",
@@ -38,6 +39,7 @@
     "package:firefox": "npm run package -- --filename={name}-{version}-firefox.zip",
     "package:chrome": "npm run package -- --filename={name}-{version}-chrome.zip",
     "package:edge": "npm run package -- --filename={name}-{version}-edge.zip",
+    "package:edge:local": "npm run package:edge && node scripts/copy-edge-local.js",
     "package:all": "npm run postbuild:firefox && npm run package:firefox && npm run postbuild:chrome && npm run package:chrome && npm run package:edge",
     "package:source": "zip -r -FS distract_me_not-source.zip * .env.development .env.test -x build\\* node_modules\\* old\\* old-src\\* web-ext-artifacts\\* screenshots\\* *.zip",
     "prepare-release": "node scripts/prepare-release.js",

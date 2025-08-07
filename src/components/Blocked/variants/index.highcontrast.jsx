@@ -3,10 +3,9 @@ import { toaster, DuplicateIcon } from 'evergreen-ui';
 import { translate } from 'helpers/i18n';
 import { storage, sendMessage } from 'helpers/webext';
 import { isDevEnv } from 'helpers/debug';
-import { getValidUrl } from 'helpers/url';
 import { isPageReloaded } from 'helpers/block';
 import copy from 'copy-to-clipboard';
-import './styles.scss';
+import '../styles.scss';
 
 export class Blocked extends Component {
   constructor(props) {
@@ -51,17 +50,17 @@ export class Blocked extends Component {
     if (reasonMatch && reasonMatch[1]) {
       try {
         finalReason = decodeURIComponent(reasonMatch[1]);
-        // Update terminology from Blacklist to Deny List
-        finalReason = finalReason.replace(/Blacklist/g, 'Deny List');
-        finalReason = finalReason.replace(/blacklist/g, 'deny list');
-        console.log(
-          '[Blocked] Extracted reason (after terminology update):',
-          finalReason,
-        );
+        console.log('[Blocked] Extracted reason:', finalReason);
       } catch (e) {
         console.error('[Blocked] Error decoding reason:', e);
       }
     }
+
+    // Force high-contrast dummy reason for testing if we didn't find one
+    // Comment this out for production, or leave for testing
+    // if (finalReason === 'REASON_NOT_FOUND') {
+    //   finalReason = 'TEST REASON: Pattern match *.reddit.com';
+    // }
 
     this.setState({
       url: finalUrl,
@@ -123,47 +122,6 @@ export class Blocked extends Component {
     }
   };
 
-  // Format the reason text to distinguish between pattern match and direct denial
-  formatReasonText = (reasonText) => {
-    if (
-      !reasonText ||
-      reasonText === 'INITIALIZING' ||
-      reasonText === 'REASON_NOT_FOUND'
-    ) {
-      return translate('noSpecificReason');
-    }
-
-    // Check if it's a pattern match
-    if (reasonText.includes('pattern:')) {
-      // It's a pattern match
-      const parts = reasonText.split('pattern:');
-      if (parts.length >= 2) {
-        return (
-          <>
-            <span style={{ color: '#d0d0d0' }}>{translate('denyListPattern')}:</span>
-            <span style={{ color: '#db9d61', fontWeight: 'bold', marginLeft: '3px' }}>
-              {parts[1].trim()}
-            </span>
-          </>
-        );
-      }
-    }
-    // Check if it's a direct URL match
-    else if (reasonText.includes('://')) {
-      return (
-        <>
-          <span style={{ color: '#d0d0d0' }}>{translate('deniedSite')}:</span>
-          <span style={{ color: '#db9d61', fontWeight: 'bold', marginLeft: '3px' }}>
-            {reasonText}
-          </span>
-        </>
-      );
-    }
-
-    // Default case - just show the reason as is
-    return reasonText;
-  };
-
   render() {
     console.log('[Blocked] Render - State:', this.state);
 
@@ -194,30 +152,40 @@ export class Blocked extends Component {
 
               <div className="distract-cursor distract-select distract-overlay-img"></div>
 
-              {/* Subtle block reason display */}
+              {/* High-contrast block reason display */}
               <div
                 style={{
                   margin: '20px auto 0',
-                  padding: '12px',
-                  backgroundColor: 'transparent',
-                  color: '#d0d0d0',
+                  padding: '15px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                  border: '2px solid #ff9800',
+                  borderRadius: '5px',
+                  boxShadow: '0 2px 10px rgba(0, 0, 0, 0.3)',
+                  color: 'white',
                   fontFamily: 'OpenSansFont, Arial, sans-serif',
-                  fontSize: '15px',
+                  fontSize: '16px',
                   maxWidth: '80%',
                   textAlign: 'center',
                 }}
               >
                 <div
-                  style={{ marginBottom: '5px', color: '#d0d0d0', fontWeight: 'normal' }}
+                  style={{ marginBottom: '8px', color: '#ff9800', fontWeight: 'bold' }}
                 >
                   {translate('blockedDueTo')}:
                 </div>
                 <div
                   style={{
+                    color: '#ffffff',
+                    fontWeight: 'bold',
                     wordBreak: 'break-word',
+                    textShadow: '1px 1px 2px rgba(0,0,0,0.7)',
                   }}
                 >
-                  {this.formatReasonText(this.state.reason)}
+                  {this.state.reason &&
+                  this.state.reason !== 'INITIALIZING' &&
+                  this.state.reason !== 'REASON_NOT_FOUND'
+                    ? this.state.reason
+                    : translate('noSpecificReason')}
                 </div>
               </div>
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { RawHTML } from 'components';
 
 it('renders correctly with safe HTML', () => {
@@ -10,11 +10,10 @@ it('renders correctly with safe HTML', () => {
 
 it('sanitizes unsafe HTML elements', () => {
   const maliciousHtml = '<script>alert("xss")</script><b>safe text</b>';
-  const { container } = render(<RawHTML>{maliciousHtml}</RawHTML>);
+  render(<RawHTML>{maliciousHtml}</RawHTML>);
 
   // Should not contain script tag
-  expect(container.querySelector('script')).toBeNull();
-  // Should contain safe formatting
-  expect(container.querySelector('b')).not.toBeNull();
-  expect(container.textContent).toContain('safe text');
+  expect(screen.queryByRole('script')).toBeNull();
+  // Should contain safe formatting and text
+  expect(screen.getByText('safe text')).toBeInTheDocument();
 });

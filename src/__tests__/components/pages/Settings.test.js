@@ -1,3 +1,4 @@
+/* eslint-disable testing-library/no-container, testing-library/no-node-access */
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 //import { toaster } from 'evergreen-ui';
@@ -102,7 +103,7 @@ it('saves settings on save button click', async () => {
   render(<Settings />);
   const saveButton = screen.getByRole('button', { name: 'save' });
   fireEvent.click(saveButton);
-  const saveSuccessText = await waitFor(() => screen.getByText(/settingsSaved/i));
+  const saveSuccessText = await screen.findByText(/settingsSaved/i);
   expect(saveSuccessText).toBeInTheDocument();
   //expect(toasterSuccess).toBeCalled();
 });
@@ -135,15 +136,19 @@ it('accepts only passwords that contains at least 8 characters', async () => {
   toaster.danger = mockToasterDanger;
 
   // render our component
-  const { container } = render(<Settings enablePassword={true} />);
+  render(<Settings enablePassword={true} />);
 
   // Wait for component to load the mocked data
+  let passwordInput;
   await waitFor(() => {
-    const passwordInput = container.querySelector('input[type="password"]');
+    const allInputs = screen.getAllByDisplayValue('');
+    passwordInput = allInputs.find((input) => input.type === 'password');
     expect(passwordInput).toBeInTheDocument();
   });
 
-  const passwordInput = container.querySelector('input[type="password"]');
+  passwordInput = screen
+    .getAllByDisplayValue('')
+    .find((input) => input.type === 'password');
   const saveButton = screen.getByRole('button', { name: 'save' });
 
   // test passwords containing less than 8 characters

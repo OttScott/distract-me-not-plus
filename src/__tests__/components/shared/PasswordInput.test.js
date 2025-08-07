@@ -14,10 +14,8 @@ it('renders correctly', () => {
 
 it('handles value change', () => {
   const handleChange = jest.fn();
-  const { container } = render(
-    <PasswordInput value={password.value} onChange={handleChange} />,
-  );
-  const passwordInput = container.querySelector('input[type="password"]');
+  render(<PasswordInput value={password.value} onChange={handleChange} />);
+  const passwordInput = screen.getByDisplayValue(password.value);
   expect(passwordInput.value).toBe(password.value);
   fireEvent.change(passwordInput, {
     target: { value: password.replacement },
@@ -27,8 +25,8 @@ it('handles value change', () => {
 });
 
 it('toggles password visibility', () => {
-  const { container } = render(<PasswordInput value={password.value} />);
-  const passwordInput = container.querySelector('input[type="password"]');
+  render(<PasswordInput value={password.value} />);
+  const passwordInput = screen.getByDisplayValue(password.value);
   expect(passwordInput.getAttribute('type')).toBe('password');
   const toggleButton = screen.getByRole('button', {
     selector: '.password-toggle',

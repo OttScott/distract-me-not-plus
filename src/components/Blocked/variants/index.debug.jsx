@@ -1,12 +1,12 @@
 import React, { Component, Fragment } from 'react';
-import { Pane, toaster, DuplicateIcon } from 'evergreen-ui';
+import { toaster, DuplicateIcon } from 'evergreen-ui';
 import { translate } from 'helpers/i18n';
 import { storage, sendMessage } from 'helpers/webext';
-import { debug, isDevEnv } from 'helpers/debug';
+import { isDevEnv } from 'helpers/debug';
 import { getValidUrl } from 'helpers/url';
 import { isPageReloaded } from 'helpers/block';
 import copy from 'copy-to-clipboard';
-import './styles.scss';
+import '../styles.scss';
 
 export class Blocked extends Component {
   constructor(props) {

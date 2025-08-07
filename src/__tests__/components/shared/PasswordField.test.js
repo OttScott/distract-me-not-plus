@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react';
+import { render, fireEvent, screen } from '@testing-library/react';
 import { PasswordField } from 'components';
 
 const password = {
@@ -14,10 +14,8 @@ it('renders correctly', () => {
 
 it('handles value change', () => {
   const handleChange = jest.fn();
-  const { container } = render(
-    <PasswordField value={password.value} onChange={handleChange} />,
-  );
-  const passwordInput = container.querySelector('input[type="password"]');
+  render(<PasswordField value={password.value} onChange={handleChange} />);
+  const passwordInput = screen.getByDisplayValue(password.value);
   expect(passwordInput.value).toBe(password.value);
   fireEvent.change(passwordInput, {
     target: { value: password.replacement },

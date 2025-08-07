@@ -136,14 +136,19 @@ it('accepts only passwords that contains at least 8 characters', async () => {
   toaster.danger = mockToasterDanger;
 
   // render our component
-  const { container } = render(<Settings enablePassword={true} />);
+  render(<Settings enablePassword={true} />);
 
   // Wait for component to load the mocked data
+  let passwordInput;
   await waitFor(() => {
-    expect(container.querySelector('input[type="password"]')).not.toBeNull();
+    const allInputs = screen.getAllByDisplayValue('');
+    passwordInput = allInputs.find((input) => input.type === 'password');
+    expect(passwordInput).toBeInTheDocument();
   });
 
-  const passwordInput = container.querySelector('input[type="password"]');
+  passwordInput = screen
+    .getAllByDisplayValue('')
+    .find((input) => input.type === 'password');
   const saveButton = screen.getByRole('button', { name: 'save' });
 
   // test passwords containing less than 8 characters

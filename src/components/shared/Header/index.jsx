@@ -21,7 +21,7 @@ export function Header(props) {
         className="cursor-default"
         color="#333"
       >
-        {translate('appName') || 'Distract Me Not'}
+        {translate('appName') || 'Distract Me Not Plus'}
       </Heading>
     </Pane>
   );

@@ -1,6 +1,6 @@
 # 🚀 Release Process Guide
 
-This guide covers how to create releases for the Distract Me Not browser extension.
+This guide covers how to create releases for the Distract Me Not Plus browser extension.
 
 ## 🎯 What Gets Updated Automatically
 

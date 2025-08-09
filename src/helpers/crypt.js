@@ -1,5 +1,5 @@
 /* global dcodeIO */
-// Cryptographic utilities for Distract Me Not extension
+// Cryptographic utilities for Distract Me Not Plus extension
 // Enhanced from: https://github.com/OttScott/distract-me-not/issues/20#issuecomment-774486659
 // import bcrypt from 'bcryptjs'; // @see https://github.com/dcodeIO/bcrypt.js/issues/70
 const bcrypt = dcodeIO.bcrypt;

@@ -70,7 +70,7 @@ const chrome = {
     id: 'test-extension-id',
     getManifest: jest.fn(() => ({
       version: '3.0.0',
-      name: 'Distract Me Not Test',
+      name: 'Distract Me Not Plus Test',
     })),
     sendMessage: jest.fn((message, callback) => {
       if (callback) callback({ success: true });
@@ -140,7 +140,7 @@ const chrome = {
     getMessage: jest.fn((messageName, substitutions) => {
       // Mock implementation for i18n messages
       const messages = {
-        appName: 'Distract Me Not',
+        appName: 'Distract Me Not Plus',
         status: 'Status',
         mode: 'Mode',
         blacklist: 'denyList',

@@ -1,6 +1,6 @@
 # Sync Diagnostics and Testing Guide
 
-This guide explains how to use the comprehensive sync diagnostics and testing features added to Distract Me Not.
+This guide explains how to use the comprehensive sync diagnostics and testing features added to Distract Me Not Plus.
 
 ## Overview
 
@@ -16,7 +16,7 @@ The extension now includes robust sync diagnostics to help identify and resolve 
 
 ### Via Extension Settings
 
-1. Open the Distract Me Not extension settings
+1. Open the Distract Me Not Plus extension settings
 2. Navigate to the **"Diagnostic"** tab
 3. Use the available sync diagnostic tools:
 

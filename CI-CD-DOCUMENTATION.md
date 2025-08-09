@@ -1,6 +1,6 @@
 # CI/CD Pipeline Documentation
 
-This document outlines the comprehensive CI/CD pipeline implemented for the Distract Me Not browser extension.
+This document outlines the comprehensive CI/CD pipeline implemented for the Distract Me Not Plus browser extension.
 
 ## 🚀 Pipeline Overview
 
@@ -228,4 +228,4 @@ The pipeline is designed for continuous improvement:
 
 ---
 
-This CI/CD pipeline ensures the Distract Me Not extension maintains high quality, security, and reliability standards throughout its development lifecycle.
+This CI/CD pipeline ensures the Distract Me Not Plus extension maintains high quality, security, and reliability standards throughout its development lifecycle.

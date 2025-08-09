@@ -1,4 +1,4 @@
-# ![icon](public/icons/magnet-32.png) Distract Me Not <img align="right" src="screenshots/panel.png">
+# ![icon](public/icons/magnet-32.png) Distract Me Not Plus <img align="right" src="screenshots/panel.png">
 
 [![Mozilla Add-on version](https://img.shields.io/amo/v/distract-me-not.svg?logo=mozilla&label=&labelColor=grey)](https://addons.mozilla.org/firefox/addon/distract-me-not/?src=external-github-shield-downloads)
 [![Mozilla Add-on downloads](https://img.shields.io/amo/dw/distract-me-not.svg)](https://addons.mozilla.org/firefox/addon/distract-me-not/?src=external-github-shield-downloads)
@@ -8,7 +8,7 @@
 
 > **Stay focused in a world full of distractions.**
 
-Distract Me Not is a lightweight website blocker with a user friendly interface.
+Distract Me Not Plus is a lightweight website blocker with a user friendly interface.
 
 ## Features
 
@@ -209,4 +209,4 @@ For previous version changes, please check the commit history.
 
 ## License
 
-Distract Me Not is licensed under the [MIT license](LICENSE).
+Distract Me Not Plus is licensed under the [MIT license](LICENSE).

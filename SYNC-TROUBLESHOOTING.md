@@ -18,7 +18,7 @@ Chrome's `storage.sync` API ties data to a specific extension ID and user accoun
 
 1. Go to `chrome://extensions/`
 2. Enable "Developer mode" (toggle in top right)
-3. Find "Distract Me Not" in the extensions list
+3. Find "Distract Me Not Plus" in the extensions list
 4. The ID is shown just beneath the extension name
 
 ## Common Causes of Different Extension IDs

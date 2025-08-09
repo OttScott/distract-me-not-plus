@@ -1,14 +1,18 @@
 {
   "manifest_version": 2,
-
   "browser_specific_settings": {
     "gecko": {
-      "id": "{5f884915-160e-4276-a216-770a753a3abe}",
+      "id": "{ottscott-distract-me-not-c33eef50-2e0a-4cd8-8e09-8569640a6de9@ottscott.dev}",
       "strict_min_version": "58.0"
-    }  },
+    }
+  },
   "name": "__MSG_appName__",
+<<<<<<< HEAD
   "version": "3.1.3",
 
+=======
+  "version": "3.1.2",
+>>>>>>> c234573 (feat: complete extension rebranding from AXeL-dev to OttScott)
   "default_locale": "en",
   "description": "__MSG_appDesc__",
   "icons": {
@@ -18,26 +22,22 @@
     "64": "icons/magnet-64.png",
     "128": "icons/magnet-128.png"
   },
-
-  "web_accessible_resources": ["index.html"],
-
+  "web_accessible_resources": [
+    "index.html"
+  ],
   "browser_action": {
     "default_icon": "icons/magnet-128.png",
     "default_popup": "index.html"
   },
-
   "options_ui": {
     "page": "index.html#settings",
     "open_in_tab": true
   },
-
   "background": {
     "page": "index.html#background"
   },
-
-  "author": "AXeL-dev",
-  "homepage_url": "https://github.com/AXeL-dev/distract-me-not",
-
+  "author": "OttScott",
+  "homepage_url": "https://github.com/OttScott/distract-me-not",
   "permissions": [
     "notifications",
     "activeTab",

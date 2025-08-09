@@ -571,7 +571,7 @@ export class Settings extends Component {
   };
 
   openDonationLink = () => {
-    window.open('https://www.paypal.com/paypalme/axeldev', '_blank');
+    window.open('https://github.com/sponsors/OttScott', '_blank');
   };
 
   openPage = (page) => {

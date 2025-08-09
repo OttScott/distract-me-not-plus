@@ -1,5 +1,6 @@
 /* global dcodeIO */
-// https://github.com/AXeL-dev/distract-me-not/issues/20#issuecomment-774486659
+// Cryptographic utilities for Distract Me Not extension
+// Enhanced from: https://github.com/OttScott/distract-me-not/issues/20#issuecomment-774486659
 // import bcrypt from 'bcryptjs'; // @see https://github.com/dcodeIO/bcrypt.js/issues/70
 import { BCRYPT_SALT_ROUNDS } from './constants';
 

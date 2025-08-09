@@ -228,7 +228,7 @@ jobs:
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
           
           cat > release-notes.md << EOF
-          ## 🚀 Distract Me Not ${VERSION}
+          ## 🚀 Distract Me Not Plus ${VERSION}
           
           ### 📋 What's Changed
           EOF

@@ -31,7 +31,7 @@ export function Header(props) {
         className="cursor-default"
         color="#333"
       >
-        {translate('appName') || 'Distract Me Not'}
+        {translate('appName') || 'Distract Me Not Plus'}
       </Heading>
       <Text size={300} color="muted" marginLeft={8} className="cursor-default">
         v{version}

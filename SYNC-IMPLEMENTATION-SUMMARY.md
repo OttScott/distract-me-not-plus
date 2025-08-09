@@ -2,7 +2,7 @@
 
 ## Overview
 
-This implementation successfully extends the Distract Me Not extension's sync functionality with enhanced error tracking, status monitoring, and comprehensive testing. The changes transform the previous "Diagnose" tab into a more comprehensive "Sync" tab that provides real-time sync status information and error tracking.
+This implementation successfully extends the Distract Me Not Plus extension's sync functionality with enhanced error tracking, status monitoring, and comprehensive testing. The changes transform the previous "Diagnose" tab into a more comprehensive "Sync" tab that provides real-time sync status information and error tracking.
 
 ## Key Changes Implemented
 

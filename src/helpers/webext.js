@@ -170,7 +170,7 @@ export function getTab(tabId) {
 
 export function sendNotification(
   message,
-  title = 'Distract Me Not',
+  title = 'Distract Me Not Plus',
   type = 'basic',
   id = undefined,
 ) {

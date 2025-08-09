@@ -51,3 +51,9 @@ eslint-results.sarif
 .vscode/settings.json
 .idea/
 
+
+
+# Extension private keys (DO NOT COMMIT)
+private-keys/
+*.pem
+EXTENSION-KEYS-README.md

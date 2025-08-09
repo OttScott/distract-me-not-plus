@@ -25,6 +25,8 @@
     "webextension-polyfill": "^0.12.0"
   },
   "scripts": {
+    "generate-keys": "node scripts/generate-extension-keys.js",
+    "rebrand": "npm run generate-keys",
     "start": "node scripts/build-with-legacy-support.js --dev",
     "build": "node scripts/build-with-legacy-support.js && node scripts/ensure-vendor-libs.js",
     "build:firefox": "npm run build",

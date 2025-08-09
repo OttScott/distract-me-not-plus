@@ -560,7 +560,7 @@ export class Settings extends Component {
   };
 
   openDonationLink = () => {
-    window.open('https://www.paypal.com/paypalme/axeldev', '_blank');
+    window.open('https://github.com/sponsors/OttScott', '_blank');
   };
 
   openPage = (page) => {
@@ -2129,13 +2129,13 @@ export class Settings extends Component {
         <div className="text">{translate('appDesc')}</div>
         <a
           className="link"
-          href="https://github.com/AXeL-dev/distract-me-not/releases/latest"
+          href="https://github.com/OttScott/distract-me-not/releases/latest"
           target="_blank"
           rel="noreferrer"
         >{`${translate('version')} ${version}`}</a>
         <a
           className="link"
-          href="https://github.com/AXeL-dev/distract-me-not/blob/master/LICENSE"
+          href="https://github.com/OttScott/distract-me-not/blob/master/LICENSE"
           target="_blank"
           rel="noreferrer"
         >
@@ -2143,7 +2143,7 @@ export class Settings extends Component {
         </a>
         <a
           className="link"
-          href="https://github.com/AXeL-dev/distract-me-not/wiki/FAQ"
+          href="https://github.com/OttScott/distract-me-not/wiki/FAQ"
           target="_blank"
           rel="noreferrer"
         >

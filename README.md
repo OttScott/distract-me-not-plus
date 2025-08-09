@@ -4,7 +4,7 @@
 [![Mozilla Add-on downloads](https://img.shields.io/amo/dw/distract-me-not.svg)](https://addons.mozilla.org/firefox/addon/distract-me-not/?src=external-github-shield-downloads)
 [![Mozilla Add-on users](https://img.shields.io/amo/users/distract-me-not.svg)](https://addons.mozilla.org/firefox/addon/distract-me-not/statistics/)
 [![Mozilla Add-on stars](https://img.shields.io/amo/stars/distract-me-not.svg)](https://addons.mozilla.org/firefox/addon/distract-me-not/reviews/)
-[![Donate](https://img.shields.io/badge/PayPal-grey.svg?style=flat&logo=paypal&labelColor=grey&color=168CC2)](https://www.paypal.me/axeldev)
+[![Donate](https://img.shields.io/badge/GitHub%20Sponsors-grey.svg?style=flat&logo=github&labelColor=grey&color=168CC2)](https://github.com/sponsors/OttScott)
 
 > **Stay focused in a world full of distractions.**
 
@@ -103,9 +103,9 @@ These commands will:
 
 - **Firefox** and **Edge** builds use a simpler approach that also works well across these platforms.
 
-Or download it from [github releases](https://github.com/AXeL-dev/distract-me-not/releases/latest).
+Or download it from [github releases](https://github.com/OttScott/distract-me-not/releases/latest).
 
-[How to install?](https://github.com/AXeL-dev/install-webextension)
+[How to install?](https://github.com/OttScott/install-webextension)
 
 ## Technical
 

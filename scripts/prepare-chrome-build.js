@@ -24,18 +24,31 @@ const path = require('path');
 let cheerio;
 try {
   cheerio = require('cheerio');
-} catch (e) {
-  console.error('Error: cheerio package is required for this script.');
-  console.error('Please install it using: npm install cheerio --save-dev');
-  console.error('Error details:', e.message);
   
-  // If we're in Node.js 16 and cheerio fails, we might need to use a simpler approach
-  if (parseInt(process.version.slice(1)) < 18) {
-    console.log('Detected Node.js < 18, will try simple string replacement instead of cheerio');
-    cheerio = null; // We'll handle this in the updateHtmlFile function
-  } else {
-    process.exit(1);
+  // Test cheerio compatibility with a simple load operation
+  const testHtml = '<div>test</div>';
+  const $ = cheerio.load(testHtml);
+  
+  // Verify essential cheerio methods are available
+  if (!$ || typeof $.html !== 'function') {
+    throw new Error('Cheerio API incompatible - missing required methods');
   }
+  
+  console.log('✅ Cheerio loaded successfully');
+} catch (e) {
+  console.error('❌ Error loading cheerio:', e.message);
+  
+  // Provide better error context
+  if (e.message.includes('Cannot find module')) {
+    console.error('   → Install cheerio: npm install cheerio --save-dev');
+  } else if (e.message.includes('File is not defined') || e.message.includes('Cheerio API incompatible')) {
+    console.error('   → Cheerio version compatibility issue detected');
+    console.error('   → Try: npm install cheerio@latest --save-dev');
+  }
+  
+  // For Node.js 18+, we prefer cheerio but can fall back to string replacement
+  console.log('📝 Falling back to string replacement method');
+  cheerio = null;
 }
 
 // Paths
@@ -136,48 +149,57 @@ function updateHtmlFile() {
       // Use cheerio for robust HTML manipulation
       console.log('Using cheerio for HTML manipulation...');
       
-      // Load HTML into cheerio
-      const $ = cheerio.load(htmlContent);
-      
-      // Remove any existing script tags for these libraries
-      $('script').each(function() {
-        const src = $(this).attr('src');
-        if (
-          src &&
-          (
-            src.includes('browser-polyfill.min.js') ||
-            src.includes('bcrypt.min.js')
-          )
-        ) {
-          $(this).remove();
-        }
-      });
-      
-      // Remove any inlined libraries
-      $('script').each(function() {
-        const content = $(this).html();
-        if (
-          content &&
-          (
-            content.includes('webextension-polyfill') ||
-            content.includes('bcrypt.js')
-          )
-        ) {
-          $(this).remove();
-        }
-      });
-      
-      // Add new script tags at the beginning of body
-      $('body').prepend(`
-        <script src="/static/js/bcrypt.min.js"></script>
-        <script src="/static/js/browser-polyfill.min.js"></script>
-      `);
-      
-      // Write the modified HTML
-      fs.writeFileSync(INDEX_HTML, $.html());
-      console.log('✓ Updated HTML file with script references using cheerio');
-      
-    } else {
+      try {
+        // Load HTML into cheerio
+        const $ = cheerio.load(htmlContent);
+        
+        // Remove any existing script tags for these libraries
+        $('script').each(function() {
+          const src = $(this).attr('src');
+          if (
+            src &&
+            (
+              src.includes('browser-polyfill.min.js') ||
+              src.includes('bcrypt.min.js')
+            )
+          ) {
+            $(this).remove();
+          }
+        });
+        
+        // Remove any inlined libraries
+        $('script').each(function() {
+          const content = $(this).html();
+          if (
+            content &&
+            (
+              content.includes('webextension-polyfill') ||
+              content.includes('bcrypt.js')
+            )
+          ) {
+            $(this).remove();
+          }
+        });
+        
+        // Add new script tags at the beginning of body
+        $('body').prepend(`
+          <script src="/static/js/bcrypt.min.js"></script>
+          <script src="/static/js/browser-polyfill.min.js"></script>
+        `);
+        
+        // Write the modified HTML
+        fs.writeFileSync(INDEX_HTML, $.html());
+        console.log('✓ Updated HTML file with script references using cheerio');
+        return true;
+        
+      } catch (cheerioError) {
+        console.error('❌ Error using cheerio:', cheerioError.message);
+        console.log('📝 Falling back to string replacement method');
+        cheerio = null; // Fall back to string replacement
+      }
+    }
+    
+    if (!cheerio) {
       // Fallback: Use simple string replacement
       console.log('Using simple string replacement for HTML manipulation...');
       

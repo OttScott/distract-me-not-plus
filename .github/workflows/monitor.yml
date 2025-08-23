@@ -117,47 +117,16 @@ jobs:
               }
             }
 
-      - name: Slack notification for critical failures 📢
-        if: github.event.workflow_run.conclusion == 'failure' && (github.event.workflow_run.name == 'Continuous Integration' || github.event.workflow_run.name == 'Build and Release' || github.event.workflow_run.name == 'Security Scanning') && env.SLACK_WEBHOOK_URL != ''
-        uses: 8398a7/action-slack@v3
-        with:
-          status: custom
-          channel: '#alerts'
-          username: 'Pipeline Monitor'
-          icon_emoji: ':rotating_light:'
-          custom_payload: |
-            {
-              "attachments": [{
-                "color": "${{ steps.analyze.outputs.status_color }}",
-                "title": "${{ steps.analyze.outputs.status_emoji }} Critical Pipeline Failure",
-                "fields": [{
-                  "title": "Workflow",
-                  "value": "${{ steps.analyze.outputs.workflow_name }}",
-                  "short": true
-                }, {
-                  "title": "Branch",
-                  "value": "${{ steps.analyze.outputs.branch }}",
-                  "short": true
-                }, {
-                  "title": "Repository",
-                  "value": "${{ github.repository }}",
-                  "short": true
-                }, {
-                  "title": "Status",
-                  "value": "${{ steps.analyze.outputs.workflow_status }}",
-                  "short": true
-                }],
-                "actions": [{
-                  "type": "button",
-                  "text": "View Run",
-                  "url": "${{ steps.analyze.outputs.workflow_url }}"
-                }],
-                "footer": "GitHub Actions",
-                "ts": "${{ steps.analyze.outputs.updated_at }}"
-              }]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      # Slack notifications removed - not used in this project
+      - name: Log critical failure �
+        if: github.event.workflow_run.conclusion == 'failure' && (github.event.workflow_run.name == 'Continuous Integration' || github.event.workflow_run.name == 'Build and Release' || github.event.workflow_run.name == 'Security Scanning')
+        run: |
+          echo "🚨 Critical pipeline failure detected:"
+          echo "  Workflow: ${{ steps.analyze.outputs.workflow_name }}"
+          echo "  Branch: ${{ steps.analyze.outputs.branch }}"
+          echo "  Status: ${{ steps.analyze.outputs.workflow_status }}"
+          echo "  URL: ${{ steps.analyze.outputs.workflow_url }}"
+          echo "  An issue has been created for tracking this failure."
 
   weekly-health-report:
     name: Weekly Health Report
@@ -209,39 +178,12 @@ jobs:
         id: date
         run: echo "report_date=$(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
 
-      - name: Weekly Slack summary 📢
-        uses: 8398a7/action-slack@v3
-        with:
-          status: custom
-          channel: '#dev-reports'
-          username: 'Pipeline Health Monitor'
-          icon_emoji: ':chart_with_upward_trend:'
-          custom_payload: |
-            {
-              "attachments": [{
-                "color": "good",
-                "title": "📊 Weekly CI/CD Pipeline Health Report",
-                "text": "Your weekly pipeline health report is ready!",
-                "fields": [{
-                  "title": "Repository",
-                  "value": "${{ github.repository }}",
-                  "short": true
-                }, {
-                  "title": "Report Date",
-                  "value": "${{ steps.date.outputs.report_date }}",
-                  "short": true
-                }],
-                "actions": [{
-                  "type": "button",
-                  "text": "View Actions",
-                  "url": "https://github.com/${{ github.repository }}/actions"
-                }, {
-                  "type": "button",
-                  "text": "Security Alerts",
-                  "url": "https://github.com/${{ github.repository }}/security"
-                }],
-                "footer": "Pipeline Health Monitor"
-              }]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      # Slack notifications removed - not used in this project
+      - name: Log weekly report completion 📋
+        run: |
+          echo "📊 Weekly CI/CD Pipeline Health Report Generated"
+          echo "  Repository: ${{ github.repository }}"
+          echo "  Report Date: ${{ steps.date.outputs.report_date }}"
+          echo "  Report uploaded as artifact: weekly-health-report"
+          echo "  View GitHub Actions: https://github.com/${{ github.repository }}/actions"
+          echo "  Security Alerts: https://github.com/${{ github.repository }}/security"

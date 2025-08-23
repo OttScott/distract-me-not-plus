@@ -67,7 +67,6 @@ NODE_ENV=development
 # SONAR_TOKEN=your_sonar_token
 # SNYK_TOKEN=your_snyk_token
 # SEMGREP_APP_TOKEN=your_semgrep_token
-# SLACK_WEBHOOK_URL=your_slack_webhook_url
 
 # Build Configuration
 INLINE_RUNTIME_CHUNK=false
@@ -99,12 +98,11 @@ try {
 console.log('🎉 Development environment setup complete!\n');
 console.log('📋 Next steps:');
 console.log('  1. Copy .env.example to .env and configure your environment');
-console.log('  2. Set up the required secrets in your GitHub repository:');
+console.log('  2. Set up the optional secrets in your GitHub repository:');
 console.log('     - CODECOV_TOKEN (optional, for coverage reporting)');
 console.log('     - SONAR_TOKEN (optional, for code quality analysis)');
 console.log('     - SNYK_TOKEN (optional, for security scanning)');
 console.log('     - SEMGREP_APP_TOKEN (optional, for SAST scanning)');
-console.log('     - SLACK_WEBHOOK_URL (optional, for notifications)');
 console.log('  3. Run "npm run validate" to test the full pipeline locally');
 console.log('  4. Push your changes to trigger the CI/CD pipeline\n');
 

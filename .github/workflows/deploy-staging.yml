@@ -79,25 +79,24 @@ jobs:
           echo "Artifacts uploaded to GitHub Actions"
           echo "url=https://github.com/$REPO_NAME/actions/runs/$RUN_ID" >> $GITHUB_OUTPUT
 
-  notify-slack:
-    name: Notify Team
+  log-deployment:
+    name: Log Deployment Result
     needs: deploy-staging
     runs-on: ubuntu-latest
     if: always() && (success() || failure())
     
     steps:
-      - name: Slack Notification 📢
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ needs.deploy-staging.result }}
-          channel: '#releases'
-          username: 'GitHub Actions'
-          icon_emoji: ':rocket:'
-          fields: repo,message,commit,author,action,eventName,ref,workflow
-          text: |
-            Staging deployment ${{ needs.deploy-staging.result }}!
-            Environment: ${{ github.event.inputs.environment || 'staging' }}
-            Branch: ${{ github.ref_name }}
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        if: env.SLACK_WEBHOOK_URL != ''
+      - name: Log Deployment Status �
+        run: |
+          echo "🚀 Staging Deployment Completed"
+          echo "  Status: ${{ needs.deploy-staging.result }}"
+          echo "  Environment: ${{ github.event.inputs.environment || 'staging' }}"
+          echo "  Branch: ${{ github.ref_name }}"
+          echo "  Repository: ${{ github.repository }}"
+          echo "  Run ID: ${{ github.run_id }}"
+          echo "  Commit: ${{ github.sha }}"
+          if [[ "${{ needs.deploy-staging.result }}" == "success" ]]; then
+            echo "✅ Deployment completed successfully!"
+          else
+            echo "❌ Deployment failed - check logs for details"
+          fi

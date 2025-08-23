@@ -118,7 +118,6 @@ CODECOV_TOKEN      # Codecov integration
 SONAR_TOKEN        # SonarCloud analysis
 SNYK_TOKEN         # Snyk security scanning
 SEMGREP_APP_TOKEN  # Semgrep SAST scanning
-SLACK_WEBHOOK_URL  # Slack notifications (optional)
 ```
 
 ## 📦 New NPM Scripts

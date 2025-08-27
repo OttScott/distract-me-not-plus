@@ -137,13 +137,11 @@ export class Blocked extends Component {
       // It's a pattern match
       const parts = reasonText.split('pattern:');
       if (parts.length >= 2) {
+        const pattern = parts[1].trim();
         return (
-          <>
-            <span style={{ color: '#d0d0d0' }}>{translate('denyListPattern')}:</span>
-            <span style={{ color: '#db9d61', fontWeight: 'bold', marginLeft: '3px' }}>
-              {parts[1].trim()}
-            </span>
-          </>
+          <span style={{ color: '#db9d61', fontWeight: 'bold' }}>
+            {translate('denyListPattern', [pattern])}
+          </span>
         );
       }
     }

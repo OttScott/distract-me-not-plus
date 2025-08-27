@@ -713,9 +713,13 @@ function handleUrl(url, tabId, source) {
     // Check if URL should be blocked
   const blockDetails = checkUrlShouldBeBlockedLocal(normalizedUrl);
   
+  // Debug logging to see what we get back
+  logInfo(`[DEBUG] checkUrlShouldBeBlockedLocal returned:`, blockDetails);
+  
   if (blockDetails && blockDetails.blocked) {
     const reason = blockDetails.reason || "Matched block rule";
     logInfo(`BLOCKING URL: ${normalizedUrl} (source: ${source}), Reason: ${reason}`);
+    logInfo(`[DEBUG] About to call redirectToBlockedPage with tabId=${tabId}, url=${url}, reason=${reason}`);
     blockedUrls.add(url); // Cache original URL
     blockedUrls.add(normalizedUrl); // Cache normalized URL
     redirectToBlockedPage(tabId, url, reason);
@@ -729,6 +733,7 @@ function handleUrl(url, tabId, source) {
 function navigationHandler(details) {
   if (details.frameId === 0) { // Only block main frame navigations
     logInfo(`Navigation attempt to: ${details.url} (via navigationHandler)`);
+    logInfo(`[DEBUG] navigationHandler called with tabId: ${details.tabId}`);
 
     // Only check if extension is enabled
     if (!isEnabled) {
@@ -736,11 +741,13 @@ function navigationHandler(details) {
       return;
     }    // Check if URL should be blocked
     const blockDetails = checkUrlShouldBeBlockedLocal(details.url); // Returns { blocked, reason }
+    logInfo(`[DEBUG] navigationHandler - checkUrlShouldBeBlockedLocal returned:`, blockDetails);
 
     if (blockDetails && blockDetails.blocked) {
       // Block the navigation by redirecting to the blocked page
       const reason = blockDetails.reason || "Matched block rule";
       logInfo(`BLOCKING navigation to: ${details.url}, Reason: ${reason} (via navigationHandler)`);
+      logInfo(`[DEBUG] navigationHandler calling redirectToBlockedPage with tabId=${details.tabId}, url=${details.url}, reason=${reason}`);
       redirectToBlockedPage(details.tabId, details.url, reason); // Use redirectToBlockedPage to include reason
     } else {
       const reason = blockDetails && blockDetails.reason ? blockDetails.reason : "No matching block rules";
@@ -763,11 +770,27 @@ function deepLog(message, data) {
 let blockedUrls = new Set();
 
 // Extract the redirect logic to a separate function
-function redirectToBlockedPage(tabId, url, reason) {  const indexUrl = chrome.runtime.getURL('index.html');
+function redirectToBlockedPage(tabId, url, reason) {  
+  logInfo(`[DEBUG] redirectToBlockedPage called with: tabId=${tabId}, url=${url}, reason=${reason}`);
+  
+  const indexUrl = chrome.runtime.getURL('index.html');
   const encodedUrl = encodeURIComponent(url);
+  
   // Safeguard: if reason is empty or falsy, provide a default.
-  const effectiveReason = reason || "Unknown reason for block";
+  // Be more defensive about the reason parameter
+  let effectiveReason = reason;
+  if (!effectiveReason || typeof effectiveReason !== 'string' || effectiveReason.trim() === '') {
+    effectiveReason = "Deny List pattern: content blocked";
+    logInfo(`[DEBUG] Using default reason: ${effectiveReason}`);
+  } else {
+    logInfo(`[DEBUG] Using provided reason: ${effectiveReason}`);
+  }
+  effectiveReason = effectiveReason.trim();
+  
   const encodedReason = encodeURIComponent(effectiveReason);
+  logInfo(`[DEBUG] Encoded reason: ${encodedReason}`);
+  
+  logInfo(`Redirecting tab ${tabId} to block page: ${url} (reason: ${effectiveReason})`);
     // Get custom message if available - use promise pattern compatible with both Chrome and Firefox
   chrome.storage.sync.get({ message: '', blockTab: { message: '' } }, function(items) {
     // Try to get the message from either location
@@ -783,9 +806,14 @@ function redirectToBlockedPage(tabId, url, reason) {  const indexUrl = chrome.ru
     
     // Log the full redirect URL for debugging
     const redirectUrl = `${indexUrl}#/blocked?url=${encodedUrl}&reason=${encodedReason}${messageParam}`;
+    logInfo('[DEBUG] Final redirect URL being used:', redirectUrl);
     logInfo('Redirecting to:', redirectUrl);
     
-    chrome.tabs.update(tabId, { url: redirectUrl });
+    chrome.tabs.update(tabId, { url: redirectUrl }).then(() => {
+      logInfo(`[DEBUG] Tab ${tabId} successfully redirected`);
+    }).catch(error => {
+      logError(`[DEBUG] Failed to redirect tab ${tabId}:`, error);
+    });
   });
 }
 
@@ -951,14 +979,58 @@ function extractPatternsFromRules() {
 }
 
 /**
- * Evaluates URL against patterns without dumping all patterns to logs.
+ * Evaluates URL against patterns with proper fallback handling.
  * Follows SRP by focusing only on pattern matching.
  */
 function evaluateUrlAgainstPatterns(url, patterns) {
+  // Try to use the external pattern matching function
   if (self.checkUrlShouldBeBlocked && typeof self.checkUrlShouldBeBlocked === 'function') {
-    return self.checkUrlShouldBeBlocked(url, patterns.allowPatterns, patterns.denyPatterns);
+    const result = self.checkUrlShouldBeBlocked(url, patterns.allowPatterns, patterns.denyPatterns);
+    if (result && result.reason) {
+      return result;
+    }
   }
-  return null;
+  
+  // Fallback: Basic pattern matching if external function fails or is unavailable
+  return performBasicPatternMatching(url, patterns);
+}
+
+/**
+ * Performs basic pattern matching as fallback.
+ * Ensures we always have meaningful block reasons.
+ */
+function performBasicPatternMatching(url, patterns) {
+  try {
+    const normalizedUrl = url.toLowerCase();
+    
+    // Check allow patterns first (higher priority)
+    for (const pattern of patterns.allowPatterns) {
+      if (urlMatchesPattern(normalizedUrl, pattern.toLowerCase())) {
+        return createBlockResult(false, `Allow pattern: ${pattern}`, pattern);
+      }
+    }
+    
+    // Check deny patterns - use 'pattern:' format expected by UI
+    for (const pattern of patterns.denyPatterns) {
+      if (urlMatchesPattern(normalizedUrl, pattern.toLowerCase())) {
+        return createBlockResult(true, `pattern: ${pattern}`, pattern);
+      }
+    }
+    
+    return createBlockResult(false, "No patterns matched");
+  } catch (error) {
+    logError('Error in basic pattern matching:', error);
+    return createBlockResult(false, "Pattern matching error");
+  }
+}
+
+/**
+ * Simple URL pattern matching helper.
+ */
+function urlMatchesPattern(url, pattern) {
+  // Convert wildcard pattern to regex
+  const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$', 'i');
+  return regex.test(url) || url.includes(pattern.replace(/\*/g, ''));
 }
 
 /**
@@ -995,10 +1067,23 @@ function handleUnmatchedUrl(url) {
   const normalizedMode = (mode || '').toLowerCase();
   
   if (normalizedMode === 'whitelist' || normalizedMode === 'allowlist') {
-    return createBlockResult(true, "URL not on Allow List (Allow List Mode)");
+    return createBlockResult(true, "This site is not on the Allow List");
   }
   
-  return createBlockResult(false, "No matching rules");
+  // Provide more helpful default message
+  const hostname = extractHostname(url);
+  return createBlockResult(false, `No blocking rules match ${hostname || 'this URL'}`);
+}
+
+/**
+ * Extracts hostname from URL for better error messages.
+ */
+function extractHostname(url) {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -1998,6 +2083,39 @@ function testProblemDomains() {
   console.log("=== TEST COMPLETE ===");
 }
 
+// Firefox compatibility: Early urgent initialization
+// Set up critical listeners immediately to avoid race conditions
+function urgentInitialization() {
+  // Set up navigation listener immediately
+  if (chrome.webNavigation && chrome.webNavigation.onBeforeNavigate) {
+    // Remove any existing listeners first to avoid duplicates
+    if (chrome.webNavigation.onBeforeNavigate.hasListeners()) {
+      chrome.webNavigation.onBeforeNavigate.removeListener(navigationHandler);
+    }
+    chrome.webNavigation.onBeforeNavigate.addListener(navigationHandler);
+    logInfo('Firefox early navigation listener setup complete');
+  }
+  
+  // Set up webRequest listener with blocking
+  if (chrome.webRequest && chrome.webRequest.onBeforeRequest) {
+    // Remove any existing listeners first to avoid duplicates
+    if (chrome.webRequest.onBeforeRequest.hasListeners()) {
+      chrome.webRequest.onBeforeRequest.removeListener(webRequestHandler);
+    }
+    chrome.webRequest.onBeforeRequest.addListener(
+      webRequestHandler,
+      { urls: ['<all_urls>'], types: ['main_frame'] },
+      ['blocking']
+    );
+    logInfo('Firefox early webRequest listener setup complete');
+  }
+}
+
+// Call urgent initialization immediately for Firefox
+if (navigator.userAgent.includes('Firefox')) {
+  urgentInitialization();
+}
+
 // Initialize on install or update
 chrome.runtime.onInstalled.addListener(details => {
   console.log('Extension installed or updated:', details.reason);
@@ -2016,6 +2134,11 @@ chrome.runtime.onInstalled.addListener(details => {
   // Extra diagnostics
   if (typeof self.diagnoseSyncStatus === 'function') {
     self.diagnoseSyncStatus();
+  }
+  
+  // Firefox compatibility: Ensure urgent listeners are in place
+  if (navigator.userAgent.includes('Firefox')) {
+    urgentInitialization();
   }
   
   // First init
@@ -2125,6 +2248,12 @@ chrome.runtime.onInstalled.addListener(details => {
 chrome.runtime.onStartup.addListener(() => {
   console.log('Browser started');
   isInitialInstall = false; // Not a fresh install on browser startup
+  
+  // Firefox compatibility: Ensure urgent listeners are in place
+  if (navigator.userAgent.includes('Firefox')) {
+    urgentInitialization();
+  }
+  
   init();
   
   // Start periodic sync check
@@ -2225,6 +2354,12 @@ async function checkSyncStatus() {
 
 // Initialize immediately
 init();
+
+// Firefox compatibility: Ensure urgent initialization on script load
+if (navigator.userAgent.includes('Firefox')) {
+  urgentInitialization();
+  logInfo('Firefox urgent initialization completed on script load');
+}
 
 // Improve the extension's unload handling
 chrome.runtime.onSuspend.addListener(() => {

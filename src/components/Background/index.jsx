@@ -73,6 +73,11 @@ export class Background extends Component {
     this.whitelist = [];
     this.blacklistKeywords = [];
     this.whitelistKeywords = [];
+    // Store original patterns for reason reporting
+    this.originalBlacklist = [];
+    this.originalWhitelist = [];
+    this.originalBlacklistKeywords = [];
+    this.originalWhitelistKeywords = [];
     this.isEnabled = defaultIsEnabled;
     this.mode = defaultMode;
     this.action = defaultAction;
@@ -144,11 +149,11 @@ export class Background extends Component {
     return this.isEnabled;
   };
 
-  setBlacklist = (blist, tabId = null) => {
-    this.blacklist = transformList(blist);
-    if (tabId && this.isEnabled) {
-      this.checkTabById(tabId, 'setBlacklist');
-    }
+  setBlacklist = (blist) => {
+    // Filter out null/empty patterns before storing
+    const filteredList = (blist || []).filter(p => p && p.trim && p.trim() !== '');
+    this.originalBlacklist = [...filteredList]; // Store original patterns
+    this.blacklist = transformList(filteredList);
   };
 
   getBlacklist = () => {
@@ -156,7 +161,10 @@ export class Background extends Component {
   };
 
   setBlacklistKeywords = (keywords) => {
-    this.blacklistKeywords = transformKeywords(keywords);
+    // Filter out null/empty keywords before storing
+    const filteredKeywords = (keywords || []).filter(p => p && p.trim && p.trim() !== '');
+    this.originalBlacklistKeywords = [...filteredKeywords]; // Store original keywords
+    this.blacklistKeywords = transformKeywords(filteredKeywords);
   };
 
   getBlacklistKeywords = () => {
@@ -164,7 +172,10 @@ export class Background extends Component {
   };
 
   setWhitelistKeywords = (keywords) => {
-    this.whitelistKeywords = transformKeywords(keywords);
+    // Filter out null/empty keywords before storing
+    const filteredKeywords = (keywords || []).filter(p => p && p.trim && p.trim() !== '');
+    this.originalWhitelistKeywords = [...filteredKeywords]; // Store original keywords
+    this.whitelistKeywords = transformKeywords(filteredKeywords);
   };
 
   getWhitelistKeywords = () => {
@@ -172,7 +183,10 @@ export class Background extends Component {
   };
 
   setWhitelist = (wlist, tabId = null) => {
-    this.whitelist = transformList(wlist);
+    // Filter out null/empty patterns before storing
+    const filteredList = (wlist || []).filter(p => p && p.trim && p.trim() !== '');
+    this.originalWhitelist = [...filteredList]; // Store original patterns
+    this.whitelist = transformList(filteredList);
     if (tabId && this.isEnabled) {
       this.checkTabById(tabId, 'setWhitelist');
     }
@@ -296,10 +310,34 @@ export class Background extends Component {
         //   storage.set({ whitelist: items.whitelist });
         // }
         //----- End backward compatibility with v1
-        this.blacklist = transformList(items.blacklist);
-        this.whitelist = transformList(items.whitelist);
-        this.blacklistKeywords = transformKeywords(items.blacklistKeywords);
-        this.whitelistKeywords = transformKeywords(items.whitelistKeywords);
+        // Store original patterns for reason reporting
+        // Filter out null/undefined/empty patterns to prevent issues
+        this.originalBlacklist = (items.blacklist || []).filter(p => p != null && typeof p === 'string' && p.trim() !== '');
+        this.originalWhitelist = (items.whitelist || []).filter(p => p != null && typeof p === 'string' && p.trim() !== '');
+        this.originalBlacklistKeywords = (items.blacklistKeywords || []).filter(p => p != null && typeof p === 'string' && p.trim() !== '');
+        this.originalWhitelistKeywords = (items.whitelistKeywords || []).filter(p => p != null && typeof p === 'string' && p.trim() !== '');
+        
+        // Debug logging to see what we actually have
+        console.log('[Background] Raw blacklist from storage:', items.blacklist);
+        console.log('[Background] Raw blacklist keywords from storage:', items.blacklistKeywords);
+        console.log('[Background] Filtered blacklist patterns:', this.originalBlacklist);
+        console.log('[Background] Filtered blacklist keywords:', this.originalBlacklistKeywords);
+        
+        // Apply the same filtering to the arrays passed to transformList/transformKeywords
+        const filteredBlacklist = (items.blacklist || []).filter(p => p != null && typeof p === 'string' && p.trim() !== '');
+        const filteredWhitelist = (items.whitelist || []).filter(p => p != null && typeof p === 'string' && p.trim() !== '');
+        const filteredBlacklistKeywords = (items.blacklistKeywords || []).filter(p => p != null && typeof p === 'string' && p.trim() !== '');
+        const filteredWhitelistKeywords = (items.whitelistKeywords || []).filter(p => p != null && typeof p === 'string' && p.trim() !== '');
+        
+        console.log('[Background] Filtered blacklist for regex:', filteredBlacklist);
+        console.log('[Background] Filtered blacklist keywords for regex:', filteredBlacklistKeywords);
+        
+        this.blacklist = transformList(filteredBlacklist);
+        this.whitelist = transformList(filteredWhitelist);
+        this.blacklistKeywords = transformKeywords(filteredBlacklistKeywords);
+        this.whitelistKeywords = transformKeywords(filteredWhitelistKeywords);
+        
+        console.log('[Background] Regex arrays - blacklist length:', this.blacklist.length, 'keywords length:', this.blacklistKeywords.length);
         this.mode = items.mode;
         this.action = items.action;
         this.framesType = items.framesType;
@@ -575,17 +613,26 @@ export class Background extends Component {
     }
   };
 
-  handleAction = (data) => {
+  handleAction = (data, reason = null) => {
     switch (this.action) {
       case Action.blockTab:
       case Action.redirectToUrl:
-      default:
+      default: {
+        // Create base blocked URL
+        let blockedUrl = `${indexUrl}#blocked?url=${encodeURIComponent(data.url)}`;
+        
+        // Add reason parameter if provided
+        if (reason) {
+          blockedUrl += `&reason=${encodeURIComponent(reason)}`;
+        }
+        
         return {
           redirectUrl:
             this.action === Action.redirectToUrl && this.redirectUrl.length
               ? this.redirectUrl
-              : `${indexUrl}#blocked?url=${encodeURIComponent(data.url)}`,
+              : blockedUrl,
         };
+      }
       case Action.closeTab:
         this.closeTab(data.tabId);
         return {
@@ -663,6 +710,76 @@ export class Background extends Component {
     return false;
   };
 
+  // Enhanced function that returns the specific pattern that matched
+  getBlacklistMatch = (url) => {
+    if (this.isTmpAllowed(url)) {
+      return { matched: false, pattern: null };
+    }
+    
+    console.log('[getBlacklistMatch] Checking URL:', url);
+    console.log('[getBlacklistMatch] Available patterns:', this.originalBlacklist);
+    console.log('[getBlacklistMatch] Available keywords:', this.originalBlacklistKeywords);
+    
+    // Check regular blacklist patterns
+    for (let i = 0; i < this.blacklist.length; i++) {
+      const rule = this.blacklist[i];
+      try {
+        if (rule.test(url)) {
+          // Get original pattern from storage with better fallback
+          let originalPattern = this.originalBlacklist[i];
+          
+          console.log('[getBlacklistMatch] Pattern matched at index', i);
+          console.log('[getBlacklistMatch] Original pattern value:', originalPattern);
+          console.log('[getBlacklistMatch] Original pattern type:', typeof originalPattern);
+          console.log('[getBlacklistMatch] Is null?', originalPattern === null);
+          console.log('[getBlacklistMatch] Is undefined?', originalPattern === undefined);
+          
+          // Handle null/undefined patterns more gracefully
+          if (!originalPattern || originalPattern === null || originalPattern === undefined) {
+            originalPattern = `unknown pattern at index ${i}`;
+            console.warn('Missing original pattern at index', i, 'using fallback');
+          }
+          
+          this.debug('blacklist pattern matched:', originalPattern);
+          return { matched: true, pattern: originalPattern };
+        }
+      } catch (e) {
+        console.error('error while testing blacklist rule:', rule, e);
+      }
+    }
+    
+    // Check keyword patterns
+    for (let i = 0; i < this.blacklistKeywords.length; i++) {
+      const rule = this.blacklistKeywords[i];
+      try {
+        if (rule.test(url)) {
+          // Get original keyword from storage with better fallback
+          let originalKeyword = this.originalBlacklistKeywords[i];
+          
+          console.log('[getBlacklistMatch] Keyword matched at index', i);
+          console.log('[getBlacklistMatch] Original keyword value:', originalKeyword);
+          console.log('[getBlacklistMatch] Original keyword type:', typeof originalKeyword);
+          console.log('[getBlacklistMatch] Is null?', originalKeyword === null);
+          console.log('[getBlacklistMatch] Is undefined?', originalKeyword === undefined);
+          
+          // Handle null/undefined keywords more gracefully
+          if (!originalKeyword || originalKeyword === null || originalKeyword === undefined) {
+            originalKeyword = `unknown keyword at index ${i}`;
+            console.warn('Missing original keyword at index', i, 'using fallback');
+          }
+          
+          this.debug('blacklist keyword matched:', originalKeyword);
+          return { matched: true, pattern: originalKeyword };
+        }
+      } catch (e) {
+        console.error('error while testing blacklist keyword rule:', rule, e);
+      }
+    }
+    
+    console.log('[getBlacklistMatch] No patterns matched');
+    return { matched: false, pattern: null };
+  };
+
   isWhitelisted = (url) => {
     if (!isAccessible(url) || this.isTmpAllowed(url)) {
       return true;
@@ -689,6 +806,46 @@ export class Background extends Component {
     }
     this.debug('not whitelisted:', url);
     return false;
+  };
+
+  // Enhanced function that returns the specific pattern that matched
+  getWhitelistMatch = (url) => {
+    // Always allow inaccessible URLs or temp allowed URLs
+    if (!isAccessible(url) || this.isTmpAllowed(url)) {
+      return { matched: true, pattern: 'system allowed (inaccessible or temp)' };
+    }
+    
+    // Check regular whitelist patterns
+    for (let i = 0; i < this.whitelist.length; i++) {
+      const rule = this.whitelist[i];
+      try {
+        if (rule.test(url)) {
+          // Get original pattern from storage
+          const originalPattern = this.originalWhitelist[i] || 'unknown pattern';
+          this.debug('whitelist pattern matched:', originalPattern);
+          return { matched: true, pattern: originalPattern };
+        }
+      } catch (e) {
+        console.error('error while testing whitelist rule:', rule, e);
+      }
+    }
+    
+    // Check keyword patterns
+    for (let i = 0; i < this.whitelistKeywords.length; i++) {
+      const rule = this.whitelistKeywords[i];
+      try {
+        if (rule.test(url)) {
+          // Get original keyword from storage
+          const originalKeyword = this.originalWhitelistKeywords[i] || 'unknown keyword';
+          this.debug('whitelist keyword matched:', originalKeyword);
+          return { matched: true, pattern: originalKeyword };
+        }
+      } catch (e) {
+        console.error('error while testing whitelist keyword rule:', rule, e);
+      }
+    }
+    
+    return { matched: false, pattern: null };
   };
 
   isUrlBlocked = (url) => {
@@ -718,6 +875,46 @@ export class Background extends Component {
         return false;
       default:
         return false;
+    }
+  };
+
+  // Enhanced function that returns both blocking decision and reason
+  getUrlBlockingDetails = (url) => {
+    switch (this.mode) {
+      case Mode.blacklist: {
+        const blacklistMatch = this.getBlacklistMatch(url);
+        if (blacklistMatch.matched) {
+          return { blocked: true, reason: `pattern: ${blacklistMatch.pattern}` };
+        }
+        return { blocked: false, reason: 'Not in Deny List' };
+      }
+      case Mode.whitelist: {
+        const whitelistMatch = this.getWhitelistMatch(url);
+        if (!whitelistMatch.matched) {
+          return { blocked: true, reason: 'Not in Allow List (Allow List mode)' };
+        }
+        return { blocked: false, reason: `Allow pattern: ${whitelistMatch.pattern}` };
+      }
+      case Mode.combined: {
+        // Check whitelist first
+        const whitelistMatch = this.getWhitelistMatch(url);
+        if (whitelistMatch.matched) {
+          this.debug('URL is whitelisted in combined mode, allowing:', url);
+          return { blocked: false, reason: `Allow pattern: ${whitelistMatch.pattern}` };
+        }
+
+        // Check blacklist
+        const blacklistMatch = this.getBlacklistMatch(url);
+        if (blacklistMatch.matched) {
+          this.debug('URL is blacklisted in combined mode, blocking:', url);
+          return { blocked: true, reason: `pattern: ${blacklistMatch.pattern}` };
+        }
+
+        // Not in either list
+        return { blocked: false, reason: 'No matching rules' };
+      }
+      default:
+        return { blocked: false, reason: 'Extension disabled' };
     }
   };
 
@@ -827,8 +1024,10 @@ export class Background extends Component {
         return;
       }
     }
-    // Handle blocking
-    const shouldBlock = this.isUrlBlocked(data.url);
+    // Handle blocking - use enhanced function to get reason
+    const blockingDetails = this.getUrlBlockingDetails(data.url);
+    const shouldBlock = blockingDetails.blocked;
+    
     // Log url
     if (this.enableLogs) {
       logger.add({
@@ -839,7 +1038,7 @@ export class Background extends Component {
     }
     // Execute action
     if (shouldBlock) {
-      return this.handleAction(data);
+      return this.handleAction(data, blockingDetails.reason);
     }
   };
 

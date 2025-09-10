@@ -52,11 +52,6 @@ eslint-results.json
 .vscode/settings.json
 .idea/
 
-<<<<<<< HEAD
-=======
-
-
->>>>>>> c234573 (feat: complete extension rebranding from AXeL-dev to OttScott)
 # Extension private keys (DO NOT COMMIT)
 private-keys/
 *.pem

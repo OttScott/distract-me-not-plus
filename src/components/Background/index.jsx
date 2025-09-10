@@ -584,13 +584,8 @@ export class Background extends Component {
               tabId,
               timeout,
             });
-            getTab(tabId).then((tab) => {
-              // get latest tab infos (url)
-              this.redirectTab(
-                tab.id,
-                `${indexUrl}#blocked?url=${encodeURIComponent(tab.url)}`,
-              );
-            });
+
+            this.checkAllTabs();
           }
         }, timeout);
       }

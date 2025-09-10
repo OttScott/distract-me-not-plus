@@ -302,6 +302,65 @@ export class Blocked extends Component {
             </div>
           </div>
         </div>
+        
+        <Dialog
+              isShown={this.state.unblockDialog.isShown}
+              onCloseComplete={this.closeUnblockDialog}
+              shouldCloseOnOverlayClick={false}
+              //hasHeader={false}
+              hasFooter={false}
+              topOffset="40vmin"
+              width={400}
+              containerProps={{
+                className: 'unblock-dialog',
+                // Handle ENTER keypress and close dialog
+                onKeyDown: (event) => {
+                  if (!this.state.unblockDialog.requirePassword && event.key === 'Enter') {
+                    this.unblock();
+                  }
+                }
+              }}
+            >
+              <Pane width="95%" margin="auto">
+                <RadioGroup
+                  size={16}
+                  value={this.state.unblockDialog.selected}
+                  options={this.state.unblockDialog.options}
+                  onChange={(event) =>
+                    this.updateUnblockDialogState({
+                      selected: event.target.value,
+                    })
+                  }
+                />
+                {this.state.unblockDialog.requirePassword ? (
+                  <PasswordPrompt
+                    hasHeader={false}
+                    hasFooter={false}
+                    minWidth="auto"
+                    minHeight={50}
+                    inputWidth="100%"
+                    maxInputWidth="auto"
+                    onSuccess={this.unblock}
+                  />
+                ) : (
+                  <Pane
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    marginTop={20}
+                  >
+                    <Button
+                      height={32}
+                      appearance="primary"
+                      iconBefore={UnlockIcon}
+                      onClick={this.unblock}
+                    >
+                      {translate('unblock')}
+                    </Button>
+                  </Pane>
+                )}
+              </Pane>
+            </Dialog>
       </Fragment>
     );
   }

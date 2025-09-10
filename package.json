@@ -1,6 +1,6 @@
 {
   "name": "distract-me-not",
-  "version": "3.1.2",
+  "version": "3.1.3",
   "private": true,
   "dependencies": {
     "@babel/core": "^7.16.0",
@@ -86,7 +86,8 @@
     "ci:check": "npm run format:check && npm run lint:ci && npm run lint:sarif && npm run test:ci && npm run build",
     "ci:check:fix": "npm run format && npm run lint:fix && npm run lint:sarif && npm run test:ci && npm run build",
     "ci:check:fast": "npm run format:check && npm run lint:ci && npm run lint:sarif && npm run test:ci",
-    "setup:cicd": "node scripts/setup-cicd.js"
+    "setup:cicd": "node scripts/setup-cicd.js",
+    "prepare": "husky"
   },
   "eslintConfig": {
     "env": {
@@ -129,6 +130,7 @@
     "cheerio": "^1.0.0",
     "copy-webpack-plugin": "^5.1.2",
     "cross-env": "^7.0.3",
+    "husky": "^9.1.7",
     "jest-sonar-reporter": "^2.0.0",
     "nodemon": "^3.1.9",
     "prettier": "^3.0.0",

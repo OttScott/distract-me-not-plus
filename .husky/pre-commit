@@ -1,0 +1,10 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Run tests in CI mode (non-interactive)
+echo "🧪 Running tests..."
+npm run test:ci || { echo "❌ Tests failed! Commit aborted."; exit 1; }
+
+echo "✅ Pre-commit checks completed!"

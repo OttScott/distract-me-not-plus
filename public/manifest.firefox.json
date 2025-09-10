@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "browser_specific_settings": {
     "gecko": {
-      "id": "{ottscott-distract-me-not-c33eef50-2e0a-4cd8-8e09-8569640a6de9@ottscott.dev}",
+      "id": "{ottscott-distract-me-not-900f12d3-21f0-44b3-bc22-ee2d8e1a34ca@ottscott.dev}",
       "strict_min_version": "58.0"
     }
   },

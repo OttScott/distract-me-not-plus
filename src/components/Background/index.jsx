@@ -151,7 +151,7 @@ export class Background extends Component {
 
   setBlacklist = (blist) => {
     // Filter out null/empty patterns before storing
-    const filteredList = (blist || []).filter(p => p && p.trim && p.trim() !== '');
+    const filteredList = (blist || []).filter((p) => p && p.trim && p.trim() !== '');
     this.originalBlacklist = [...filteredList]; // Store original patterns
     this.blacklist = transformList(filteredList);
   };
@@ -162,7 +162,9 @@ export class Background extends Component {
 
   setBlacklistKeywords = (keywords) => {
     // Filter out null/empty keywords before storing
-    const filteredKeywords = (keywords || []).filter(p => p && p.trim && p.trim() !== '');
+    const filteredKeywords = (keywords || []).filter(
+      (p) => p && p.trim && p.trim() !== '',
+    );
     this.originalBlacklistKeywords = [...filteredKeywords]; // Store original keywords
     this.blacklistKeywords = transformKeywords(filteredKeywords);
   };
@@ -173,7 +175,9 @@ export class Background extends Component {
 
   setWhitelistKeywords = (keywords) => {
     // Filter out null/empty keywords before storing
-    const filteredKeywords = (keywords || []).filter(p => p && p.trim && p.trim() !== '');
+    const filteredKeywords = (keywords || []).filter(
+      (p) => p && p.trim && p.trim() !== '',
+    );
     this.originalWhitelistKeywords = [...filteredKeywords]; // Store original keywords
     this.whitelistKeywords = transformKeywords(filteredKeywords);
   };
@@ -184,7 +188,7 @@ export class Background extends Component {
 
   setWhitelist = (wlist, tabId = null) => {
     // Filter out null/empty patterns before storing
-    const filteredList = (wlist || []).filter(p => p && p.trim && p.trim() !== '');
+    const filteredList = (wlist || []).filter((p) => p && p.trim && p.trim() !== '');
     this.originalWhitelist = [...filteredList]; // Store original patterns
     this.whitelist = transformList(filteredList);
     if (tabId && this.isEnabled) {
@@ -312,32 +316,62 @@ export class Background extends Component {
         //----- End backward compatibility with v1
         // Store original patterns for reason reporting
         // Filter out null/undefined/empty patterns to prevent issues
-        this.originalBlacklist = (items.blacklist || []).filter(p => p != null && typeof p === 'string' && p.trim() !== '');
-        this.originalWhitelist = (items.whitelist || []).filter(p => p != null && typeof p === 'string' && p.trim() !== '');
-        this.originalBlacklistKeywords = (items.blacklistKeywords || []).filter(p => p != null && typeof p === 'string' && p.trim() !== '');
-        this.originalWhitelistKeywords = (items.whitelistKeywords || []).filter(p => p != null && typeof p === 'string' && p.trim() !== '');
-        
+        this.originalBlacklist = (items.blacklist || []).filter(
+          (p) => p != null && typeof p === 'string' && p.trim() !== '',
+        );
+        this.originalWhitelist = (items.whitelist || []).filter(
+          (p) => p != null && typeof p === 'string' && p.trim() !== '',
+        );
+        this.originalBlacklistKeywords = (items.blacklistKeywords || []).filter(
+          (p) => p != null && typeof p === 'string' && p.trim() !== '',
+        );
+        this.originalWhitelistKeywords = (items.whitelistKeywords || []).filter(
+          (p) => p != null && typeof p === 'string' && p.trim() !== '',
+        );
+
         // Debug logging to see what we actually have
         console.log('[Background] Raw blacklist from storage:', items.blacklist);
-        console.log('[Background] Raw blacklist keywords from storage:', items.blacklistKeywords);
+        console.log(
+          '[Background] Raw blacklist keywords from storage:',
+          items.blacklistKeywords,
+        );
         console.log('[Background] Filtered blacklist patterns:', this.originalBlacklist);
-        console.log('[Background] Filtered blacklist keywords:', this.originalBlacklistKeywords);
-        
+        console.log(
+          '[Background] Filtered blacklist keywords:',
+          this.originalBlacklistKeywords,
+        );
+
         // Apply the same filtering to the arrays passed to transformList/transformKeywords
-        const filteredBlacklist = (items.blacklist || []).filter(p => p != null && typeof p === 'string' && p.trim() !== '');
-        const filteredWhitelist = (items.whitelist || []).filter(p => p != null && typeof p === 'string' && p.trim() !== '');
-        const filteredBlacklistKeywords = (items.blacklistKeywords || []).filter(p => p != null && typeof p === 'string' && p.trim() !== '');
-        const filteredWhitelistKeywords = (items.whitelistKeywords || []).filter(p => p != null && typeof p === 'string' && p.trim() !== '');
-        
+        const filteredBlacklist = (items.blacklist || []).filter(
+          (p) => p != null && typeof p === 'string' && p.trim() !== '',
+        );
+        const filteredWhitelist = (items.whitelist || []).filter(
+          (p) => p != null && typeof p === 'string' && p.trim() !== '',
+        );
+        const filteredBlacklistKeywords = (items.blacklistKeywords || []).filter(
+          (p) => p != null && typeof p === 'string' && p.trim() !== '',
+        );
+        const filteredWhitelistKeywords = (items.whitelistKeywords || []).filter(
+          (p) => p != null && typeof p === 'string' && p.trim() !== '',
+        );
+
         console.log('[Background] Filtered blacklist for regex:', filteredBlacklist);
-        console.log('[Background] Filtered blacklist keywords for regex:', filteredBlacklistKeywords);
-        
+        console.log(
+          '[Background] Filtered blacklist keywords for regex:',
+          filteredBlacklistKeywords,
+        );
+
         this.blacklist = transformList(filteredBlacklist);
         this.whitelist = transformList(filteredWhitelist);
         this.blacklistKeywords = transformKeywords(filteredBlacklistKeywords);
         this.whitelistKeywords = transformKeywords(filteredWhitelistKeywords);
-        
-        console.log('[Background] Regex arrays - blacklist length:', this.blacklist.length, 'keywords length:', this.blacklistKeywords.length);
+
+        console.log(
+          '[Background] Regex arrays - blacklist length:',
+          this.blacklist.length,
+          'keywords length:',
+          this.blacklistKeywords.length,
+        );
         this.mode = items.mode;
         this.action = items.action;
         this.framesType = items.framesType;
@@ -615,12 +649,12 @@ export class Background extends Component {
       default: {
         // Create base blocked URL
         let blockedUrl = `${indexUrl}#blocked?url=${encodeURIComponent(data.url)}`;
-        
+
         // Add reason parameter if provided
         if (reason) {
           blockedUrl += `&reason=${encodeURIComponent(reason)}`;
         }
-        
+
         return {
           redirectUrl:
             this.action === Action.redirectToUrl && this.redirectUrl.length
@@ -710,11 +744,14 @@ export class Background extends Component {
     if (this.isTmpAllowed(url)) {
       return { matched: false, pattern: null };
     }
-    
+
     console.log('[getBlacklistMatch] Checking URL:', url);
     console.log('[getBlacklistMatch] Available patterns:', this.originalBlacklist);
-    console.log('[getBlacklistMatch] Available keywords:', this.originalBlacklistKeywords);
-    
+    console.log(
+      '[getBlacklistMatch] Available keywords:',
+      this.originalBlacklistKeywords,
+    );
+
     // Check regular blacklist patterns
     for (let i = 0; i < this.blacklist.length; i++) {
       const rule = this.blacklist[i];
@@ -722,19 +759,26 @@ export class Background extends Component {
         if (rule.test(url)) {
           // Get original pattern from storage with better fallback
           let originalPattern = this.originalBlacklist[i];
-          
+
           console.log('[getBlacklistMatch] Pattern matched at index', i);
           console.log('[getBlacklistMatch] Original pattern value:', originalPattern);
-          console.log('[getBlacklistMatch] Original pattern type:', typeof originalPattern);
+          console.log(
+            '[getBlacklistMatch] Original pattern type:',
+            typeof originalPattern,
+          );
           console.log('[getBlacklistMatch] Is null?', originalPattern === null);
           console.log('[getBlacklistMatch] Is undefined?', originalPattern === undefined);
-          
+
           // Handle null/undefined patterns more gracefully
-          if (!originalPattern || originalPattern === null || originalPattern === undefined) {
+          if (
+            !originalPattern ||
+            originalPattern === null ||
+            originalPattern === undefined
+          ) {
             originalPattern = `unknown pattern at index ${i}`;
             console.warn('Missing original pattern at index', i, 'using fallback');
           }
-          
+
           this.debug('blacklist pattern matched:', originalPattern);
           return { matched: true, pattern: originalPattern };
         }
@@ -742,7 +786,7 @@ export class Background extends Component {
         console.error('error while testing blacklist rule:', rule, e);
       }
     }
-    
+
     // Check keyword patterns
     for (let i = 0; i < this.blacklistKeywords.length; i++) {
       const rule = this.blacklistKeywords[i];
@@ -750,19 +794,26 @@ export class Background extends Component {
         if (rule.test(url)) {
           // Get original keyword from storage with better fallback
           let originalKeyword = this.originalBlacklistKeywords[i];
-          
+
           console.log('[getBlacklistMatch] Keyword matched at index', i);
           console.log('[getBlacklistMatch] Original keyword value:', originalKeyword);
-          console.log('[getBlacklistMatch] Original keyword type:', typeof originalKeyword);
+          console.log(
+            '[getBlacklistMatch] Original keyword type:',
+            typeof originalKeyword,
+          );
           console.log('[getBlacklistMatch] Is null?', originalKeyword === null);
           console.log('[getBlacklistMatch] Is undefined?', originalKeyword === undefined);
-          
+
           // Handle null/undefined keywords more gracefully
-          if (!originalKeyword || originalKeyword === null || originalKeyword === undefined) {
+          if (
+            !originalKeyword ||
+            originalKeyword === null ||
+            originalKeyword === undefined
+          ) {
             originalKeyword = `unknown keyword at index ${i}`;
             console.warn('Missing original keyword at index', i, 'using fallback');
           }
-          
+
           this.debug('blacklist keyword matched:', originalKeyword);
           return { matched: true, pattern: originalKeyword };
         }
@@ -770,7 +821,7 @@ export class Background extends Component {
         console.error('error while testing blacklist keyword rule:', rule, e);
       }
     }
-    
+
     console.log('[getBlacklistMatch] No patterns matched');
     return { matched: false, pattern: null };
   };
@@ -809,7 +860,7 @@ export class Background extends Component {
     if (!isAccessible(url) || this.isTmpAllowed(url)) {
       return { matched: true, pattern: 'system allowed (inaccessible or temp)' };
     }
-    
+
     // Check regular whitelist patterns
     for (let i = 0; i < this.whitelist.length; i++) {
       const rule = this.whitelist[i];
@@ -824,7 +875,7 @@ export class Background extends Component {
         console.error('error while testing whitelist rule:', rule, e);
       }
     }
-    
+
     // Check keyword patterns
     for (let i = 0; i < this.whitelistKeywords.length; i++) {
       const rule = this.whitelistKeywords[i];
@@ -839,7 +890,7 @@ export class Background extends Component {
         console.error('error while testing whitelist keyword rule:', rule, e);
       }
     }
-    
+
     return { matched: false, pattern: null };
   };
 
@@ -1022,7 +1073,7 @@ export class Background extends Component {
     // Handle blocking - use enhanced function to get reason
     const blockingDetails = this.getUrlBlockingDetails(data.url);
     const shouldBlock = blockingDetails.blocked;
-    
+
     // Log url
     if (this.enableLogs) {
       logger.add({

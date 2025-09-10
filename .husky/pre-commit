@@ -1,10 +1,51 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
+#!/bin/sh#!/bin/sh#!/bin/sh
 
-echo "🔍 Running pre-commit checks..."
 
-# Run tests in CI mode (non-interactive)
+
+echo "🔍 Running pre-commit checks...". "$(dirname "$0")/_/husky.sh". "$(dirname "$0")/_/husky.sh"
+
+
+
+# Format code with Prettier
+
+echo "🎨 Formatting code with Prettier..."
+
+npm run format || { echo "❌ Prettier formatting failed! Commit aborted."; exit 1; }echo "🔍 Running pre-commit checks..."echo "🔍 Running pre-commit checks..."
+
+
+
+# Run ESLint checks (CI mode with no warnings allowed)
+
+echo "🔍 Running ESLint checks..."
+
+npm run lint:ci || { echo "❌ ESLint checks failed! Commit aborted."; exit 1; }# Format code with Prettier# Format code with Prettier
+
+
+
+# Run tests in CI mode (non-interactive)echo "🎨 Formatting code with Prettier..."echo "🎨 Formatting code with Prettier..."
+
 echo "🧪 Running tests..."
-npm run test:ci || { echo "❌ Tests failed! Commit aborted."; exit 1; }
+
+npm run test:ci || { echo "❌ Tests failed! Commit aborted."; exit 1; }npm run format || { echo "❌ Prettier formatting failed! Commit aborted."; exit 1; }npm run format || { echo "❌ Prettier formatting failed! Commit aborted."; exit 1; }
+
+
 
 echo "✅ Pre-commit checks completed!"
+
+# Run ESLint checks (CI mode with no warnings allowed)# Run ESLint checks (CI mode with no warnings allowed)
+
+echo "🔍 Running ESLint checks..."echo "🔍 Running ESLint checks..."
+
+npm run lint:ci || { echo "❌ ESLint checks failed! Commit aborted."; exit 1; }npm run lint:ci || { echo "❌ ESLint checks failed! Commit aborted."; exit 1; }
+
+
+
+# Run tests in CI mode (non-interactive)# Run tests in CI mode (non-interactive)
+
+echo "🧪 Running tests..."echo "🧪 Running tests..."
+
+npm run test:ci || { echo "❌ Tests failed! Commit aborted."; exit 1; }npm run test:ci || { echo "❌ Tests failed! Commit aborted."; exit 1; }
+
+
+
+echo "✅ Pre-commit checks completed!"echo "✅ Pre-commit checks completed!"

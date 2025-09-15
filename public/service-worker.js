@@ -267,6 +267,10 @@ async function init() {
       
       logInfo('Using defaults during fresh install, sync check will load cloud data if available');
       setupBlockingRules();
+      
+      // Always update icon on initialization to ensure it matches the current state
+      updateIcon();
+      
       logInfo('Service worker initialization complete (fresh install mode)');
       return;
     }
@@ -461,6 +465,9 @@ async function init() {
     
     // Set up periodic sync checking
     setupPeriodicSyncCheck();
+
+    // Always update icon on initialization to ensure it matches the current state
+    updateIcon();
 
     logInfo('Service worker initialized successfully');
   } catch (error) {
@@ -1857,6 +1864,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           firstBlacklistItems: blacklist.slice(0, 3),
           firstWhitelistItems: whitelist.slice(0, 3)
         };
+        break;
+        
+      case 'updateIcon':
+        updateIcon();
+        response = { success: true, message: 'Icon updated' };
         break;
         
       default:

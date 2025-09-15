@@ -97,6 +97,8 @@ export class Panel extends Component {
             showAddWebsitePrompt,
           });
         }),
+      // Ensure icon state is synchronized when popup opens
+      sendMessage('updateIcon'),
     ]).finally(() => {
       this.setState({ ready: true });
     });

@@ -394,10 +394,8 @@ export class Background extends Component {
         if (!this.isEventListenersEnabled) {
           this.enableEventListeners();
         }
-        // update icon
-        if (!this.isEnabled) {
-          this.updateIcon();
-        }
+        // always update icon on initialization to ensure it matches the current state
+        this.updateIcon();
         // resume timer
         if (this.timer.isEnabled) {
           this.resumeTimer();

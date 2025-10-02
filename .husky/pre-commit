@@ -1,2 +1,25 @@
 #!/bin/sh
-.husky/pre-commit.cmd
+echo "Running pre-commit checks..."
+
+echo "Formatting code with Prettier..."
+npm run format
+if [ $? -ne 0 ]; then
+    echo "Prettier formatting failed! Commit aborted."
+    exit 1
+fi
+
+echo "Running ESLint checks..."
+npm run lint:ci
+if [ $? -ne 0 ]; then
+    echo "ESLint checks failed! Commit aborted."
+    exit 1
+fi
+
+echo "Running tests..."
+npm run test:ci
+if [ $? -ne 0 ]; then
+    echo "Tests failed! Commit aborted."
+    exit 1
+fi
+
+echo "Pre-commit checks completed!"

@@ -90,6 +90,7 @@ export class Settings extends Component {
     this.whitelistComponentRef = React.createRef(); // allowlist
     this.blacklistKeywordsComponentRef = React.createRef(); // denylist keywords
     this.whitelistKeywordsComponentRef = React.createRef(); // allowlist keywords
+    this.isSaving = false; // Flag to prevent processing our own storage changes
     // prettier-ignore
     const tabs = [
       { label: translate('blocking'), id: 'blocking' },
@@ -462,6 +463,9 @@ export class Settings extends Component {
       return;
     }
 
+    // Temporarily disable storage change listener to prevent processing our own save
+    this.isSaving = true;
+
     syncStorage
       .set({
         isEnabled: this.state.options.isEnabled,
@@ -530,6 +534,12 @@ export class Settings extends Component {
           // Update originalIsEnabled to reflect the saved state
           this.setState({ originalIsEnabled: this.state.options.isEnabled });
         }
+
+        // Re-enable storage change listener after a short delay
+        setTimeout(() => {
+          this.isSaving = false;
+        }, 500);
+
         // Show success message (keep out of success condition to ensure it's executed on unit tests & dev env.)
         toaster.success(translate('settingsSaved'), {
           id: 'settings-toaster',
@@ -594,7 +604,13 @@ export class Settings extends Component {
     );
     this.closeDialog();
   };
-  handleStorageChanges = (changes, areaName) => {
+  handleStorageChanges = async (changes, areaName) => {
+    // Ignore storage changes triggered by our own save operation
+    if (this.isSaving) {
+      logInfo('Ignoring storage changes during save operation');
+      return;
+    }
+
     logInfo(`Storage changes detected in ${areaName}:`, changes);
     let settingsUpdated = false;
     const updates = {};
@@ -603,6 +619,28 @@ export class Settings extends Component {
     // We should handle both sync and local storage changes
     if (areaName !== 'sync' && areaName !== 'local') {
       return;
+    }
+
+    // Helper to check if a key is being chunked (look for chunk metadata changes)
+    const isChunkUpdate =
+      changes.blacklistCount ||
+      changes.whitelistCount ||
+      changes.blacklistKeywordsCount ||
+      changes.whitelistKeywordsCount ||
+      Object.keys(changes).some((key) => key.includes('_chunk_'));
+
+    // If we see chunk-related changes, reload full data from storage instead of
+    // processing individual key changes (which could be misleading during chunking)
+    if (isChunkUpdate && areaName === 'sync') {
+      logInfo('Detected chunking-related changes, reloading full data from storage');
+      try {
+        const allSettings = await this.getAllSettings();
+        this.setSettings(allSettings);
+        return; // Skip individual key processing
+      } catch (error) {
+        logInfo('Failed to reload settings during chunk update:', error);
+        // Fall through to process individual changes
+      }
     }
 
     // Process changes in blacklist

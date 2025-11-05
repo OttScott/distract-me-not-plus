@@ -52,7 +52,7 @@ const chunkArray = (array, maxBytesPerChunk) => {
 
   for (const item of array) {
     const itemSize = estimateByteSize(item) + 1; // +1 for comma
-    
+
     if (currentSize + itemSize > maxBytesPerChunk && currentChunk.length > 0) {
       // Current chunk would exceed limit, save it and start new one
       chunks.push(currentChunk);
@@ -154,32 +154,42 @@ export const syncStorage = {
     if (Object.keys(syncItems).length > 0) {
       try {
         logInfo('Getting from sync storage:', Object.keys(syncItems));
-        
+
         // First, get the requested keys plus potential chunk metadata
         const keysToGet = {};
-        Object.keys(syncItems).forEach(key => {
+        Object.keys(syncItems).forEach((key) => {
           keysToGet[key] = syncItems[key];
           keysToGet[`${key}Count`] = 0; // Also get chunk count if it exists
         });
-        
+
         const syncResults = await chrome.storage.sync.get(keysToGet);
-        
+
         // Reconstruct any chunked arrays
         for (const key of Object.keys(syncItems)) {
-          if (key === 'blacklist' || key === 'whitelist' || key === 'blacklistKeywords' || key === 'whitelistKeywords') {
+          if (
+            key === 'blacklist' ||
+            key === 'whitelist' ||
+            key === 'blacklistKeywords' ||
+            key === 'whitelistKeywords'
+          ) {
             const countKey = `${key}Count`;
             if (countKey in syncResults && syncResults[countKey] > 0) {
               // This is chunked data, need to get all chunks
-              logInfo(`Reconstructing chunked ${key} data (${syncResults[countKey]} chunks)`);
-              
+              logInfo(
+                `Reconstructing chunked ${key} data (${syncResults[countKey]} chunks)`,
+              );
+
               const chunkKeys = {};
               for (let i = 0; i < syncResults[countKey]; i++) {
                 chunkKeys[`${key}_chunk_${i}`] = [];
               }
-              
+
               const chunkData = await chrome.storage.sync.get(chunkKeys);
-              results[key] = reconstructChunkedArray({ ...syncResults, ...chunkData }, key);
-              
+              results[key] = reconstructChunkedArray(
+                { ...syncResults, ...chunkData },
+                key,
+              );
+
               logInfo(`Reconstructed ${key} with ${results[key].length} items`);
             } else if (key in syncResults) {
               // Not chunked, use as-is
@@ -190,7 +200,8 @@ export const syncStorage = {
             }
           } else {
             // Not an array that gets chunked
-            results[key] = syncResults[key] !== undefined ? syncResults[key] : syncItems[key];
+            results[key] =
+              syncResults[key] !== undefined ? syncResults[key] : syncItems[key];
           }
         }
 
@@ -284,37 +295,61 @@ export const syncStorage = {
         const dataToStore = {};
         const keysToRemove = []; // Track old chunk keys to clean up
 
+        // First, check what's currently in storage to know what to clean up
+        const currentStorageKeys = await chrome.storage.sync.get(null);
+
         for (const [key, value] of Object.entries(syncItems)) {
           // Check if this is a large array that needs chunking
-          const isLargeArray = Array.isArray(value) && estimateByteSize(value) > BYTES_PER_CHUNK;
-          
-          if (isLargeArray && (key === 'blacklist' || key === 'whitelist' || key === 'blacklistKeywords' || key === 'whitelistKeywords')) {
-            logInfo(`Chunking ${key} array (${value.length} items) to avoid quota limits`);
-            
+          const isLargeArray =
+            Array.isArray(value) && estimateByteSize(value) > BYTES_PER_CHUNK;
+
+          const isChunkableKey =
+            key === 'blacklist' ||
+            key === 'whitelist' ||
+            key === 'blacklistKeywords' ||
+            key === 'whitelistKeywords';
+
+          if (isLargeArray && isChunkableKey) {
+            logInfo(
+              `Chunking ${key} array (${value.length} items) to avoid quota limits`,
+            );
+
             const chunks = chunkArray(value, BYTES_PER_CHUNK);
             dataToStore[`${key}Count`] = chunks.length;
-            
+
             chunks.forEach((chunk, index) => {
               dataToStore[`${key}_chunk_${index}`] = chunk;
             });
 
-            // Mark the non-chunked key for removal if it exists
-            keysToRemove.push(key);
-            
+            // Mark the non-chunked key for removal if it exists in storage
+            if (key in currentStorageKeys) {
+              keysToRemove.push(key);
+            }
+
             logInfo(`Split ${key} into ${chunks.length} chunks`);
           } else {
             // Not chunked or doesn't need chunking
             dataToStore[key] = value;
+
             // Clean up any old chunks if this was previously chunked
-            keysToRemove.push(`${key}Count`);
+            if (isChunkableKey && `${key}Count` in currentStorageKeys) {
+              keysToRemove.push(`${key}Count`);
+
+              // Remove all chunk keys
+              const chunkCount = currentStorageKeys[`${key}Count`];
+              for (let i = 0; i < chunkCount; i++) {
+                keysToRemove.push(`${key}_chunk_${i}`);
+              }
+            }
           }
         }
 
         logInfo('Setting to sync storage:', Object.keys(dataToStore));
         await chrome.storage.sync.set(dataToStore);
-        
+
         // Clean up old chunk keys if needed
         if (keysToRemove.length > 0) {
+          logInfo('Cleaning up old storage keys:', keysToRemove);
           try {
             await chrome.storage.sync.remove(keysToRemove);
           } catch (removeError) {
@@ -322,7 +357,7 @@ export const syncStorage = {
             debug.error('Failed to remove old chunk keys:', removeError);
           }
         }
-        
+
         logInfo('Successfully saved to sync storage');
 
         // Record successful sync operation

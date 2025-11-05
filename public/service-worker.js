@@ -40,6 +40,71 @@ console.log('Enhanced service worker starting...');
 // The wildcardToRegExp function is defined in service-worker-patterns.js
 // This main service worker will use the imported implementation
 
+// Chunking helpers for large arrays (matches syncStorage.js implementation)
+const BYTES_PER_CHUNK = 7000; // Leave headroom for JSON overhead (8KB max per item)
+
+// Helper to reconstruct chunked arrays from storage
+function reconstructChunkedArray(storageData, keyPrefix) {
+  if (!storageData || typeof storageData !== 'object') {
+    return [];
+  }
+
+  // Check if data is chunked (has keyCount property)
+  const countKey = `${keyPrefix}Count`;
+  if (!(countKey in storageData)) {
+    // Not chunked, return the normal key value or empty array
+    return storageData[keyPrefix] || [];
+  }
+
+  const chunkCount = storageData[countKey];
+  if (chunkCount === 0) {
+    return [];
+  }
+
+  // Reconstruct from chunks
+  const result = [];
+  for (let i = 0; i < chunkCount; i++) {
+    const chunkKey = `${keyPrefix}_chunk_${i}`;
+    const chunk = storageData[chunkKey];
+    if (Array.isArray(chunk)) {
+      result.push(...chunk);
+    }
+  }
+
+  return result;
+}
+
+// Helper to fetch sync storage with chunking support
+async function getSyncStorageWithChunking(keys) {
+  return new Promise((resolve, reject) => {
+    // First, get the base keys to check for chunking metadata
+    chrome.storage.sync.get(null, (allData) => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message || 'Storage error'));
+        return;
+      }
+
+      const result = {};
+      
+      // Process each requested key
+      for (const key of keys) {
+        const countKey = `${key}Count`;
+        
+        if (countKey in allData) {
+          // This key is chunked, reconstruct it
+          result[key] = reconstructChunkedArray(allData, key);
+        } else if (key in allData) {
+          // Normal key, use as-is
+          result[key] = allData[key];
+        }
+        // If neither exists, the key won't be in result (undefined)
+      }
+      
+      resolve(result);
+    });
+  });
+}
+
 // Import necessary constants for the basic functionality
 const defaultTimerRuntime = {
   duration: 0,
@@ -97,11 +162,6 @@ function logWarning(message, data) {
 
 function logError(message, error) {
   console.error(`[DMN ERROR] ${message}`, error || '');
-}
-
-// Stub periodic sync checker so init() can always call it
-function setupPeriodicSyncCheck() {
-  // No-op for periodic sync
 }
 
 // Fallback: ensure checkAllTabs exists before any registration
@@ -174,8 +234,8 @@ async function forcePullFromSyncStorage() {
       logError('Error checking sync storage size:', bytesError);
     }
     
-    logInfo('Requesting data from sync storage...');
-    const syncData = await chrome.storage.sync.get(syncSettings);
+    logInfo('Requesting data from sync storage (with chunking support)...');
+    const syncData = await getSyncStorageWithChunking(syncSettings);
     
     // Validate sync data
     const hasValidRules = 
@@ -228,8 +288,8 @@ async function forcePullFromSyncStorage() {
         
         // Try a more explicit request for blacklist and whitelist directly
         try {
-          const directSyncData = await chrome.storage.sync.get(['blacklist', 'whitelist']);
-          logInfo('Direct sync query results:', {
+          const directSyncData = await getSyncStorageWithChunking(['blacklist', 'whitelist']);
+          logInfo('Direct sync query results (with chunking):', {
             hasBlacklist: !!directSyncData.blacklist,
             blacklistLength: Array.isArray(directSyncData.blacklist) ? directSyncData.blacklist.length : 'not array',
             hasWhitelist: !!directSyncData.whitelist,
@@ -297,17 +357,9 @@ async function init() {
         self.syncDebug.log('Initializing service worker: Attempting to read from sync storage', {
           keys: syncSettings
         });
-      }      // Get the actual stored data using callback pattern (more reliable than async/await)
-      logInfo('Reading from sync storage...');
-      const items = await new Promise((resolve, reject) => {
-        chrome.storage.sync.get(syncSettings, (result) => {
-          if (chrome.runtime.lastError) {
-            reject(new Error(chrome.runtime.lastError.message || 'Storage error'));
-          } else {
-            resolve(result || {});
-          }
-        });
-      });
+      }      // Get the actual stored data with chunking support
+      logInfo('Reading from sync storage (with chunking support)...');
+      const items = await getSyncStorageWithChunking(syncSettings);
       
       // Check if storage read was successful
       if (!items || typeof items !== 'object') {
@@ -1612,9 +1664,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               redirectUrl: '',
               schedule: { isEnabled: false, days: {} }
             };
-              // First try sync storage for the latest data
-            logInfo('Explicitly requesting latest data from sync storage');
-            const syncData = await chrome.storage.sync.get(syncSettings);
+              // First try sync storage for the latest data (with chunking support)
+            logInfo('Explicitly requesting latest data from sync storage (with chunking)');
+            const syncData = await getSyncStorageWithChunking(syncSettings);
             
             // Create a safe result object with defaults for all expected values
             const safeSyncData = {
@@ -2064,7 +2116,7 @@ function getCurrentSettings() {
 }
 
 // Function to test if URL patterns match correctly
-function testUrlMatching(url, pattern) {
+function testPatternMatch(url, pattern) {
   const regex = wildcardToRegExp(pattern);
   const isMatch = regex.test(url);
   console.log(`Testing if '${url}' matches pattern '${pattern}': ${isMatch ? 'YES' : 'NO'}`);
@@ -2164,18 +2216,10 @@ chrome.runtime.onInstalled.addListener(details => {
       
       // Create a sync check function that's more aggressive
       const checkSyncStorage = async (attempt = 1) => {
-        try {          logInfo(`Sync check attempt #${attempt} - Reading sync storage directly`);
+        try {          logInfo(`Sync check attempt #${attempt} - Reading sync storage directly (with chunking support)`);
           
-          // Get all sync data using key names array (not defaults object)
-          const syncData = await new Promise((resolve, reject) => {
-            chrome.storage.sync.get(['blacklist', 'whitelist', 'blacklistKeywords', 'whitelistKeywords'], (result) => {
-              if (chrome.runtime.lastError) {
-                reject(new Error(chrome.runtime.lastError.message || 'Storage error'));
-              } else {
-                resolve(result || {});
-              }
-            });
-          });
+          // Get all sync data with chunking support
+          const syncData = await getSyncStorageWithChunking(['blacklist', 'whitelist', 'blacklistKeywords', 'whitelistKeywords']);
           
           // Ensure we have the data object before accessing properties
           if (!syncData || typeof syncData !== 'object') {
@@ -2291,16 +2335,8 @@ async function checkSyncStatus() {
   logInfo('Performing periodic sync check');
   
   try {
-    // Get current rules from sync storage using Promise-wrapped callback
-    const syncData = await new Promise((resolve, reject) => {
-      chrome.storage.sync.get(['blacklist', 'whitelist', 'blacklistKeywords', 'whitelistKeywords', 'mode'], (result) => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message || 'Storage error'));
-        } else {
-          resolve(result || {});
-        }
-      });
-    });
+    // Get current rules from sync storage with chunking support
+    const syncData = await getSyncStorageWithChunking(['blacklist', 'whitelist', 'blacklistKeywords', 'whitelistKeywords', 'mode']);
     
     // Ensure we have valid data before accessing properties
     if (!syncData || typeof syncData !== 'object') {
@@ -2463,44 +2499,3 @@ function setMode(newMode) {
 
 // Call this function to manually test domain matching in the browser console
 // testProblemDomains();
-
-// Utility function for testing URL matching
-function testUrlMatch(url, pattern) {
-  const regex = wildcardToRegExp(pattern);
-  const isMatch = regex.test(url);
-  console.log(`Testing URL: ${url} against pattern: ${pattern}`);
-  console.log(`Regex: ${regex}`);
-  console.log(`Result: ${isMatch ? 'MATCH' : 'NO MATCH'}`);
-  
-  // Try also with hostname extraction
-  try {
-    const parsedUrl = new URL(url);
-    const hostname = parsedUrl.hostname;
-    const hostnameMatch = regex.test(hostname);
-    console.log(`Hostname: ${hostname}`);
-    console.log(`Hostname match: ${hostnameMatch ? 'MATCH' : 'NO MATCH'}`);
-  } catch (e) {
-    console.log(`URL parsing failed: ${e.message}`);
-  }
-  
-  return isMatch;
-}
-
-// Debug function to test domain matching
-function testDomainMatching() {
-  console.log("=== TESTING DOMAIN MATCHING ===");
-  
-  // Test with iptorrents.com
-  testUrlMatch("https://iptorrents.com/t", "iptorrents.com");
-  testUrlMatch("https://iptorrents.com/t?p=8#torrents", "iptorrents.com");
-  testUrlMatch("https://www.iptorrents.com/t", "iptorrents.com");
-  
-  // Test with wildcards
-  testUrlMatch("https://sub.example.com/page", "*.example.com");
-  testUrlMatch("https://example.com/page", "*.example.com");
-  
-  // Test with uppercase/lowercase
-  testUrlMatch("https://IPTORRENTS.COM/t", "iptorrents.com");
-  
-  console.log("=== END TESTING ===");
-}

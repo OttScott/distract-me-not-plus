@@ -534,12 +534,12 @@ export class Settings extends Component {
           // Update originalIsEnabled to reflect the saved state
           this.setState({ originalIsEnabled: this.state.options.isEnabled });
         }
-        
+
         // Re-enable storage change listener after a short delay
         setTimeout(() => {
           this.isSaving = false;
         }, 500);
-        
+
         // Show success message (keep out of success condition to ensure it's executed on unit tests & dev env.)
         toaster.success(translate('settingsSaved'), {
           id: 'settings-toaster',
@@ -610,7 +610,7 @@ export class Settings extends Component {
       logInfo('Ignoring storage changes during save operation');
       return;
     }
-    
+
     logInfo(`Storage changes detected in ${areaName}:`, changes);
     let settingsUpdated = false;
     const updates = {};

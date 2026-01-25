@@ -6,7 +6,7 @@
     "@babel/core": "^7.16.0",
     "@babel/runtime": "^7.16.0",
     "archiver": "^7.0.1",
-    "bcryptjs": "^3.0.3",
+    "bcryptjs": "^2.4.3",
     "copy-to-clipboard": "^3.3.3",
     "date-fns": "^2.30.0",
     "dompurify": "^3.2.6",

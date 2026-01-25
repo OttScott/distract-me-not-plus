@@ -81,11 +81,11 @@ After running `npm audit fix` and updating safe dependencies, we've reduced vuln
 ## Status of Safe Updates (Completed)
 
 ✅ Babel packages (7.16.0 → 7.28.x)  
-✅ bcryptjs (2.4.3 → 3.0.3)  
+✅ bcryptjs (2.4.3 → 2.4.3 - v3.x incompatible with build)  
 ✅ DOMPurify (3.2.6 → 3.3.1)  
 ✅ Prettier (3.6.2 → 3.8.1)  
 ✅ Sass (1.85.1 → 1.97.3)  
-✅ Nodemon (3.1.9 → 3.1.11)  
+✅ Nodemon (3.1.9 → 3.1.11)
 
 ## References
 

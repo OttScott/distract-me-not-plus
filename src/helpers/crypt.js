@@ -1,13 +1,15 @@
 /* global dcodeIO */
 // https://github.com/AXeL-dev/distract-me-not/issues/20#issuecomment-774486659
 // import bcrypt from 'bcryptjs'; // @see https://github.com/dcodeIO/bcrypt.js/issues/70
+import { BCRYPT_SALT_ROUNDS } from './constants';
+
 const bcrypt = dcodeIO.bcrypt;
 
 export function hash(password) {
   if (!password || password.length === 0) {
     return '';
   }
-  return bcrypt.hashSync(password, 10);
+  return bcrypt.hashSync(password, BCRYPT_SALT_ROUNDS);
 }
 
 export function compare(password, hash) {

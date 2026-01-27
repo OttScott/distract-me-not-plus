@@ -6,6 +6,9 @@ export const SYNC_STORAGE_MAX_SIZE = 100 * 1024; // 100KB Chrome sync storage to
 export const SYNC_STORAGE_MAX_ITEM_SIZE = 8 * 1024; // 8KB per-item limit
 export const SYNC_CHUNK_SIZE = 7 * 1024; // 7KB chunks (1KB buffer for JSON overhead)
 
+// Sync version key - stores a timestamp of the last sync write
+export const SYNC_VERSION_KEY = 'syncVersion';
+
 // Regex validation
 export const MAX_REGEX_LENGTH = 10000; // Maximum allowed regex pattern length
 

@@ -88,6 +88,7 @@ const localSettings = ['isEnabled', 'enableLogs', 'timer'];
 
 // Storage chunking helpers for large arrays
 const SYNC_STORAGE_MAX_ITEM_SIZE = 8 * 1024; // 8KB per-item limit
+const SYNC_VERSION_KEY = 'syncVersion'; // Global sync version tracker
 const getDataSize = (data) => new Blob([JSON.stringify(data)]).size;
 
 const chunkArray = (array, key) => {
@@ -128,6 +129,43 @@ const chunkArray = (array, key) => {
 };
 
 const saveArrayToSync = async (key, array) => {
+  // CRITICAL SAFETY CHECK: Never overwrite existing sync data with empty arrays
+  if (!array || array.length === 0) {
+    logWarning(`Attempting to save empty ${key} to sync storage - checking for existing data first`);
+    
+    // Check for existing metadata with timestamp
+    try {
+      const metadataKey = `${key}_metadata`;
+      const metadataResult = await chrome.storage.sync.get(metadataKey);
+      const existingMetadata = metadataResult?.[metadataKey];
+      
+      if (existingMetadata && existingMetadata.totalCount > 0) {
+        const existingDate = new Date(existingMetadata.lastUpdated);
+        const ageMinutes = (Date.now() - existingDate.getTime()) / 60000;
+        logError(`PREVENTED DATA LOSS: Found existing ${key} metadata:`);
+        logError(`  - ${existingMetadata.totalCount} items in ${existingMetadata.totalChunks} chunks`);
+        logError(`  - Last updated: ${existingDate.toLocaleString()} (${ageMinutes.toFixed(1)} minutes ago)`);
+        logError(`  - Refusing to overwrite with empty array!`);
+        logError(`  - Saving to local storage only`);
+        await chrome.storage.local.set({ [key]: array });
+        return;
+      }
+    } catch (metadataError) {
+      logError(`Error checking ${key} metadata:`, metadataError);
+    }
+    
+    // If no metadata, check if there's existing data by trying to load it
+    const existing = await loadArrayFromSync(key);
+    if (existing && existing.length > 0) {
+      logError(`PREVENTED DATA LOSS: Found ${existing.length} existing ${key} items (no metadata)`);
+      logError(`Refusing to overwrite with empty array! Saving to local storage only.`);
+      await chrome.storage.local.set({ [key]: array });
+      return;
+    }
+    
+    logInfo(`No existing ${key} data in sync storage, allowing empty array write`);
+  }
+  
   const dataSize = getDataSize(array);
   
   // Check if chunking is needed
@@ -161,6 +199,15 @@ const saveArrayToSync = async (key, array) => {
     await chrome.storage.local.set({ [key]: array });
     logInfo(`Saved ${key} to sync storage (${dataSize} bytes, no chunking needed)`);
   }
+  
+  // Update global sync version
+  const syncVersion = {
+    lastUpdated: new Date().toISOString(),
+    key: key,
+    itemCount: array.length,
+  };
+  await chrome.storage.sync.set({ [SYNC_VERSION_KEY]: syncVersion });
+  logInfo(`Updated sync version for ${key}: ${syncVersion.lastUpdated}`);
 };
 
 const loadArrayFromSync = async (key) => {

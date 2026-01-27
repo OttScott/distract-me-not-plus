@@ -105,16 +105,30 @@ export class SyncStatusButton extends Component {
     const iconColor = this.getSyncHealthColor();
 
     const tooltipContent = (
-      <div>
-        <div>
+      <div style={{ color: '#fff' }}>
+        <div style={{ marginBottom: '4px' }}>
           <strong>Last Sync:</strong> {this.formatLastSync()}
         </div>
-        <div>
+        <div style={{ marginBottom: '4px' }}>
           <strong>Rules:</strong> {ruleCount}
         </div>
         {syncStatus?.syncHealth && (
-          <div>
-            <strong>Health:</strong> {syncStatus.syncHealth}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <strong>Health:</strong>
+            <span
+              style={{
+                display: 'inline-block',
+                padding: '2px 8px',
+                borderRadius: '3px',
+                backgroundColor: iconColor,
+                color: '#fff',
+                fontWeight: '600',
+                fontSize: '11px',
+                textTransform: 'uppercase',
+              }}
+            >
+              {syncStatus.syncHealth}
+            </span>
           </div>
         )}
       </div>

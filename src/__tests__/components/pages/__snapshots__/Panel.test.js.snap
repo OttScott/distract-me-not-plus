@@ -18,6 +18,11 @@ exports[`renders panel correctly 1`] = `
       >
         appName
       </h2>
+      <span
+        class="cursor-default ub-fnt-sze_12px ub-f-wght_400 ub-ln-ht_16px ub-ltr-spc_0 ub-fnt-fam_b77syt ub-color_696f8c ub-ml_8px ub-box-szg_border-box"
+      >
+        v3.14.0
+      </span>
     </div>
     <div
       class="ub-dspl_flex ub-flx-drct_column ub-min-h_115px ub-pl_16px ub-pr_16px ub-pb_20px ub-pt_20px ub-box-szg_border-box"

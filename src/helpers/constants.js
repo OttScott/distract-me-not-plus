@@ -2,7 +2,9 @@
 export const BCRYPT_SALT_ROUNDS = 10;
 
 // Storage constants
-export const SYNC_STORAGE_MAX_SIZE = 100 * 1024; // 100KB Chrome sync storage limit
+export const SYNC_STORAGE_MAX_SIZE = 100 * 1024; // 100KB Chrome sync storage total limit
+export const SYNC_STORAGE_MAX_ITEM_SIZE = 8 * 1024; // 8KB per-item limit
+export const SYNC_CHUNK_SIZE = 7 * 1024; // 7KB chunks (1KB buffer for JSON overhead)
 
 // Regex validation
 export const MAX_REGEX_LENGTH = 10000; // Maximum allowed regex pattern length

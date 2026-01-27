@@ -1,7 +1,9 @@
 import React from 'react';
-import { Pane, Heading } from 'evergreen-ui';
+import { Pane, Heading, Text } from 'evergreen-ui';
 import { translate } from 'helpers/i18n';
 import './styles.scss';
+
+const VERSION = '3.14.0';
 
 export function Header(props) {
   return (
@@ -23,6 +25,9 @@ export function Header(props) {
       >
         {translate('appName') || 'Distract Me Not'}
       </Heading>
+      <Text size={300} color="muted" marginLeft={8} className="cursor-default">
+        v{VERSION}
+      </Text>
     </Pane>
   );
 }

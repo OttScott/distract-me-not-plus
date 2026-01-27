@@ -155,7 +155,7 @@ exports[`renders panel correctly 1`] = `
             class="ub-dspl_inline-flex ub-box-szg_border-box"
           >
             <svg
-              class="ub-fill_696f8c ub-w_14px ub-h_14px ub-box-szg_border-box"
+              class="ub-fill_66788A ub-w_16px ub-h_16px ub-box-szg_border-box"
               data-icon="cloud-upload"
               viewBox="0 0 16 16"
             >

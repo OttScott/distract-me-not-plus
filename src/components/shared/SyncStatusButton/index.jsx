@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { IconButton, CloudUploadIcon, Tooltip, Position, Badge } from 'evergreen-ui';
+import { IconButton, CloudUploadIcon, Tooltip, Position } from 'evergreen-ui';
 import { sendMessage } from 'helpers/webext';
 import { syncStatusTracker } from 'helpers/syncDiagnostics';
 import { syncStorage } from 'helpers/syncStorage';
@@ -86,22 +86,24 @@ export class SyncStatusButton extends Component {
 
   getSyncHealthColor = () => {
     const { syncStatus } = this.state;
-    if (!syncStatus) return 'neutral';
+    if (!syncStatus) return '#66788A'; // Neutral grey
 
     switch (syncStatus.syncHealth) {
       case 'good':
-        return 'green';
+        return '#47B881'; // Bright green
       case 'fair':
-        return 'yellow';
+        return '#F7D154'; // Bright yellow
       case 'poor':
-        return 'red';
+        return '#EC4C47'; // Bright red
       default:
-        return 'neutral';
+        return '#66788A'; // Neutral grey
     }
   };
 
   render() {
     const { syncStatus, ruleCount, loading } = this.state;
+    const iconColor = this.getSyncHealthColor();
+
     const tooltipContent = (
       <div>
         <div>
@@ -118,26 +120,17 @@ export class SyncStatusButton extends Component {
       </div>
     );
 
+    const StyledCloudIcon = () => <CloudUploadIcon color={iconColor} />;
+
     return (
       <Tooltip content={tooltipContent} position={Position.BOTTOM}>
         <IconButton
-          icon={CloudUploadIcon}
+          icon={StyledCloudIcon}
           appearance="minimal"
           isLoading={loading}
           onClick={this.forceSync}
           aria-label="Sync status"
-          position="relative"
-        >
-          {syncStatus && (
-            <Badge
-              color={this.getSyncHealthColor()}
-              position="absolute"
-              top={-2}
-              right={-2}
-              style={{ minWidth: '6px', minHeight: '6px', padding: '2px' }}
-            />
-          )}
-        </IconButton>
+        />
       </Tooltip>
     );
   }

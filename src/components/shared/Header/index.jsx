@@ -3,9 +3,17 @@ import { Pane, Heading, Text } from 'evergreen-ui';
 import { translate } from 'helpers/i18n';
 import './styles.scss';
 
-const VERSION = '3.14.0';
+// Get version from manifest at runtime
+const getVersion = () => {
+  try {
+    return chrome?.runtime?.getManifest?.()?.version || '3.14.1';
+  } catch {
+    return '3.14.1';
+  }
+};
 
 export function Header(props) {
+  const version = getVersion();
   return (
     <Pane
       display="flex"
@@ -26,7 +34,7 @@ export function Header(props) {
         {translate('appName') || 'Distract Me Not'}
       </Heading>
       <Text size={300} color="muted" marginLeft={8} className="cursor-default">
-        v{VERSION}
+        v{version}
       </Text>
     </Pane>
   );

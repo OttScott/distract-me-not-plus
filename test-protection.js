@@ -60,37 +60,70 @@ async function createTestData() {
   showResult('setup-result', 'Creating test data...', 'info');
   
   try {
+    // First, clear any existing data
+    showResult('setup-result', 'Clearing existing data...', 'info');
+    await cleanupTestDataSilent();
+    
+    // Wait longer for cleanup to complete and sync to settle
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    showResult('setup-result', 'Creating 10 new test rules...', 'info');
+    
     const testData = [];
     for (let i = 1; i <= 10; i++) {
       testData.push(`test-rule-${i}.com`);
     }
     
+    console.log('Sending setBlacklist message with', testData.length, 'items');
+    
     // Use the extension's sync storage helper by sending message to service worker
-    await chrome.runtime.sendMessage({
-      action: 'setBlacklist',
+    // Note: service worker expects 'message' not 'action'
+    const response = await chrome.runtime.sendMessage({
+      message: 'setBlacklist',
       params: [testData]
     });
     
+    console.log('setBlacklist response:', response);
+    console.log('Response type:', typeof response);
+    console.log('Response details:', JSON.stringify(response, null, 2));
+    
     // Wait a bit for sync to complete
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log('Waiting 1.5s for sync to complete...');
+    await new Promise(resolve => setTimeout(resolve, 1500));
     
     // Verify it was saved
+    console.log('Checking if data was saved...');
     const saved = await loadArrayFromSync('blacklist');
+    console.log('Data in sync storage:', saved?.length || 0, 'items');
+    
+    // Also check local storage
+    const local = await chrome.storage.local.get('blacklist');
+    console.log('Data in local storage:', local.blacklist?.length || 0, 'items');
     
     if (saved && saved.length === 10) {
       showResult('setup-result', 
-        `✅ SUCCESS: Created ${saved.length} test rules\n` +
-        `First 3: ${saved.slice(0, 3).join(', ')}`, 
+        `SUCCESS: Created ${saved.length} test rules\n` +
+        `First 3: ${saved.slice(0, 3).join(', ')}\n` +
+        `Sync storage: ${saved.length} items\n` +
+        `Local storage: ${local.blacklist?.length || 0} items`, 
         'success'
       );
     } else {
+      const count = saved?.length || 0;
+      const localCount = local.blacklist?.length || 0;
+      const preview = saved && saved.length > 0 ? saved.slice(0, 5).join(', ') : 'none';
       showResult('setup-result', 
-        `⚠️ WARNING: Expected 10 rules, got ${saved?.length || 0}`, 
+        `WARNING: Expected 10 rules, got ${count}\n` +
+        `Sync storage: ${count} items\n` +
+        `Local storage: ${localCount} items\n` +
+        `This might be due to existing data or cleanup timing.\n` +
+        `Rules: ${preview}${count > 5 ? '...' : ''}\n\n` +
+        `Check console for details.`, 
         'warning'
       );
     }
   } catch (error) {
-    showResult('setup-result', `❌ ERROR: ${error.message}`, 'error');
+    showResult('setup-result', `ERROR: ${error.message}\n${error.stack}`, 'error');
   }
 }
 
@@ -98,13 +131,22 @@ async function createLargeTestData() {
   showResult('setup-result', 'Creating large test data (this will be chunked)...', 'info');
   
   try {
+    // First, clear any existing data
+    showResult('setup-result', 'Clearing existing data...', 'info');
+    await cleanupTestDataSilent();
+    
+    // Wait longer for cleanup to complete
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    showResult('setup-result', 'Creating 50 new test rules...', 'info');
+    
     const testData = [];
     for (let i = 1; i <= 50; i++) {
       testData.push(`large-test-rule-${i}.example.com/path/to/resource?query=param`);
     }
     
     await chrome.runtime.sendMessage({
-      action: 'setBlacklist',
+      message: 'setBlacklist',
       params: [testData]
     });
     
@@ -116,18 +158,18 @@ async function createLargeTestData() {
     
     if (metadata.blacklist_metadata && metadata.blacklist_metadata.totalChunks > 0) {
       showResult('setup-result', 
-        `✅ SUCCESS: Created ${saved.length} rules in ${metadata.blacklist_metadata.totalChunks} chunks\n` +
+        `SUCCESS: Created ${saved.length} rules in ${metadata.blacklist_metadata.totalChunks} chunks\n` +
         `Metadata: ${JSON.stringify(metadata.blacklist_metadata, null, 2)}`,
         'success'
       );
     } else {
       showResult('setup-result', 
-        `⚠️ Data saved but not chunked (${saved.length} items)`,
+        `Data saved but not chunked (${saved.length} items)`,
         'warning'
       );
     }
   } catch (error) {
-    showResult('setup-result', `❌ ERROR: ${error.message}`, 'error');
+    showResult('setup-result', `ERROR: ${error.message}`, 'error');
   }
 }
 
@@ -183,7 +225,7 @@ async function testEmptyArrayProtection() {
     
     // Try to write empty array via service worker
     await chrome.runtime.sendMessage({
-      action: 'setBlacklist',
+      message: 'setBlacklist',
       params: [[]]  // Empty array
     });
     
@@ -293,7 +335,7 @@ async function updateDataAndCheckVersion() {
     
     // Update data
     await chrome.runtime.sendMessage({
-      action: 'setBlacklist',
+      message: 'setBlacklist',
       params: [['updated-rule-1.com', 'updated-rule-2.com', 'updated-rule-3.com']]
     });
     
@@ -343,7 +385,7 @@ async function testServiceWorkerProtection() {
     // Try to use the service worker message handler
     console.log('Sending empty array via setBlacklist message...');
     await chrome.runtime.sendMessage({
-      action: 'setBlacklist',
+      message: 'setBlacklist',
       params: [[]]
     });
     
@@ -393,7 +435,7 @@ async function triggerProtectionLogs() {
     
     // Trigger protection
     await chrome.runtime.sendMessage({
-      action: 'setBlacklist',
+      message: 'setBlacklist',
       params: [[]]
     });
     
@@ -415,6 +457,47 @@ async function triggerProtectionLogs() {
   }
 }
 
+// Cleanup (silent version for internal use)
+async function cleanupTestDataSilent() {
+  try {
+    console.log('Starting silent cleanup...');
+    
+    // Get all sync data to find what needs cleaning
+    const allData = await chrome.storage.sync.get(null);
+    const keysToRemove = Object.keys(allData).filter(key => 
+      key.startsWith('blacklist_chunk_') || 
+      key === 'blacklist_metadata' ||
+      key === 'blacklist'
+    );
+    
+    console.log(`Removing ${keysToRemove.length} keys from sync storage:`, keysToRemove);
+    
+    // Remove directly from sync storage (bypasses protection)
+    if (keysToRemove.length > 0) {
+      await chrome.storage.sync.remove(keysToRemove);
+    }
+    
+    // Also clear from local storage
+    await chrome.storage.local.remove(['blacklist']);
+    
+    // Now tell service worker to update its in-memory state
+    // Use a special internal message or just reload
+    try {
+      // Send message to update rules (this will read from now-empty storage)
+      await chrome.runtime.sendMessage({
+        message: 'updateRules'
+      });
+    } catch (e) {
+      console.log('Could not send updateRules message, continuing anyway:', e.message);
+    }
+    
+    console.log('Silent cleanup complete');
+  } catch (error) {
+    console.error('Cleanup error:', error);
+    throw error;
+  }
+}
+
 // Cleanup
 async function cleanupTestData() {
   if (!confirm('This will remove ALL test data from sync storage. Continue?')) {
@@ -424,31 +507,18 @@ async function cleanupTestData() {
   showResult('cleanup-result', 'Cleaning up test data...', 'info');
   
   try {
-    // Remove via service worker
-    await chrome.runtime.sendMessage({
-      action: 'setBlacklist',
-      params: [[]]
-    });
+    await cleanupTestDataSilent();
     
-    // Also manually clean up any chunks
-    const allData = await chrome.storage.sync.get(null);
-    const keysToRemove = Object.keys(allData).filter(key => 
-      key.startsWith('blacklist_chunk_') || 
-      key === 'blacklist_metadata' ||
-      key === 'blacklist'
-    );
-    
-    if (keysToRemove.length > 0) {
-      await chrome.storage.sync.remove(keysToRemove);
-    }
+    const keysRemoved = (await chrome.storage.sync.get(null));
+    const remainingKeys = Object.keys(keysRemoved).filter(k => k.startsWith('blacklist'));
     
     showResult('cleanup-result',
-      `✅ Cleaned up:\n` +
-      `- Blacklist data\n` +
-      `- ${keysToRemove.length} sync storage keys removed`,
+      `Cleaned up:\n` +
+      `- Blacklist data cleared\n` +
+      `- Remaining blacklist keys: ${remainingKeys.length}`,
       'success'
     );
   } catch (error) {
-    showResult('cleanup-result', `❌ ERROR: ${error.message}`, 'error');
+    showResult('cleanup-result', `ERROR: ${error.message}`, 'error');
   }
 }

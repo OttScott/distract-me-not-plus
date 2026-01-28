@@ -8,7 +8,11 @@
  */
 
 import { debug, logInfo } from './debug';
-import { SYNC_STORAGE_MAX_ITEM_SIZE, SYNC_CHUNK_SIZE, SYNC_VERSION_KEY } from './constants';
+import {
+  SYNC_STORAGE_MAX_ITEM_SIZE,
+  SYNC_CHUNK_SIZE,
+  SYNC_VERSION_KEY,
+} from './constants';
 
 // Settings that should be chunked if they exceed size limits
 const chunkableSettings = [
@@ -373,37 +377,46 @@ export const syncStorage = {
             Array.isArray(value) &&
             value.length === 0
           ) {
-            debug.log(`Attempting to write empty ${key} to sync - checking for existing data`);
-            
+            debug.log(
+              `Attempting to write empty ${key} to sync - checking for existing data`,
+            );
+
             // Check if there's existing data in sync storage (direct or chunked)
             try {
               // First check for metadata which has timestamp
               const metadataKey = `${key}_metadata`;
               const metadataResult = await chrome.storage.sync.get(metadataKey);
               const existingMetadata = metadataResult?.[metadataKey];
-              
+
               if (existingMetadata) {
-                const ageMinutes = (Date.now() - new Date(existingMetadata.lastUpdated).getTime()) / 60000;
+                const ageMinutes =
+                  (Date.now() - new Date(existingMetadata.lastUpdated).getTime()) / 60000;
                 debug.error(
                   `PREVENTED DATA LOSS: Found existing ${key} metadata (${existingMetadata.totalCount} items, last updated ${ageMinutes.toFixed(1)} minutes ago)`,
                 );
-                debug.error(`Refusing to overwrite with empty array! Saving to local storage only.`);
+                debug.error(
+                  `Refusing to overwrite with empty array! Saving to local storage only.`,
+                );
                 await chrome.storage.local.set({ [key]: value });
                 continue; // Skip sync write for this key
               }
-              
+
               // If no metadata, check for direct value
               const existingData = await this.get({ [key]: [] });
               if (existingData[key] && existingData[key].length > 0) {
                 debug.error(
                   `PREVENTED DATA LOSS: Found existing ${key} data (${existingData[key].length} items, no metadata)`,
                 );
-                debug.error(`Refusing to overwrite with empty array! Saving to local storage only.`);
+                debug.error(
+                  `Refusing to overwrite with empty array! Saving to local storage only.`,
+                );
                 await chrome.storage.local.set({ [key]: value });
                 continue; // Skip sync write for this key
               }
-              
-              debug.log(`No existing ${key} data found in sync, allowing empty array write`);
+
+              debug.log(
+                `No existing ${key} data found in sync, allowing empty array write`,
+              );
             } catch (checkError) {
               debug.error(`Error checking existing ${key} data:`, checkError);
               // On error, be conservative and skip sync write

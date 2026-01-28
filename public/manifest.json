@@ -47,8 +47,8 @@
   "background": {
     "service_worker": "service-worker.js"
   },
-  "author": "AXeL-dev",
-  "homepage_url": "https://github.com/AXeL-dev/distract-me-not",
+  "author": "OttScott",
+  "homepage_url": "https://github.com/OttScott/distract-me-not",
   "permissions": [
     "notifications",
     "activeTab",

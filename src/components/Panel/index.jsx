@@ -260,7 +260,7 @@ export class Panel extends Component {
                 {!this.state.hideReportIssueButton && (
                   <LinkIconButton
                     icon={GithubIcon}
-                    link="https://github.com/AXeL-dev/distract-me-not/issues"
+                    link="https://github.com/OttScott/distract-me-not/issues"
                     external
                     tooltip={translate('reportIssue')}
                     history={this.props.history}

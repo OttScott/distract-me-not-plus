@@ -35,6 +35,7 @@ import {
   SegmentedControlField,
   AnimatedIconButton,
   SettingsButton,
+  SyncStatusButton,
   LinkIconButton,
   TooltipIcon,
 } from 'components';
@@ -229,6 +230,7 @@ export class Panel extends Component {
             >
               <Pane display="flex" gap={10}>
                 <SettingsButton history={this.props.history} />
+                <SyncStatusButton />
                 {this.state.enableUnblock && (
                   <LinkIconButton
                     icon={ShieldIcon}

@@ -86,6 +86,166 @@ let currentRules = [];
 const syncSettings = ['blacklist', 'whitelist', 'blacklistKeywords', 'whitelistKeywords', 'mode', 'framesType', 'message', 'redirectUrl', 'schedule'];
 const localSettings = ['isEnabled', 'enableLogs', 'timer'];
 
+// Storage chunking helpers for large arrays
+const SYNC_STORAGE_MAX_ITEM_SIZE = 8 * 1024; // 8KB per-item limit
+const SYNC_VERSION_KEY = 'syncVersion'; // Global sync version tracker
+const getDataSize = (data) => new Blob([JSON.stringify(data)]).size;
+
+const chunkArray = (array, key) => {
+  if (!array || !Array.isArray(array) || array.length === 0) {
+    return { chunks: [], metadata: { totalChunks: 0, totalCount: 0, key } };
+  }
+
+  const chunks = [];
+  let currentChunk = [];
+  const keyOverhead = key.length + 20;
+  const maxChunkDataSize = SYNC_STORAGE_MAX_ITEM_SIZE - keyOverhead - 100;
+
+  for (const item of array) {
+    const testChunk = [...currentChunk, item];
+    const testSize = getDataSize(testChunk);
+
+    if (testSize > maxChunkDataSize && currentChunk.length > 0) {
+      chunks.push([...currentChunk]);
+      currentChunk = [item];
+    } else {
+      currentChunk.push(item);
+    }
+  }
+
+  if (currentChunk.length > 0) {
+    chunks.push(currentChunk);
+  }
+
+  return {
+    chunks,
+    metadata: {
+      totalChunks: chunks.length,
+      totalCount: array.length,
+      key,
+      lastUpdated: new Date().toISOString(),
+    }
+  };
+};
+
+const saveArrayToSync = async (key, array) => {
+  // CRITICAL SAFETY CHECK: Never overwrite existing sync data with empty arrays
+  if (!array || array.length === 0) {
+    logWarning(`Attempting to save empty ${key} to sync storage - checking for existing data first`);
+    
+    // Check for existing metadata with timestamp
+    try {
+      const metadataKey = `${key}_metadata`;
+      const metadataResult = await chrome.storage.sync.get(metadataKey);
+      const existingMetadata = metadataResult?.[metadataKey];
+      
+      if (existingMetadata && existingMetadata.totalCount > 0) {
+        const existingDate = new Date(existingMetadata.lastUpdated);
+        const ageMinutes = (Date.now() - existingDate.getTime()) / 60000;
+        logError(`PREVENTED DATA LOSS: Found existing ${key} metadata:`);
+        logError(`  - ${existingMetadata.totalCount} items in ${existingMetadata.totalChunks} chunks`);
+        logError(`  - Last updated: ${existingDate.toLocaleString()} (${ageMinutes.toFixed(1)} minutes ago)`);
+        logError(`  - Refusing to overwrite with empty array!`);
+        logError(`  - Saving to local storage only`);
+        await chrome.storage.local.set({ [key]: array });
+        return;
+      }
+    } catch (metadataError) {
+      logError(`Error checking ${key} metadata:`, metadataError);
+    }
+    
+    // If no metadata, check if there's existing data by trying to load it
+    const existing = await loadArrayFromSync(key);
+    if (existing && existing.length > 0) {
+      logError(`PREVENTED DATA LOSS: Found ${existing.length} existing ${key} items (no metadata)`);
+      logError(`Refusing to overwrite with empty array! Saving to local storage only.`);
+      await chrome.storage.local.set({ [key]: array });
+      return;
+    }
+    
+    logInfo(`No existing ${key} data in sync storage, allowing empty array write`);
+  }
+  
+  const dataSize = getDataSize(array);
+  
+  // Check if chunking is needed
+  if (dataSize > (SYNC_STORAGE_MAX_ITEM_SIZE - 500)) {
+    logInfo(`Chunking ${key} before sync (${array.length} items, ${dataSize} bytes)`);
+    const { chunks, metadata } = chunkArray(array, key);
+    
+    // Write chunks one at a time
+    for (let i = 0; i < chunks.length; i++) {
+      const chunkKey = `${key}_chunk_${i}`;
+      await chrome.storage.sync.set({ [chunkKey]: chunks[i] });
+      logInfo(`  Wrote chunk ${i}/${chunks.length-1}: ${chunks[i].length} items`);
+    }
+    
+    // Write metadata
+    await chrome.storage.sync.set({ [`${key}_metadata`]: metadata });
+    
+    // Clean up old monolithic key
+    try {
+      await chrome.storage.sync.remove([key]);
+    } catch (e) {
+      // Ignore
+    }
+    
+    // Also save to local storage as fallback
+    await chrome.storage.local.set({ [key]: array });
+    logInfo(`Successfully chunked and saved ${key} to sync storage`);
+  } else {
+    // Small enough - save normally
+    await chrome.storage.sync.set({ [key]: array });
+    await chrome.storage.local.set({ [key]: array });
+    logInfo(`Saved ${key} to sync storage (${dataSize} bytes, no chunking needed)`);
+  }
+  
+  // Update global sync version
+  const syncVersion = {
+    lastUpdated: new Date().toISOString(),
+    key: key,
+    itemCount: array.length,
+  };
+  await chrome.storage.sync.set({ [SYNC_VERSION_KEY]: syncVersion });
+  logInfo(`Updated sync version for ${key}: ${syncVersion.lastUpdated}`);
+};
+
+const loadArrayFromSync = async (key) => {
+  // Check if there's chunked data
+  const metadataKey = `${key}_metadata`;
+  const metadataResult = await chrome.storage.sync.get(metadataKey);
+  const metadata = metadataResult?.[metadataKey];
+  
+  if (metadata && metadata.totalChunks > 0) {
+    logInfo(`Dechunking ${key} (${metadata.totalChunks} chunks, ${metadata.totalCount} items)`);
+    
+    // Load all chunks
+    const chunkKeys = [];
+    for (let i = 0; i < metadata.totalChunks; i++) {
+      chunkKeys.push(`${key}_chunk_${i}`);
+    }
+    
+    const chunksData = await chrome.storage.sync.get(chunkKeys);
+    
+    // Reconstruct array
+    const result = [];
+    for (let i = 0; i < metadata.totalChunks; i++) {
+      const chunkKey = `${key}_chunk_${i}`;
+      const chunk = chunksData[chunkKey];
+      if (chunk && Array.isArray(chunk)) {
+        result.push(...chunk);
+      }
+    }
+    
+    logInfo(`Dechunked ${key}: ${result.length} items`);
+    return result;
+  } else {
+    // Not chunked - load normally
+    const result = await chrome.storage.sync.get(key);
+    return result[key];
+  }
+};
+
 // Enhanced logging functionality
 function logInfo(message, data) {
   console.log(`[DMN INFO] ${message}`, data || '');
@@ -176,6 +336,15 @@ async function forcePullFromSyncStorage() {
     
     logInfo('Requesting data from sync storage...');
     const syncData = await chrome.storage.sync.get(syncSettings);
+    
+    // Check for chunked arrays and dechunk them
+    const chunkableKeys = ['blacklist', 'whitelist', 'blacklistKeywords', 'whitelistKeywords'];
+    for (const key of chunkableKeys) {
+      const dechunked = await loadArrayFromSync(key);
+      if (dechunked !== undefined) {
+        syncData[key] = dechunked;
+      }
+    }
     
     // Validate sync data
     const hasValidRules = 
@@ -333,6 +502,20 @@ async function init() {
           denyListKeywordsCount: items.blacklistKeywords ? items.blacklistKeywords.length : 0,
           allowListKeywordsCount: items.whitelistKeywords ? items.whitelistKeywords.length : 0
         });
+      }
+      
+      // Check for chunked data and dechunk if needed
+      const chunkableKeys = ['blacklist', 'whitelist', 'blacklistKeywords', 'whitelistKeywords'];
+      for (const key of chunkableKeys) {
+        // If the direct value is empty or missing, try to load from chunks
+        if (!items[key] || (Array.isArray(items[key]) && items[key].length === 0)) {
+          logInfo(`Checking for chunked data for ${key}...`);
+          const dechunked = await loadArrayFromSync(key);
+          if (dechunked && dechunked.length > 0) {
+            items[key] = dechunked;
+            logInfo(`Loaded ${dechunked.length} items from chunked ${key}`);
+          }
+        }
       }
       
       // Directly assign values with proper validation and fallbacks
@@ -1407,9 +1590,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         // Use sync storage for lists, but not on fresh install with empty lists
         // to avoid overwriting existing cloud data
         if (!isLikelyFreshInstall() || blacklist.length > 0) {
-          chrome.storage.sync.set({ blacklist }).catch(error => {
-            logError('Failed to save to sync storage, falling back to local:', error);
-            chrome.storage.local.set({ blacklist });
+          saveArrayToSync('blacklist', blacklist).catch(error => {
+            logError('Failed to save blacklist to sync storage:', error);
           });
         } else {
           logInfo('Skipped saving empty blacklist to sync on fresh install');
@@ -1434,9 +1616,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         // Use sync storage for lists, but not on fresh install with empty lists
         // to avoid overwriting existing cloud data
         if (!isLikelyFreshInstall() || whitelist.length > 0) {
-          chrome.storage.sync.set({ whitelist }).catch(error => {
-            logError('Failed to save to sync storage, falling back to local:', error);
-            chrome.storage.local.set({ whitelist });
+          saveArrayToSync('whitelist', whitelist).catch(error => {
+            logError('Failed to save whitelist to sync storage:', error);
           });
         } else {
           logInfo('Skipped saving empty whitelist to sync on fresh install');
@@ -1615,6 +1796,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               // First try sync storage for the latest data
             logInfo('Explicitly requesting latest data from sync storage');
             const syncData = await chrome.storage.sync.get(syncSettings);
+            
+            // Check for chunked data and dechunk if needed
+            const chunkableKeys = ['blacklist', 'whitelist', 'blacklistKeywords', 'whitelistKeywords'];
+            for (const key of chunkableKeys) {
+              if (!syncData[key] || (Array.isArray(syncData[key]) && syncData[key].length === 0)) {
+                logInfo(`Checking for chunked data for ${key} in updateRules...`);
+                const dechunked = await loadArrayFromSync(key);
+                if (dechunked && dechunked.length > 0) {
+                  syncData[key] = dechunked;
+                  logInfo(`Loaded ${dechunked.length} items from chunked ${key}`);
+                }
+              }
+            }
             
             // Create a safe result object with defaults for all expected values
             const safeSyncData = {
@@ -2182,6 +2376,19 @@ chrome.runtime.onInstalled.addListener(details => {
             throw new Error(`Sync storage returned invalid data: ${typeof syncData}`);
           }
           
+          // Check for chunked data and dechunk if needed
+          const chunkableKeys = ['blacklist', 'whitelist', 'blacklistKeywords', 'whitelistKeywords'];
+          for (const key of chunkableKeys) {
+            if (!syncData[key] || (Array.isArray(syncData[key]) && syncData[key].length === 0)) {
+              logInfo(`Checking for chunked data for ${key} in install check...`);
+              const dechunked = await loadArrayFromSync(key);
+              if (dechunked && dechunked.length > 0) {
+                syncData[key] = dechunked;
+                logInfo(`Loaded ${dechunked.length} items from chunked ${key}`);
+              }
+            }
+          }
+          
           // Count items
           const blacklistCount = Array.isArray(syncData.blacklist) ? syncData.blacklist.length : 0;
           const whitelistCount = Array.isArray(syncData.whitelist) ? syncData.whitelist.length : 0;
@@ -2306,6 +2513,18 @@ async function checkSyncStatus() {
     if (!syncData || typeof syncData !== 'object') {
       logError('Sync data is invalid:', syncData);
       return;
+    }
+    
+    // Check for chunked data and dechunk if needed
+    const chunkableKeys = ['blacklist', 'whitelist', 'blacklistKeywords', 'whitelistKeywords'];
+    for (const key of chunkableKeys) {
+      if (!syncData[key] || (Array.isArray(syncData[key]) && syncData[key].length === 0)) {
+        const dechunked = await loadArrayFromSync(key);
+        if (dechunked && dechunked.length > 0) {
+          syncData[key] = dechunked;
+          logInfo(`Periodic check: loaded ${dechunked.length} items from chunked ${key}`);
+        }
+      }
     }
     
     // Check if they differ from in-memory rules

@@ -18,17 +18,26 @@ We've implemented **4 layers of protection** to prevent data loss:
 
 ### Layer 1: Catastrophic Data Loss Detection (NEW - MOST CRITICAL)
 
+### What It Does
+
 **Location**: `service-worker.js` - `handleStorageChanges()`
 
 **What it does**: 
 - Monitors all incoming sync storage changes
-- If local storage has rules (e.g., 50+ items) but sync is trying to set them to EMPTY
+- If local storage has rules (e.g., 50+ items) but sync change has `newValue = undefined` (key deleted), `null`, or `[]` (empty)
 - **REFUSES** to accept the empty data
 - **IMMEDIATELY RE-UPLOADS** local data back to sync storage to restore the cloud
 - Logs critical warning with 🚨 emoji
 - Sends notification to UI
 
 **Why it matters**: This is the ONLY protection that saves Machine B when Machine A uninstalls. Without this, Machine B would blindly accept empty data and lose everything.
+
+**Critical Implementation Detail**: 
+When Chrome uninstalls an extension, it **deletes** the sync storage keys, sending `newValue = undefined` (not `newValue = []`). The check must use:
+```javascript
+!changes.blacklist.newValue || (Array.isArray(changes.blacklist.newValue) && changes.blacklist.newValue.length === 0)
+```
+Not just `Array.isArray()` check, which would miss the undefined case!
 
 **Code**:
 ```javascript
@@ -140,19 +149,31 @@ Restored 45 deny + 5 allow rules to cloud
 
 ## Testing the Protection
 
-### Test 1: Simulate Uninstall on Machine A
+### Test 1: Simulate Uninstall on Machine A ✅ CONFIRMED WORKING
 
-**Machine A** (sacrificial test profile):
-1. Install extension with test data (10 rules)
-2. Uninstall extension (simulates the catastrophic event)
+**Machine A** (test machine):
+1. Install extension with test data (or real data)
+2. Wait for sync to Machine B (verify data appears)
+3. Uninstall extension (simulates the catastrophic event)
 
-**Machine B** (production profile with real rules):
+**Machine B** (production machine with rules):
 1. Check console logs - should see: 🚨 CATASTROPHIC DATA LOSS DETECTED!
-2. Check settings - rules should still be there
+2. Check settings - rules should still be there (258 rules confirmed in testing)
 3. Check sync storage (check-sync-data.html) - rules should be restored
-4. Notification should appear about recovery
+4. Optional: Notification appears about recovery
 
 **Expected**: Machine B refuses empty sync, restores cloud from local
+
+**Actual Test Results** (2026-01-29):
+```
+[DMN ERROR] 🚨 CATASTROPHIC DATA LOSS DETECTED! 🚨
+[DMN ERROR] Local storage has 12 deny + 246 allow rules
+[DMN ERROR] But sync storage is trying to set them to EMPTY!
+[DMN ERROR] REFUSING to accept empty data and RE-UPLOADING local rules to restore cloud!
+[SYNC] Writing to sync storage - {"keys":["blacklist"]}
+[DMN INFO] ✅ Successfully restored cloud sync storage from local data
+```
+✅ All 258 rules preserved and cloud restored successfully!
 
 ### Test 2: Fresh Install Write Protection
 
@@ -238,5 +259,8 @@ With Layer 1 protection:
 
 ## Version History
 
-- **v3.14.1** (2026-01-29): Added Layer 1 (Catastrophic Detection) - THE CRITICAL FIX
+- **v3.14.2** (2026-01-29): 
+  - Added Layer 1 (Catastrophic Detection) - THE CRITICAL FIX
+  - **BUGFIX**: Fixed detection to catch `undefined` (key deletion) not just empty arrays
+  - Tested and confirmed working with real uninstall scenario
 - **v3.14.0** (2026-01-27): Added Layers 2-4 (Fresh install, metadata, dechunk protection)

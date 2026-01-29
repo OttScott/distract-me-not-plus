@@ -63,7 +63,7 @@ export class Panel extends Component {
   componentDidUpdate(prevProps, prevState) {
     // Log any state changes that might cause button to disappear
     const stateChanges = Object.keys(this.state).filter(
-      key => this.state[key] !== prevState[key]
+      (key) => this.state[key] !== prevState[key],
     );
     if (stateChanges.length > 0) {
       console.log('[Panel] State updated:', stateChanges, this.state);

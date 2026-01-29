@@ -805,8 +805,40 @@ function setupStorageChangeListener() {
 
 // Cleaner storage changes handler with reduced logging
 async function handleStorageChanges(changes, areaName) {
+  // LOG EVERYTHING for debugging
+  logInfo('💾 handleStorageChanges called:', {
+    areaName,
+    hasChanges: !!changes,
+    changeKeys: changes ? Object.keys(changes) : []
+  });
+  
   if (areaName !== 'sync') {
+    logInfo('Ignoring non-sync storage change');
     return;
+  }
+
+  // LOG current state
+  logInfo('Current in-memory state:', {
+    blacklistCount: blacklist.length,
+    whitelistCount: whitelist.length,
+    blacklistKeywordsCount: blacklistKeywords.length,
+    whitelistKeywordsCount: whitelistKeywords.length
+  });
+
+  // LOG what's in the changes
+  if (changes.blacklist) {
+    logInfo('Blacklist change detected:', {
+      oldLength: changes.blacklist.oldValue?.length ?? 'undefined',
+      newLength: changes.blacklist.newValue?.length ?? 'undefined',
+      newValueType: typeof changes.blacklist.newValue
+    });
+  }
+  if (changes.whitelist) {
+    logInfo('Whitelist change detected:', {
+      oldLength: changes.whitelist.oldValue?.length ?? 'undefined',
+      newLength: changes.whitelist.newValue?.length ?? 'undefined',
+      newValueType: typeof changes.whitelist.newValue
+    });
   }
 
   // CRITICAL DATA LOSS PROTECTION: Detect catastrophic empty sync data
@@ -815,11 +847,31 @@ async function handleStorageChanges(changes, areaName) {
   const hasLocalRules = blacklist.length > 0 || whitelist.length > 0 || 
                         blacklistKeywords.length > 0 || whitelistKeywords.length > 0;
   
+  logInfo('Protection check:', {
+    hasLocalRules,
+    willCheckForEmptySync: hasLocalRules
+  });
+  
   if (hasLocalRules) {
-    // Check if sync is trying to set lists to empty
-    const syncSettingToEmpty = 
-      (changes.blacklist && Array.isArray(changes.blacklist.newValue) && changes.blacklist.newValue.length === 0) ||
-      (changes.whitelist && Array.isArray(changes.whitelist.newValue) && changes.whitelist.newValue.length === 0);
+    // Check if sync is trying to DELETE or set lists to empty
+    // Uninstall sends newValue = undefined (key deleted)
+    // Empty save sends newValue = [] (empty array)
+    const blacklistGoingEmpty = changes.blacklist && 
+                                (!changes.blacklist.newValue || 
+                                 (Array.isArray(changes.blacklist.newValue) && changes.blacklist.newValue.length === 0));
+    const whitelistGoingEmpty = changes.whitelist && 
+                                (!changes.whitelist.newValue ||
+                                 (Array.isArray(changes.whitelist.newValue) && changes.whitelist.newValue.length === 0));
+    
+    const syncSettingToEmpty = blacklistGoingEmpty || whitelistGoingEmpty;
+    
+    logInfo('Empty sync detection:', {
+      blacklistGoingEmpty,
+      whitelistGoingEmpty,
+      syncSettingToEmpty,
+      blacklistNewValue: changes.blacklist?.newValue,
+      whitelistNewValue: changes.whitelist?.newValue
+    });
     
     if (syncSettingToEmpty) {
       logError('🚨 CATASTROPHIC DATA LOSS DETECTED! 🚨');

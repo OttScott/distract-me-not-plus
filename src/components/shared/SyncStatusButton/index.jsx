@@ -15,12 +15,23 @@ export class SyncStatusButton extends Component {
   }
 
   componentDidMount() {
+    console.log('[SyncStatusButton] componentDidMount');
     this.loadSyncStatus();
   }
 
+  componentWillUnmount() {
+    console.error('[SyncStatusButton] componentWillUnmount - Button is being removed!');
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('[SyncStatusButton] Component crashed:', error, errorInfo);
+  }
+
   loadSyncStatus = async () => {
+    console.log('[SyncStatusButton] loadSyncStatus started');
     try {
       const syncStatus = await syncStatusTracker.getSyncStatus();
+      console.log('[SyncStatusButton] Got sync status:', syncStatus);
 
       // Get rule counts
       const settings = await syncStorage.get({
@@ -29,6 +40,7 @@ export class SyncStatusButton extends Component {
         blacklistKeywords: [],
         whitelistKeywords: [],
       });
+      console.log('[SyncStatusButton] Got settings, calculating rule count');
 
       const ruleCount =
         (settings.blacklist?.length || 0) +
@@ -36,9 +48,10 @@ export class SyncStatusButton extends Component {
         (settings.blacklistKeywords?.length || 0) +
         (settings.whitelistKeywords?.length || 0);
 
+      console.log('[SyncStatusButton] Setting state with', ruleCount, 'rules');
       this.setState({ syncStatus, ruleCount });
     } catch (error) {
-      console.error('Failed to load sync status:', error);
+      console.error('[SyncStatusButton] Failed to load sync status:', error);
     }
   };
 
@@ -101,6 +114,7 @@ export class SyncStatusButton extends Component {
   };
 
   render() {
+    console.log('[SyncStatusButton] render() called, state:', this.state);
     const { syncStatus, ruleCount, loading } = this.state;
     const iconColor = this.getSyncHealthColor();
 

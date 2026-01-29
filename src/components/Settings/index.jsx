@@ -243,6 +243,17 @@ export class Settings extends Component {
       if (this.state.refreshRulesRunning) {
         this.setState({ refreshRulesRunning: false });
       }
+    } else if (message.type === 'dataLossDetected') {
+      logInfo('Data loss detected and recovered:', message.data);
+
+      // Show critical warning notification
+      toaster.warning(
+        `⚠️ Data loss detected! Cloud storage was empty but local had ${message.data.blacklistCount + message.data.whitelistCount} rules. Automatically restored from local backup.`,
+        {
+          id: 'data-loss-recovered',
+          duration: 10,
+        },
+      );
     } else if (message.type === 'syncRulesUpdateFailed') {
       logInfo('Sync rules update failed:', message.error);
 

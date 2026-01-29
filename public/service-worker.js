@@ -130,8 +130,26 @@ const chunkArray = (array, key) => {
 
 const saveArrayToSync = async (key, array) => {
   // CRITICAL SAFETY CHECK: Never overwrite existing sync data with empty arrays
+  // Also check install time - if installed in last 15 minutes, be VERY conservative
   if (!array || array.length === 0) {
     logWarning(`Attempting to save empty ${key} to sync storage - checking for existing data first`);
+    
+    // Check how long ago we were installed
+    try {
+      const { installTime } = await chrome.storage.local.get('installTime');
+      if (installTime) {
+        const minutesSinceInstall = (Date.now() - installTime) / 60000;
+        if (minutesSinceInstall < 15) {
+          logError(`PREVENTED DATA LOSS: Extension installed only ${minutesSinceInstall.toFixed(1)} minutes ago`);
+          logError(`Refusing to write empty ${key} to sync storage during fresh install period`);
+          logError(`Saving to local storage only`);
+          await chrome.storage.local.set({ [key]: array });
+          return;
+        }
+      }
+    } catch (installTimeError) {
+      logError('Error checking install time:', installTimeError);
+    }
     
     // Check for existing metadata with timestamp
     try {
@@ -786,9 +804,61 @@ function setupStorageChangeListener() {
 }
 
 // Cleaner storage changes handler with reduced logging
-function handleStorageChanges(changes, areaName) {
+async function handleStorageChanges(changes, areaName) {
   if (areaName !== 'sync') {
     return;
+  }
+
+  // CRITICAL DATA LOSS PROTECTION: Detect catastrophic empty sync data
+  // If we have local rules but sync is trying to set everything to empty, this is likely
+  // uninstall on another machine - REJECT and restore from local data
+  const hasLocalRules = blacklist.length > 0 || whitelist.length > 0 || 
+                        blacklistKeywords.length > 0 || whitelistKeywords.length > 0;
+  
+  if (hasLocalRules) {
+    // Check if sync is trying to set lists to empty
+    const syncSettingToEmpty = 
+      (changes.blacklist && Array.isArray(changes.blacklist.newValue) && changes.blacklist.newValue.length === 0) ||
+      (changes.whitelist && Array.isArray(changes.whitelist.newValue) && changes.whitelist.newValue.length === 0);
+    
+    if (syncSettingToEmpty) {
+      logError('🚨 CATASTROPHIC DATA LOSS DETECTED! 🚨');
+      logError(`Local storage has ${blacklist.length} deny + ${whitelist.length} allow rules`);
+      logError('But sync storage is trying to set them to EMPTY!');
+      logError('This likely means another machine uninstalled the extension.');
+      logError('REFUSING to accept empty data and RE-UPLOADING local rules to restore cloud!');
+      
+      // Send message to UI to show critical notification
+      try {
+        chrome.runtime.sendMessage({
+          type: 'dataLossDetected',
+          data: {
+            blacklistCount: blacklist.length,
+            whitelistCount: whitelist.length,
+            action: 'restored'
+          }
+        }).catch(() => {
+          // Ignore if no one is listening
+        });
+      } catch (msgError) {
+        // Ignore messaging errors
+      }
+      
+      // Immediately re-upload our local data to sync to restore the cloud
+      try {
+        await saveArrayToSync('blacklist', blacklist);
+        await saveArrayToSync('whitelist', whitelist);
+        await saveArrayToSync('blacklistKeywords', blacklistKeywords);
+        await saveArrayToSync('whitelistKeywords', whitelistKeywords);
+        logInfo('✅ Successfully restored cloud sync storage from local data');
+        logInfo(`Restored ${blacklist.length} deny + ${whitelist.length} allow rules to cloud`);
+      } catch (restoreError) {
+        logError('Failed to restore sync storage:', restoreError);
+      }
+      
+      // DO NOT accept the empty values - return early
+      return;
+    }
   }
 
   const changesSummary = summarizeStorageChanges(changes);
@@ -2454,11 +2524,12 @@ chrome.runtime.onInstalled.addListener(details => {
         }
       });
       
-      // Clear initial install flag after 2 minutes to allow normal operation
+      // Clear initial install flag after 10 minutes to allow normal operation
+      // Extended from 2 minutes to give more time for Chrome sync to populate
       setTimeout(() => {
         isInitialInstall = false;
-        logInfo('Initial install phase completed, now allowing sync writes if needed');
-      }, 120000); // 2 minutes
+        logInfo('Initial install phase completed (10 minutes), now allowing sync writes if needed');
+      }, 600000); // 10 minutes
     }
   });
 });

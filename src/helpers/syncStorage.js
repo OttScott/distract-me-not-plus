@@ -200,10 +200,10 @@ const checkIfFreshInstall = async () => {
       (!data?.whitelist || data.whitelist.length === 0) &&
       (!data?.blacklistKeywords || data.blacklistKeywords.length === 0) &&
       (!data?.whitelistKeywords || data.whitelistKeywords.length === 0);
-    // Also check if this was recently installed (within last 5 minutes)
+    // Also check if this was recently installed (within last 15 minutes)
     const installTime = await chrome.storage.local.get(['installTime']);
     const isRecentInstall =
-      installTime?.installTime && Date.now() - installTime.installTime < 5 * 60 * 1000;
+      installTime?.installTime && Date.now() - installTime.installTime < 15 * 60 * 1000;
 
     return hasNoRules && isRecentInstall;
   } catch (error) {

@@ -60,6 +60,16 @@ export class Panel extends Component {
     };
   }
 
+  componentDidUpdate(prevProps, prevState) {
+    // Log any state changes that might cause button to disappear
+    const stateChanges = Object.keys(this.state).filter(
+      key => this.state[key] !== prevState[key]
+    );
+    if (stateChanges.length > 0) {
+      console.log('[Panel] State updated:', stateChanges, this.state);
+    }
+  }
+
   componentDidMount() {
     Promise.all([
       sendMessage('getIsEnabled').then(
@@ -230,7 +240,9 @@ export class Panel extends Component {
             >
               <Pane display="flex" gap={10}>
                 <SettingsButton history={this.props.history} />
+                {console.log('[DEBUG] About to render SyncStatusButton')}
                 <SyncStatusButton />
+                {console.log('[DEBUG] Rendered SyncStatusButton')}
                 {this.state.enableUnblock && (
                   <LinkIconButton
                     icon={ShieldIcon}

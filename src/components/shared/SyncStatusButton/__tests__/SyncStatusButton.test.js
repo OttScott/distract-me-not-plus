@@ -113,7 +113,7 @@ describe('SyncStatusButton', () => {
 
     await waitFor(() => {
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Failed to load sync status:',
+        '[SyncStatusButton] Failed to load sync status:',
         expect.any(Error),
       );
     });

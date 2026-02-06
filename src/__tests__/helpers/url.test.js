@@ -29,6 +29,12 @@ describe('url helper', () => {
       '*.website',
       '*.website.com',
       'website.com',
+      'chrome-extension://jbkfoedolllekgbhcbcoahefnbanhhlh/*',
+      'chrome-extension://jbkfoedolllekgbhcbcoahefnbanhhlh/popup.html',
+      'chrome-extension://jbkfoedolllekgbhcbcoahefnbanhhlh',
+      'moz-extension://abc123/popup.html',
+      'extension://nchoghdeojbbgdmoamkknikmnnboclkb/*',
+      'extension://nchoghdeojbbgdmoamkknikmnnboclkb',
     ];
 
     for (const url of urls) {

@@ -88,7 +88,6 @@ const localSettings = ['isEnabled', 'enableLogs', 'timer'];
 
 // Storage chunking helpers for large arrays
 const SYNC_STORAGE_MAX_ITEM_SIZE = 8 * 1024; // 8KB per-item limit
-const SYNC_VERSION_KEY = 'syncVersion'; // Global sync version tracker
 const getDataSize = (data) => new Blob([JSON.stringify(data)]).size;
 
 const chunkArray = (array, key) => {
@@ -129,61 +128,6 @@ const chunkArray = (array, key) => {
 };
 
 const saveArrayToSync = async (key, array) => {
-  // CRITICAL SAFETY CHECK: Never overwrite existing sync data with empty arrays
-  // Also check install time - if installed in last 15 minutes, be VERY conservative
-  if (!array || array.length === 0) {
-    logWarning(`Attempting to save empty ${key} to sync storage - checking for existing data first`);
-    
-    // Check how long ago we were installed
-    try {
-      const { installTime } = await chrome.storage.local.get('installTime');
-      if (installTime) {
-        const minutesSinceInstall = (Date.now() - installTime) / 60000;
-        if (minutesSinceInstall < 15) {
-          logError(`PREVENTED DATA LOSS: Extension installed only ${minutesSinceInstall.toFixed(1)} minutes ago`);
-          logError(`Refusing to write empty ${key} to sync storage during fresh install period`);
-          logError(`Saving to local storage only`);
-          await chrome.storage.local.set({ [key]: array });
-          return;
-        }
-      }
-    } catch (installTimeError) {
-      logError('Error checking install time:', installTimeError);
-    }
-    
-    // Check for existing metadata with timestamp
-    try {
-      const metadataKey = `${key}_metadata`;
-      const metadataResult = await chrome.storage.sync.get(metadataKey);
-      const existingMetadata = metadataResult?.[metadataKey];
-      
-      if (existingMetadata && existingMetadata.totalCount > 0) {
-        const existingDate = new Date(existingMetadata.lastUpdated);
-        const ageMinutes = (Date.now() - existingDate.getTime()) / 60000;
-        logError(`PREVENTED DATA LOSS: Found existing ${key} metadata:`);
-        logError(`  - ${existingMetadata.totalCount} items in ${existingMetadata.totalChunks} chunks`);
-        logError(`  - Last updated: ${existingDate.toLocaleString()} (${ageMinutes.toFixed(1)} minutes ago)`);
-        logError(`  - Refusing to overwrite with empty array!`);
-        logError(`  - Saving to local storage only`);
-        await chrome.storage.local.set({ [key]: array });
-        return;
-      }
-    } catch (metadataError) {
-      logError(`Error checking ${key} metadata:`, metadataError);
-    }
-    
-    // If no metadata, check if there's existing data by trying to load it
-    const existing = await loadArrayFromSync(key);
-    if (existing && existing.length > 0) {
-      logError(`PREVENTED DATA LOSS: Found ${existing.length} existing ${key} items (no metadata)`);
-      logError(`Refusing to overwrite with empty array! Saving to local storage only.`);
-      await chrome.storage.local.set({ [key]: array });
-      return;
-    }
-    
-    logInfo(`No existing ${key} data in sync storage, allowing empty array write`);
-  }
-  
   const dataSize = getDataSize(array);
   
   // Check if chunking is needed
@@ -217,15 +161,6 @@ const saveArrayToSync = async (key, array) => {
     await chrome.storage.local.set({ [key]: array });
     logInfo(`Saved ${key} to sync storage (${dataSize} bytes, no chunking needed)`);
   }
-  
-  // Update global sync version
-  const syncVersion = {
-    lastUpdated: new Date().toISOString(),
-    key: key,
-    itemCount: array.length,
-  };
-  await chrome.storage.sync.set({ [SYNC_VERSION_KEY]: syncVersion });
-  logInfo(`Updated sync version for ${key}: ${syncVersion.lastUpdated}`);
 };
 
 const loadArrayFromSync = async (key) => {
@@ -804,113 +739,9 @@ function setupStorageChangeListener() {
 }
 
 // Cleaner storage changes handler with reduced logging
-async function handleStorageChanges(changes, areaName) {
-  // LOG EVERYTHING for debugging
-  logInfo('💾 handleStorageChanges called:', {
-    areaName,
-    hasChanges: !!changes,
-    changeKeys: changes ? Object.keys(changes) : []
-  });
-  
+function handleStorageChanges(changes, areaName) {
   if (areaName !== 'sync') {
-    logInfo('Ignoring non-sync storage change');
     return;
-  }
-
-  // LOG current state
-  logInfo('Current in-memory state:', {
-    blacklistCount: blacklist.length,
-    whitelistCount: whitelist.length,
-    blacklistKeywordsCount: blacklistKeywords.length,
-    whitelistKeywordsCount: whitelistKeywords.length
-  });
-
-  // LOG what's in the changes
-  if (changes.blacklist) {
-    logInfo('Blacklist change detected:', {
-      oldLength: changes.blacklist.oldValue?.length ?? 'undefined',
-      newLength: changes.blacklist.newValue?.length ?? 'undefined',
-      newValueType: typeof changes.blacklist.newValue
-    });
-  }
-  if (changes.whitelist) {
-    logInfo('Whitelist change detected:', {
-      oldLength: changes.whitelist.oldValue?.length ?? 'undefined',
-      newLength: changes.whitelist.newValue?.length ?? 'undefined',
-      newValueType: typeof changes.whitelist.newValue
-    });
-  }
-
-  // CRITICAL DATA LOSS PROTECTION: Detect catastrophic empty sync data
-  // If we have local rules but sync is trying to set everything to empty, this is likely
-  // uninstall on another machine - REJECT and restore from local data
-  const hasLocalRules = blacklist.length > 0 || whitelist.length > 0 || 
-                        blacklistKeywords.length > 0 || whitelistKeywords.length > 0;
-  
-  logInfo('Protection check:', {
-    hasLocalRules,
-    willCheckForEmptySync: hasLocalRules
-  });
-  
-  if (hasLocalRules) {
-    // Check if sync is trying to DELETE or set lists to empty
-    // Uninstall sends newValue = undefined (key deleted)
-    // Empty save sends newValue = [] (empty array)
-    const blacklistGoingEmpty = changes.blacklist && 
-                                (!changes.blacklist.newValue || 
-                                 (Array.isArray(changes.blacklist.newValue) && changes.blacklist.newValue.length === 0));
-    const whitelistGoingEmpty = changes.whitelist && 
-                                (!changes.whitelist.newValue ||
-                                 (Array.isArray(changes.whitelist.newValue) && changes.whitelist.newValue.length === 0));
-    
-    const syncSettingToEmpty = blacklistGoingEmpty || whitelistGoingEmpty;
-    
-    logInfo('Empty sync detection:', {
-      blacklistGoingEmpty,
-      whitelistGoingEmpty,
-      syncSettingToEmpty,
-      blacklistNewValue: changes.blacklist?.newValue,
-      whitelistNewValue: changes.whitelist?.newValue
-    });
-    
-    if (syncSettingToEmpty) {
-      logError('🚨 CATASTROPHIC DATA LOSS DETECTED! 🚨');
-      logError(`Local storage has ${blacklist.length} deny + ${whitelist.length} allow rules`);
-      logError('But sync storage is trying to set them to EMPTY!');
-      logError('This likely means another machine uninstalled the extension.');
-      logError('REFUSING to accept empty data and RE-UPLOADING local rules to restore cloud!');
-      
-      // Send message to UI to show critical notification
-      try {
-        chrome.runtime.sendMessage({
-          type: 'dataLossDetected',
-          data: {
-            blacklistCount: blacklist.length,
-            whitelistCount: whitelist.length,
-            action: 'restored'
-          }
-        }).catch(() => {
-          // Ignore if no one is listening
-        });
-      } catch (msgError) {
-        // Ignore messaging errors
-      }
-      
-      // Immediately re-upload our local data to sync to restore the cloud
-      try {
-        await saveArrayToSync('blacklist', blacklist);
-        await saveArrayToSync('whitelist', whitelist);
-        await saveArrayToSync('blacklistKeywords', blacklistKeywords);
-        await saveArrayToSync('whitelistKeywords', whitelistKeywords);
-        logInfo('✅ Successfully restored cloud sync storage from local data');
-        logInfo(`Restored ${blacklist.length} deny + ${whitelist.length} allow rules to cloud`);
-      } catch (restoreError) {
-        logError('Failed to restore sync storage:', restoreError);
-      }
-      
-      // DO NOT accept the empty values - return early
-      return;
-    }
   }
 
   const changesSummary = summarizeStorageChanges(changes);
@@ -1268,11 +1099,15 @@ function createBlockResult(blocked, reason, matchedPattern = null) {
 }
 
 /**
- * Checks if URL is an internal browser page.
- * Follows SRP by handling only browser page detection.
+ * Checks if URL is an internal browser page or extension page.
+ * Follows SRP by handling only browser/extension page detection.
  */
 function isInternalBrowserPage(url) {
-  return url.startsWith('edge://') || url.startsWith('chrome://');
+  return url.startsWith('edge://') || 
+         url.startsWith('chrome://') || 
+         url.startsWith('chrome-extension://') ||
+         url.startsWith('moz-extension://') ||
+         url.startsWith('extension://');
 }
 
 /**
@@ -2576,12 +2411,11 @@ chrome.runtime.onInstalled.addListener(details => {
         }
       });
       
-      // Clear initial install flag after 10 minutes to allow normal operation
-      // Extended from 2 minutes to give more time for Chrome sync to populate
+      // Clear initial install flag after 2 minutes to allow normal operation
       setTimeout(() => {
         isInitialInstall = false;
-        logInfo('Initial install phase completed (10 minutes), now allowing sync writes if needed');
-      }, 600000); // 10 minutes
+        logInfo('Initial install phase completed, now allowing sync writes if needed');
+      }, 120000); // 2 minutes
     }
   });
 });

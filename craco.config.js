@@ -14,6 +14,10 @@ module.exports = {
           from: 'node_modules/bcryptjs/dist/bcrypt.min.js',
           to: 'static/js',
         },
+        {
+          from: 'public/icons/magnet-32.png',
+          to: 'favicon.png',
+        },
       ]),
       new webpack.optimize.LimitChunkCountPlugin({
         maxChunks: 1,

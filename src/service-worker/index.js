@@ -33,7 +33,10 @@ import {
 import { compileRules, getRulesSummary } from './rules/ruleCompiler';
 
 // Engine
-import { checkUrlShouldBeBlocked, isUrlStillBlocked as _isUrlStillBlocked } from './engine/decisionEngine';
+import {
+  checkUrlShouldBeBlocked,
+  isUrlStillBlocked as _isUrlStillBlocked,
+} from './engine/decisionEngine';
 import { evaluateUrlForMode as _evaluateUrlForMode } from './engine/blockingModes';
 import {
   executeBlockAction as _executeBlockAction,
@@ -66,8 +69,15 @@ import {
   stopTimer,
   resumeTimer,
 } from './features/timer';
-import { parseTodaySchedule as _parseTodaySchedule, isBlockingScheduleActive as _isBlockingScheduleActive } from './features/schedule';
-import { isTmpAllowed as _isTmpAllowed, removeOutdatedTmpAllowed as _removeOutdatedTmpAllowed, unblockTab } from './features/tempAllow';
+import {
+  parseTodaySchedule as _parseTodaySchedule,
+  isBlockingScheduleActive as _isBlockingScheduleActive,
+} from './features/schedule';
+import {
+  isTmpAllowed as _isTmpAllowed,
+  removeOutdatedTmpAllowed as _removeOutdatedTmpAllowed,
+  unblockTab,
+} from './features/tempAllow';
 import {
   initContextMenus as _initContextMenus,
   setupContextMenuListeners as _setupContextMenuListeners,
@@ -85,7 +95,12 @@ import {
 import { createMessageRouter, registerMessageHandler } from './messaging/messageRouter';
 
 // Diagnostics
-import { logInfo, logWarning as _logWarning, logError, logDebug } from './diagnostics/logger';
+import {
+  logInfo,
+  logWarning as _logWarning,
+  logError,
+  logDebug,
+} from './diagnostics/logger';
 import {
   syncDebug as _syncDebug,
   getSyncStorageQuota,
@@ -100,7 +115,11 @@ import {
 // Helpers (for schedule functions)
 import { getTodaySchedule, isScheduleAllowed } from '../helpers/schedule';
 import { nativeAPI, isFirefox, indexUrl as _helperIndexUrl } from '../helpers/webext';
-import { sendNotification, getTab, getActiveTab as _getActiveTab } from '../helpers/webext';
+import {
+  sendNotification,
+  getTab,
+  getActiveTab as _getActiveTab,
+} from '../helpers/webext';
 
 // ============================================================================
 // State

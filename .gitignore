@@ -56,3 +56,6 @@ eslint-results.json
 private-keys/
 *.pem
 EXTENSION-KEYS-README.md
+
+# Copilot tracking (planning artifacts)
+.copilot-tracking/

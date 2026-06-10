@@ -254,11 +254,7 @@ describe('messageRouter', () => {
 
   describe('Timer messages', () => {
     it('should handle GET_TIMER_SETTINGS', async () => {
-      await handleMessage(
-        { message: MessageTypes.GET_TIMER_SETTINGS },
-        {},
-        jest.fn(),
-      );
+      await handleMessage({ message: MessageTypes.GET_TIMER_SETTINGS }, {}, jest.fn());
 
       expect(mockHandlers.getTimerSettings).toHaveBeenCalled();
     });
@@ -304,11 +300,7 @@ describe('messageRouter', () => {
 
   describe('Schedule messages', () => {
     it('should handle GET_SCHEDULE', async () => {
-      await handleMessage(
-        { message: MessageTypes.GET_SCHEDULE },
-        {},
-        jest.fn(),
-      );
+      await handleMessage({ message: MessageTypes.GET_SCHEDULE }, {}, jest.fn());
 
       expect(mockHandlers.getSchedule).toHaveBeenCalled();
     });
@@ -373,11 +365,7 @@ describe('messageRouter', () => {
 
   describe('Unblock messages', () => {
     it('should handle GET_UNBLOCK_SETTINGS', async () => {
-      await handleMessage(
-        { message: MessageTypes.GET_UNBLOCK_SETTINGS },
-        {},
-        jest.fn(),
-      );
+      await handleMessage({ message: MessageTypes.GET_UNBLOCK_SETTINGS }, {}, jest.fn());
 
       expect(mockHandlers.getUnblockSettings).toHaveBeenCalled();
     });
@@ -455,21 +443,13 @@ describe('messageRouter', () => {
     });
 
     it('should handle FORCE_UPDATE_RULES', async () => {
-      await handleMessage(
-        { message: MessageTypes.FORCE_UPDATE_RULES },
-        {},
-        jest.fn(),
-      );
+      await handleMessage({ message: MessageTypes.FORCE_UPDATE_RULES }, {}, jest.fn());
 
       expect(mockHandlers.forceUpdateRules).toHaveBeenCalled();
     });
 
     it('should handle FORCE_PULL_FROM_SYNC', async () => {
-      await handleMessage(
-        { message: MessageTypes.FORCE_PULL_FROM_SYNC },
-        {},
-        jest.fn(),
-      );
+      await handleMessage({ message: MessageTypes.FORCE_PULL_FROM_SYNC }, {}, jest.fn());
 
       expect(mockHandlers.forcePullFromSync).toHaveBeenCalled();
     });

@@ -1,4 +1,3 @@
-export * from './Background';
 export * from './Blocked';
 export * from './Allowed';
 export * from './Panel';

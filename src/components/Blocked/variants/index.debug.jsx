@@ -1,5 +1,6 @@
 import React, { Component, Fragment } from 'react';
-import { toaster, DuplicateIcon } from 'evergreen-ui';
+import { DuplicateIcon } from 'evergreen-ui';
+import { toaster } from 'helpers/toaster';
 import { translate } from 'helpers/i18n';
 import { storage, sendMessage } from 'helpers/webext';
 import { isDevEnv } from 'helpers/debug';

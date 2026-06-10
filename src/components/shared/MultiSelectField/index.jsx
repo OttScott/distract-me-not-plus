@@ -20,7 +20,7 @@ export class MultiSelectField extends Component {
     });
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps, _prevState) {
     //debug.log({ props: this.props, prevProps: prevProps, state: this.state, prevState: prevState });
     if (this.props.options && prevProps.options) {
       // check for options change

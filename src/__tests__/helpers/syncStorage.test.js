@@ -310,7 +310,7 @@ describe('Sync Storage Advanced Tests', () => {
   describe('Fallback to Local Storage', () => {
     it('should fallback to local storage when sync fails', async () => {
       // Mock sync storage failure
-      chromeMock.storage.sync.get.mockImplementation((keys, callback) => {
+      chromeMock.storage.sync.get.mockImplementation((_keys, _callback) => {
         throw new Error('Sync storage unavailable');
       });
 
@@ -325,7 +325,7 @@ describe('Sync Storage Advanced Tests', () => {
       mockSyncStorage.get.mockImplementation(async (keys) => {
         try {
           // Try sync first (will fail)
-          await new Promise((resolve, reject) => {
+          await new Promise((resolve, _reject) => {
             chromeMock.storage.sync.get(keys, resolve);
           });
         } catch (error) {

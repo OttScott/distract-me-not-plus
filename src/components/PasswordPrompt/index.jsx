@@ -3,7 +3,6 @@ import {
   Pane,
   TextInput,
   UnlockIcon,
-  toaster,
   HistoryIcon,
   Position,
   PlusIcon,
@@ -11,6 +10,7 @@ import {
   PowerIcon,
   StopwatchIcon,
 } from 'evergreen-ui';
+import { toaster } from 'helpers/toaster';
 import { translate } from 'helpers/i18n';
 import { storage, sendMessage } from 'helpers/webext';
 import { compare } from 'helpers/crypt';
@@ -185,7 +185,7 @@ export class PasswordPrompt extends Component {
     }
   };
 
-  handleButtonClick = (event) => {
+  handleButtonClick = (_event) => {
     this.checkPassword();
   };
 

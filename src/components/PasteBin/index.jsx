@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-import { Pane, Paragraph, toaster, DuplicateIcon } from 'evergreen-ui';
+import { Pane, Paragraph, DuplicateIcon } from 'evergreen-ui';
+import { toaster } from 'helpers/toaster';
 import { translate } from 'helpers/i18n';
 import { debug, isDevEnv } from 'helpers/debug';
 import { isUrl, getValidUrl } from 'helpers/url';

@@ -1,3 +1,17 @@
+/**
+ * ARCHIVED: 2026-05-23
+ * 
+ * This file was the Firefox MV2 Background component that served as the
+ * background page for Firefox builds. It has been archived as part of the
+ * Firefox MV3 migration (PR 2 of Foundation Refactor).
+ * 
+ * Firefox MV3 now uses the unified service worker bundle (service-worker.js)
+ * via background.scripts instead of this React component.
+ * 
+ * This file is preserved for reference and as a backup in case rollback
+ * is needed.
+ */
+
 import React, { Component } from 'react';
 import {
   storage,
@@ -31,6 +45,10 @@ import { defaultTimerSettings, unactiveTimerRuntimeSettings } from 'helpers/time
 import { now } from 'helpers/date';
 import { translate } from 'helpers/i18n';
 import queryString from 'query-string';
+
+// Extracted service-worker modules (Phase 1a wiring)
+// Using isBlockingScheduleActive for unified schedule logic
+import { isBlockingScheduleActive } from 'service-worker/features/schedule';
 
 const contextMenus = [
   {
@@ -978,11 +996,11 @@ export class Background extends Component {
   isUrlStillBlocked = (url) => {
     if (!this.isEnabled) {
       return false;
-    } else {
-      const { isAllowedTime } = this.parseTodaySchedule();
-      if (isAllowedTime) {
-        return false;
-      }
+    }
+    // Use extracted schedule module for unified logic
+    // isBlockingScheduleActive returns true when blocking is active (not in allowed time)
+    if (!isBlockingScheduleActive(this.schedule)) {
+      return false;
     }
     return this.isUrlBlocked(url);
   };

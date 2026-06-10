@@ -9,7 +9,7 @@ export class NumberInput extends Component {
     };
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps, _prevState) {
     //debug.log({ props: this.props, prevProps: prevProps, state: this.state, prevState: prevState });
     if (this.props.value !== prevProps.value && this.props.value !== this.state.value) {
       debug.warn('value prop has changed:', this.props.value);

@@ -65,14 +65,8 @@ async function main() {
   const nodeVersion = process.version;
   console.log(`Node.js version: ${nodeVersion}`);
   
-  // Inject React DOM polyfill before building (for evergreen-ui compatibility)
-  console.log('🔧 Injecting React DOM polyfill for React 17 compatibility...');
-  try {
-    require('./inject-react-dom-polyfill.js');
-  } catch (error) {
-    console.warn('⚠️  Could not inject React DOM polyfill:', error.message);
-    console.warn('   Build may show warnings about react-dom/client');
-  }
+  // React 18 uses native react-dom/client - no polyfill needed
+  console.log('🚀 Using React 18 native createRoot API...');
   
   // Base environment variables for all builds
   const baseEnv = {

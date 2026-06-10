@@ -2,6 +2,22 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { PasswordPrompt } from 'components';
 
+// Mock evergreen-ui toaster with proper implementations
+jest.mock('evergreen-ui', () => {
+  const original = jest.requireActual('evergreen-ui');
+  const mockToaster = {
+    success: jest.fn(),
+    danger: jest.fn(),
+    warning: jest.fn(),
+    notify: jest.fn(),
+    closeAll: jest.fn(),
+  };
+  return {
+    ...original,
+    toaster: mockToaster,
+  };
+});
+
 const password = {
   correct: 'test1234',
   wrong: 'pass1234',

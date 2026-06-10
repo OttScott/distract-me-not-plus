@@ -3,7 +3,6 @@ import {
   Pane,
   Button,
   Paragraph,
-  toaster,
   Card,
   Heading,
   Badge,
@@ -17,6 +16,7 @@ import {
   UploadIcon,
   DownloadIcon,
 } from 'evergreen-ui';
+import { toaster } from 'helpers/toaster';
 import { diagnostics } from 'helpers/syncDiagnostics';
 import { translate } from 'helpers/i18n';
 

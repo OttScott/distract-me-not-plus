@@ -1,8 +1,23 @@
 /* eslint-disable testing-library/no-container, testing-library/no-node-access */
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-//import { toaster } from 'evergreen-ui';
+import { toaster } from 'evergreen-ui';
 import { Settings } from 'components';
+
+// Mock evergreen-ui toaster
+jest.mock('evergreen-ui', () => {
+  const original = jest.requireActual('evergreen-ui');
+  return {
+    ...original,
+    toaster: {
+      success: jest.fn(),
+      danger: jest.fn(),
+      warning: jest.fn(),
+      notify: jest.fn(),
+      closeAll: jest.fn(),
+    },
+  };
+});
 
 // Mock Chrome storage with default values
 const mockStorageData = {
@@ -99,13 +114,14 @@ it('renders save button', () => {
 });
 
 it('saves settings on save button click', async () => {
-  //const toasterSuccess = jest.spyOn(toaster, 'success');
   render(<Settings />);
   const saveButton = screen.getByRole('button', { name: 'save' });
   fireEvent.click(saveButton);
-  const saveSuccessText = await screen.findByText(/settingsSaved/i);
-  expect(saveSuccessText).toBeInTheDocument();
-  //expect(toasterSuccess).toBeCalled();
+
+  // Wait for toaster.success to be called
+  await waitFor(() => {
+    expect(toaster.success).toHaveBeenCalled();
+  });
 });
 
 it('accepts only passwords that contains at least 8 characters', async () => {
@@ -130,11 +146,6 @@ it('accepts only passwords that contains at least 8 characters', async () => {
   global.chrome.storage.sync.get.mockResolvedValue(passwordEnabledMockData);
   global.chrome.storage.local.get.mockResolvedValue(passwordEnabledMockData);
 
-  // Mock the toaster.danger call to verify validation
-  const mockToasterDanger = jest.fn();
-  const toaster = require('evergreen-ui').toaster;
-  toaster.danger = mockToasterDanger;
-
   // render our component
   render(<Settings enablePassword={true} />);
 
@@ -153,22 +164,19 @@ it('accepts only passwords that contains at least 8 characters', async () => {
 
   // test passwords containing less than 8 characters
   for (let i = 0; i < minCharsNumber; i++) {
-    mockToasterDanger.mockClear(); // Clear previous calls
+    toaster.danger.mockClear(); // Clear previous calls
     fireEvent.change(passwordInput, {
       target: { value: passwords[i] },
     });
     fireEvent.click(saveButton);
     // Wait for toaster call and verify it was called with correct message key
     await waitFor(() => {
-      expect(mockToasterDanger).toHaveBeenCalledWith(
-        'passwordIsShort',
-        expect.any(Object),
-      );
+      expect(toaster.danger).toHaveBeenCalledWith('passwordIsShort', expect.any(Object));
     });
   }
 
   // test correct password (having 8 chars)
-  mockToasterDanger.mockClear();
+  toaster.danger.mockClear();
   fireEvent.change(passwordInput, {
     target: { value: passwords[minCharsNumber] },
   });
@@ -176,5 +184,5 @@ it('accepts only passwords that contains at least 8 characters', async () => {
 
   // For valid password, toaster.danger should not be called
   await new Promise((resolve) => setTimeout(resolve, 100)); // Small delay
-  expect(mockToasterDanger).not.toHaveBeenCalled();
+  expect(toaster.danger).not.toHaveBeenCalled();
 }, 30000);

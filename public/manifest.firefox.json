@@ -1,13 +1,13 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "browser_specific_settings": {
     "gecko": {
-      "id": "{ottscott-distract-me-not-900f12d3-21f0-44b3-bc22-ee2d8e1a34ca@ottscott.dev}",
-      "strict_min_version": "58.0"
+      "id": "{900f12d3-21f0-44b3-bc22-ee2d8e1a34ca}",
+      "strict_min_version": "109.0"
     }
   },
   "name": "__MSG_appName__",
-  "version": "3.14.3",
+  "version": "3.15.0",
   "default_locale": "en",
   "description": "__MSG_appDesc__",
   "icons": {
@@ -17,10 +17,16 @@
     "64": "icons/magnet-64.png",
     "128": "icons/magnet-128.png"
   },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
   "web_accessible_resources": [
-    "index.html"
+    {
+      "resources": ["index.html"],
+      "matches": ["<all_urls>"]
+    }
   ],
-  "browser_action": {
+  "action": {
     "default_icon": "icons/magnet-128.png",
     "default_popup": "index.html"
   },
@@ -29,7 +35,7 @@
     "open_in_tab": true
   },
   "background": {
-    "page": "index.html#background"
+    "scripts": ["service-worker.js"]
   },
   "author": "OttScott",
   "homepage_url": "https://github.com/OttScott/distract-me-not",
@@ -38,10 +44,12 @@
     "activeTab",
     "storage",
     "tabs",
-    "https://*/*",
+    "contextMenus",
+    "webNavigation",
     "webRequest",
-    "webRequestBlocking",
-    "<all_urls>",
-    "contextMenus"
+    "webRequestBlocking"
+  ],
+  "host_permissions": [
+    "<all_urls>"
   ]
 }

@@ -9,7 +9,6 @@ import {
   CrossIcon,
   DuplicateIcon,
   Paragraph,
-  toaster,
   HeartIcon,
   Dialog,
   HistoryIcon,
@@ -27,6 +26,7 @@ import {
   Heading,
   Text,
 } from 'evergreen-ui';
+import { toaster } from 'helpers/toaster';
 import { translate } from 'helpers/i18n';
 import { debug, isDevEnv, logInfo } from 'helpers/debug';
 import {
@@ -221,7 +221,7 @@ export class Settings extends Component {
   }
 
   // Handle messages from service worker
-  handleBackgroundMessages = (message, sender, sendResponse) => {
+  handleBackgroundMessages = (message, _sender, _sendResponse) => {
     if (message.type === 'syncRulesUpdated') {
       logInfo('Received syncRulesUpdated message:', message.data);
 

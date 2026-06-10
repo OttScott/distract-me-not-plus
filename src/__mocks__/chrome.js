@@ -137,7 +137,7 @@ const chrome = {
   },
 
   i18n: {
-    getMessage: jest.fn((messageName, substitutions) => {
+    getMessage: jest.fn((messageName, _substitutions) => {
       // Mock implementation for i18n messages
       const messages = {
         appName: 'Distract Me Not Plus',

@@ -17,9 +17,9 @@ import {
   ImportIcon,
   ExportIcon,
   TextDropdownButton,
-  toaster,
   Dialog,
 } from 'evergreen-ui';
+import { toaster } from 'helpers/toaster';
 import copy from 'copy-to-clipboard';
 import { TextField } from 'components';
 import { translate } from 'helpers/i18n';

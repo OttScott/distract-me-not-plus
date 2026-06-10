@@ -169,8 +169,9 @@ describe('Diagnostics Component', () => {
   test('should handle duplicate cleanup correctly', async () => {
     render(<Diagnostics />);
 
+    // Wait for initial diagnostics to complete (loading to finish)
     await waitFor(() => {
-      expect(screen.getByText('Cleanup Duplicates')).toBeInTheDocument();
+      expect(screen.getByText('Cleanup Duplicates')).not.toBeDisabled();
     });
 
     // Click cleanup button
@@ -188,9 +189,11 @@ describe('Diagnostics Component', () => {
   test('should handle array optimization correctly', async () => {
     render(<Diagnostics />);
 
+    // Wait for initial diagnostics to complete (loading to finish)
     await waitFor(() => {
       expect(screen.getByText('Analyze Arrays')).toBeInTheDocument();
     });
+    expect(screen.getByText('Analyze Arrays')).not.toBeDisabled();
 
     // Click optimization button
     fireEvent.click(screen.getByText('Analyze Arrays'));

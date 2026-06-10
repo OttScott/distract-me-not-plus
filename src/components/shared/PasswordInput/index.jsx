@@ -38,7 +38,7 @@ export class PasswordInput extends Component {
     this.handleChange(event);
   };
 
-  toggle = (event) => {
+  toggle = (_event) => {
     this.setState({ isShown: !this.state.isShown });
   };
 

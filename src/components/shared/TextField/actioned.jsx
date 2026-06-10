@@ -23,7 +23,7 @@ class TextField extends Component {
     }
   };
 
-  handleButtonClick = (event) => {
+  handleButtonClick = (_event) => {
     this.submit();
   };
 

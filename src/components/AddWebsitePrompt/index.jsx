@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-import { Pane, toaster } from 'evergreen-ui';
+import { Pane } from 'evergreen-ui';
+import { toaster } from 'helpers/toaster';
 import { translate } from 'helpers/i18n';
 import { TextField } from 'components';
 import { Mode, blockUrl } from 'helpers/block';

@@ -264,17 +264,16 @@ jobs:
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release 🚢
-        uses: ncipollo/create-release@v1
+        uses: softprops/action-gh-release@v2
         with:
-          tag: ${{ steps.release-notes.outputs.version }}
+          tag_name: ${{ steps.release-notes.outputs.version }}
           name: "🚀 Release ${{ steps.release-notes.outputs.version }}"
-          bodyFile: release-notes.md
-          artifacts: "release-files/*.zip"
+          body_path: release-notes.md
+          files: release-files/*.zip
           token: ${{ secrets.GITHUB_TOKEN }}
           draft: false
           prerelease: ${{ github.event.inputs.prerelease == 'true' }}
-          allowUpdates: true
-          generateReleaseNotes: false
+          fail_on_unmatched_files: true
 
       - name: Release Summary 📊
         run: |

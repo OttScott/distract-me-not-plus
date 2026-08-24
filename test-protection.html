@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Data Loss Protection Test Suite</title>
+  <style>
+    body { 
+      font-family: system-ui, -apple-system, sans-serif; 
+      padding: 20px; 
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .test-section { 
+      margin: 20px 0; 
+      padding: 20px; 
+      border: 2px solid #ddd; 
+      border-radius: 8px;
+    }
+    .test-section h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    button { 
+      padding: 10px 20px; 
+      margin: 5px; 
+      font-size: 14px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background: #3366FF;
+      color: white;
+    }
+    button:hover {
+      background: #2952CC;
+    }
+    button.danger {
+      background: #EC4C47;
+    }
+    button.danger:hover {
+      background: #D43F3A;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .result { 
+      margin: 15px 0; 
+      padding: 15px; 
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+    .success { 
+      background: #d4edda; 
+      border: 1px solid #c3e6cb;
+      color: #155724; 
+    }
+    .error { 
+      background: #f8d7da; 
+      border: 1px solid #f5c6cb;
+      color: #721c24; 
+    }
+    .info { 
+      background: #d1ecf1; 
+      border: 1px solid #bee5eb;
+      color: #0c5460; 
+    }
+    .warning {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      color: #856404;
+    }
+  </style>
+</head>
+<body>
+  <h1>Data Loss Protection Test Suite</h1>
+  <p>This page tests the new data loss prevention mechanisms to ensure your data is protected.</p>
+
+  <!-- Setup Section -->
+  <div class="test-section">
+    <h2>Setup: Create Test Data</h2>
+    <p>First, let's create some test data in sync storage that we can try to protect.</p>
+    <button id="btn-create-small">1. Create Test Data (10 items)</button>
+    <button id="btn-create-large">2. Create Large Test Data (50 items, will be chunked)</button>
+    <button id="btn-check-current">View Current Data</button>
+    <div id="setup-result"></div>
+  </div>
+
+  <!-- Test 1: Empty Array Protection -->
+  <div class="test-section">
+    <h2>Test 1: Empty Array Protection</h2>
+    <p>Try to write an empty array to sync storage. Protection should prevent this.</p>
+    <button class="danger" id="btn-test1">Attempt to Write Empty Array</button>
+    <div id="test1-result"></div>
+  </div>
+
+  <!-- Test 2: Timestamp Verification -->
+  <div class="test-section">
+    <h2>Test 2: Metadata Timestamp Check</h2>
+    <p>Verify that metadata timestamps are being checked before overwrites.</p>
+    <button id="btn-test2">Check Metadata Timestamps</button>
+    <div id="test2-result"></div>
+  </div>
+
+  <!-- Test 3: Sync Version Tracking -->
+  <div class="test-section">
+    <h2>Test 3: Global Sync Version</h2>
+    <p>Verify that the global sync version is updated after writes.</p>
+    <button id="btn-test3a">Check Sync Version</button>
+    <button id="btn-test3b">Update Data & Verify Version</button>
+    <div id="test3-result"></div>
+  </div>
+
+  <!-- Test 4: Service Worker Protection -->
+  <div class="test-section">
+    <h2>Test 4: Service Worker Protection</h2>
+    <p>Test that the service worker's saveArrayToSync also has protection.</p>
+    <button id="btn-test4">Test Service Worker Save</button>
+    <div id="test4-result"></div>
+  </div>
+
+  <!-- Test 5: Console Log Verification -->
+  <div class="test-section">
+    <h2>Test 5: Console Logging</h2>
+    <p>Verify that protection triggers log clear "PREVENTED DATA LOSS" messages.</p>
+    <button id="btn-test5">Trigger Protection & Check Logs</button>
+    <div id="test5-result"></div>
+    <div class="info" style="margin-top: 10px;">
+      Open DevTools Console (F12) to see detailed protection logs.
+    </div>
+  </div>
+
+  <!-- Cleanup Section -->
+  <div class="test-section">
+    <h2>Cleanup</h2>
+    <button class="danger" id="btn-cleanup">Remove All Test Data</button>
+    <div id="cleanup-result"></div>
+  </div>
+
+  <script src="browser-polyfill.min.js"></script>
+  <script src="test-protection.js"></script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sync Data Diagnostic</title>
+  <style>
+    body { font-family: monospace; padding: 20px; }
+    .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+    .error { color: red; }
+    .success { color: green; }
+    .warning { color: orange; }
+    pre { background: #f5f5f5; padding: 10px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1>Sync Storage Diagnostic</h1>
+  <button id="checkBtn">Check Sync Storage</button>
+  <button id="checkLocalBtn">Check Local Storage</button>
+  <div id="output"></div>
+
+  <script src="browser-polyfill.min.js"></script>
+  <script src="check-sync-data.js"></script>
+</body>
+</html>

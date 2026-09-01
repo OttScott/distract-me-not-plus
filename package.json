@@ -43,7 +43,7 @@
     "package:chrome": "npm run package -- --filename={name}-{version}-chrome.zip",
     "package:edge": "npm run package -- --filename={name}-{version}-edge.zip",
     "package:edge:local": "npm run package:edge && node scripts/copy-edge-local.js",
-    "package:all": "npm run postbuild:firefox && npm run package:firefox && npm run postbuild:chrome && npm run package:chrome && npm run package:edge",
+    "package:all": "npm run build:firefox && npm run package:firefox && npm run build:chrome && npm run package:chrome && npm run package:edge",
     "package:source": "zip -r -FS distract_me_not-source.zip * .env.development .env.test -x build\\* node_modules\\* old\\* old-src\\* web-ext-artifacts\\* screenshots\\* *.zip",
     "prepare-release": "node scripts/prepare-release.js",
     "release": "npm run prepare-release",

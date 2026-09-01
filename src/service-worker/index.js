@@ -221,15 +221,6 @@ async function init() {
     // Compile rules
     recompileRules();
 
-    // Setup listeners
-    setupListeners();
-
-    // Setup message handler
-    setupMessageHandler();
-
-    // Setup storage change listener
-    state.storageListenerCleanup = setupStorageChangeListener(handleStorageChanges);
-
     // Update icon
     updateIcon();
 
@@ -255,6 +246,36 @@ async function init() {
   } catch (error) {
     logError('Error initializing service worker:', error);
   }
+}
+
+/**
+ * Whether state initialization (init) has completed at least once
+ * in this service worker instance.
+ */
+let isInitialized = false;
+
+/**
+ * In-flight init promise, used to guarantee init() runs exactly once
+ * per service worker lifetime and to let callers await readiness.
+ */
+let initPromise = null;
+
+/**
+ * Ensure the service worker state has been initialized.
+ *
+ * In Chrome MV3 the service worker is torn down when idle and restarted on
+ * demand (e.g. when the popup sends a message). This lazily runs init() on the
+ * first demand so state is loaded regardless of which event woke the worker.
+ *
+ * @returns {Promise<void>}
+ */
+function ensureInitialized() {
+  if (!initPromise) {
+    initPromise = init().then(() => {
+      isInitialized = true;
+    });
+  }
+  return initPromise;
 }
 
 /**
@@ -386,6 +407,7 @@ function setupMessageHandler() {
     state,
     handlers: createMessageHandlers(),
     nativeAPI,
+    waitForReady: ensureInitialized,
   });
 
   state.messageCleanup = registerMessageHandler(messageHandler);
@@ -467,7 +489,11 @@ function createMessageHandlers() {
     },
     diagnoseSyncStatus: () => diagnoseSyncStatusFn(),
     getSyncDiagnostics: () => getSyncStorageQuota(),
-    reinitialize: () => init(),
+    reinitialize: () => {
+      initPromise = null;
+      isInitialized = false;
+      return ensureInitialized();
+    },
     clearBlockedCache: () => {
       clearBlockedCache();
       return true;
@@ -497,6 +523,13 @@ function checkUrlLocal(url) {
  * Handle URL - main entry point for URL checks
  */
 function handleUrl(url, tabId, _source) {
+  // The worker may have been woken by this navigation before state was loaded.
+  // Load state, then re-run so the blocking decision uses real rules.
+  if (!isInitialized) {
+    ensureInitialized().then(() => handleUrl(url, tabId, _source));
+    return;
+  }
+
   const indexUrl = getExtensionIndexUrl(chrome.runtime);
 
   // Skip extension pages
@@ -782,6 +815,26 @@ function handleStorageChanges(changes, areaName) {
 }
 
 // ============================================================================
+// Listener Registration (synchronous, top-level)
+// ============================================================================
+//
+// In Chrome MV3 the service worker is ephemeral: it is terminated when idle and
+// restarted on demand. Event listeners MUST be registered synchronously during
+// the initial evaluation of the worker script, otherwise a worker woken by an
+// event (e.g. the popup calling runtime.sendMessage) has no listener attached
+// and the caller fails with "Could not establish connection. Receiving end does
+// not exist." State loading remains lazy (see ensureInitialized).
+
+// Register the message handler first so the popup/UI can always reach the worker.
+setupMessageHandler();
+
+// Register navigation/tab/webRequest listeners for blocking.
+setupListeners();
+
+// Register the storage change listener.
+state.storageListenerCleanup = setupStorageChangeListener(handleStorageChanges);
+
+// ============================================================================
 // Lifecycle Events
 // ============================================================================
 
@@ -794,19 +847,19 @@ chrome.runtime.onInstalled.addListener((details) => {
     logInfo('Fresh install detected');
   }
 
-  init();
+  ensureInitialized();
 });
 
 // Handle startup
 chrome.runtime.onStartup.addListener(() => {
   logInfo('Browser startup');
-  init();
+  ensureInitialized();
 });
 
 // Initialize immediately for Firefox urgent initialization
 if (typeof navigator !== 'undefined' && navigator.userAgent.includes('Firefox')) {
   logInfo('Firefox detected - initializing immediately');
-  init();
+  ensureInitialized();
 }
 
 // ============================================================================

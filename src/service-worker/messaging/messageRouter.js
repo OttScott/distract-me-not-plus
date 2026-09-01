@@ -25,7 +25,7 @@ import { isFirefox, indexUrl } from '../../helpers/webext';
  * @returns {Function} - Message handler function
  */
 export function createMessageRouter(context) {
-  const { state, handlers, nativeAPI } = context;
+  const { state, handlers, nativeAPI, waitForReady } = context;
 
   /**
    * Handle incoming runtime messages
@@ -36,6 +36,16 @@ export function createMessageRouter(context) {
    */
   return async function handleMessage(request, sender, _sendResponse) {
     console.log('[MessageRouter] Message received:', request.message);
+
+    // The worker may have just been woken by this message. Make sure state has
+    // been loaded before answering so responses reflect real settings.
+    if (waitForReady) {
+      try {
+        await waitForReady();
+      } catch (error) {
+        console.error('[MessageRouter] Initialization failed:', error);
+      }
+    }
 
     try {
       let response = null;

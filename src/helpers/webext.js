@@ -127,8 +127,12 @@ export function sendMessage(message, ...params) {
           message,
           params,
         })
-        .then(({ response }) => {
-          resolve(response);
+        .then((result) => {
+          resolve(result ? result.response : null);
+        })
+        .catch((error) => {
+          report.error(error);
+          resolve(null);
         });
     } catch (error) {
       report.error(error);

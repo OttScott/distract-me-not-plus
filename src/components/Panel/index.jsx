@@ -190,7 +190,7 @@ export class Panel extends Component {
 
   render() {
     return (
-      <Pane minWidth={350}>
+      <Pane width={350}>
         {!this.state.ready ? null : (
           <>
             <Header />

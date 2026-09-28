@@ -35,6 +35,7 @@ yarn-error.log*
 temp-*.js
 test-report.xml
 eslint-results.sarif
+eslint-results.json
 *.log
 
 # Build snapshots (keep only in snapshots/ directory)

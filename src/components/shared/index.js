@@ -12,6 +12,7 @@ export * from './RawHTML';
 export * from './SegmentedControlField';
 export * from './SettingsButton';
 export * from './SwitchField';
+export * from './SyncStatusButton';
 export * from './TextField';
 export * from './TimeField';
 export * from './SelectField';

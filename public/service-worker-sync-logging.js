@@ -114,7 +114,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
 });
 
 // Wrap chrome.storage.sync methods to add logging
-const originalSyncGet = chrome.storage.sync.get;
+const originalSyncGet = chrome.storage.sync.get.bind(chrome.storage.sync);
 chrome.storage.sync.get = function(keys, callback) {
   try {
     let logData;
@@ -125,32 +125,32 @@ chrome.storage.sync.get = function(keys, callback) {
       logData = { key: keys };
     } else if (Array.isArray(keys)) {
       logData = { keys: keys };
-    } else if (typeof keys === 'object') {    try {
-      // Make sure keys is an object before calling Object.keys
-      logData = { keys: keys && typeof keys === 'object' ? Object.keys(keys) : ['null_or_undefined'] };
-    } catch (e) {
-      logData = { objectError: String(e) };
-    }
+    } else if (typeof keys === 'object') {
+      try {
+        // Make sure keys is an object before calling Object.keys
+        logData = { keys: keys && typeof keys === 'object' ? Object.keys(keys) : ['null_or_undefined'] };
+      } catch (e) {
+        logData = { objectError: String(e) };
+      }
     } else {
       logData = { unknown: String(keys) };
-    }      // Add default deny list/allow list arrays if needed
-    // (Using legacy storage keys 'blacklist'/'whitelist' for backward compatibility)
-    if (typeof keys === 'object' && keys) {
-      // No-op - we'll handle this in the service worker initialization
-      // Don't modify the keys object here as it might be null or read-only
     }
     
     global.syncDebug.log('Reading from sync storage', logData);
   } catch (e) {
     console.error('Error in sync logging wrapper:', e);
-  }  return originalSyncGet.call(chrome.storage.sync, keys, function(result) {
+  }
+  
+  // Helper to log the result
+  const logResult = (result) => {
     try {
       if (chrome.runtime.lastError) {
         global.syncDebug.error('Error reading from sync storage', chrome.runtime.lastError);
       } else {
-        try {          // Ensure the result is an object to avoid errors
+        try {
+          // Ensure the result is an object to avoid errors
           const resultObj = result || {};
-            // Don't modify the result object directly - just safely read from it
+          // Don't modify the result object directly - just safely read from it
           const resultKeys = typeof resultObj === 'object' ? Object.keys(resultObj) : [];
           
           // Safely check values for log data
@@ -173,19 +173,33 @@ chrome.storage.sync.get = function(keys, callback) {
     } catch (outerError) {
       console.error('Error in sync log result handler:', outerError);
     }
-    
-    if (callback) {
+  };
+  
+  // If callback is provided, use callback pattern
+  if (typeof callback === 'function') {
+    return originalSyncGet(keys, function(result) {
+      logResult(result);
       try {
         callback(result);
       } catch (callbackError) {
         console.error('Error in sync storage callback:', callbackError);
       }
-    }
+    });
+  }
+  
+  // No callback - use Promise pattern
+  return originalSyncGet(keys).then(result => {
+    logResult(result);
+    return result;
+  }).catch(error => {
+    global.syncDebug.error('Error reading from sync storage (promise)', error);
+    throw error;
   });
 };
 
-const originalSyncSet = chrome.storage.sync.set;
-chrome.storage.sync.set = function(items, callback) {  let keys = [];
+const originalSyncSet = chrome.storage.sync.set.bind(chrome.storage.sync);
+chrome.storage.sync.set = function(items, callback) {
+  let keys = [];
   try {
     if (items && typeof items === 'object') {
       keys = Object.keys(items);
@@ -194,10 +208,13 @@ chrome.storage.sync.set = function(items, callback) {  let keys = [];
     }
   } catch (e) {
     console.error('Error getting keys from items:', e);
-  }  
+  }
+  
   global.syncDebug.log('Writing to sync storage', { keys: keys });
   
-  return originalSyncSet.call(chrome.storage.sync, items, function() {    if (chrome.runtime.lastError) {
+  // Helper to log the result
+  const logResult = () => {
+    if (chrome.runtime.lastError) {
       global.syncDebug.error('Error writing to sync storage', chrome.runtime.lastError);
     } else {
       global.syncDebug.log('Successfully wrote to sync storage', { 
@@ -205,10 +222,22 @@ chrome.storage.sync.set = function(items, callback) {  let keys = [];
         itemsType: typeof items
       });
     }
-    
-    if (callback) {
+  };
+  
+  // If callback is provided, use callback pattern
+  if (typeof callback === 'function') {
+    return originalSyncSet(items, function() {
+      logResult();
       callback();
-    }
+    });
+  }
+  
+  // No callback - use Promise pattern
+  return originalSyncSet(items).then(() => {
+    logResult();
+  }).catch(error => {
+    global.syncDebug.error('Error writing to sync storage (promise)', error);
+    throw error;
   });
 };
 

@@ -243,6 +243,17 @@ export class Settings extends Component {
       if (this.state.refreshRulesRunning) {
         this.setState({ refreshRulesRunning: false });
       }
+    } else if (message.type === 'dataLossDetected') {
+      logInfo('Data loss detected and recovered:', message.data);
+
+      // Show critical warning notification
+      toaster.warning(
+        `⚠️ Data loss detected! Cloud storage was empty but local had ${message.data.blacklistCount + message.data.whitelistCount} rules. Automatically restored from local backup.`,
+        {
+          id: 'data-loss-recovered',
+          duration: 10,
+        },
+      );
     } else if (message.type === 'syncRulesUpdateFailed') {
       logInfo('Sync rules update failed:', message.error);
 
@@ -746,40 +757,38 @@ export class Settings extends Component {
     try {
       logInfo('Requesting rules refresh from sync storage');
 
-      // Step 1: Try direct sync access to get the true cloud state
+      // Step 1: Use syncStorage.get() which properly handles chunked data
       try {
-        logInfo('Directly reading from sync storage');
+        logInfo('Reading from sync storage via syncStorage helper');
 
-        // Define the keys we're interested in
-        const syncKeys = {
+        // Use the syncStorage helper which handles chunking properly
+        const syncData = await syncStorage.get({
           blacklist: [],
           whitelist: [],
           blacklistKeywords: [],
           whitelistKeywords: [],
           mode: 'combined',
           framesType: ['main', 'sub'],
-        };
+        });
 
-        // Read from Chrome sync directly
-        const rawSyncData = await chrome.storage.sync.get(syncKeys);
-        logInfo('Raw sync data retrieved:', {
-          blacklistCount: rawSyncData?.blacklist?.length || 0,
-          whitelistCount: rawSyncData?.whitelist?.length || 0,
+        logInfo('Sync data retrieved via helper:', {
+          blacklistCount: syncData?.blacklist?.length || 0,
+          whitelistCount: syncData?.whitelist?.length || 0,
         });
 
         // Validate the data
         const validSyncData = {
-          blacklist: Array.isArray(rawSyncData.blacklist) ? rawSyncData.blacklist : [],
-          whitelist: Array.isArray(rawSyncData.whitelist) ? rawSyncData.whitelist : [],
-          blacklistKeywords: Array.isArray(rawSyncData.blacklistKeywords)
-            ? rawSyncData.blacklistKeywords
+          blacklist: Array.isArray(syncData.blacklist) ? syncData.blacklist : [],
+          whitelist: Array.isArray(syncData.whitelist) ? syncData.whitelist : [],
+          blacklistKeywords: Array.isArray(syncData.blacklistKeywords)
+            ? syncData.blacklistKeywords
             : [],
-          whitelistKeywords: Array.isArray(rawSyncData.whitelistKeywords)
-            ? rawSyncData.whitelistKeywords
+          whitelistKeywords: Array.isArray(syncData.whitelistKeywords)
+            ? syncData.whitelistKeywords
             : [],
-          mode: rawSyncData.mode || 'combined',
-          framesType: Array.isArray(rawSyncData.framesType)
-            ? rawSyncData.framesType
+          mode: syncData.mode || 'combined',
+          framesType: Array.isArray(syncData.framesType)
+            ? syncData.framesType
             : ['main', 'sub'],
         };
 
@@ -796,7 +805,7 @@ export class Settings extends Component {
           logInfo('No rules found in sync storage');
         }
       } catch (syncError) {
-        logInfo('Error accessing sync storage directly:', syncError);
+        logInfo('Error accessing sync storage:', syncError);
       }
 
       // Step 2: Use the service worker update mechanism (backup path)
@@ -2129,13 +2138,13 @@ export class Settings extends Component {
         <div className="text">{translate('appDesc')}</div>
         <a
           className="link"
-          href="https://github.com/AXeL-dev/distract-me-not/releases/latest"
+          href="https://github.com/OttScott/distract-me-not/releases/latest"
           target="_blank"
           rel="noreferrer"
         >{`${translate('version')} ${version}`}</a>
         <a
           className="link"
-          href="https://github.com/AXeL-dev/distract-me-not/blob/master/LICENSE"
+          href="https://github.com/OttScott/distract-me-not/blob/master/LICENSE"
           target="_blank"
           rel="noreferrer"
         >
@@ -2143,7 +2152,7 @@ export class Settings extends Component {
         </a>
         <a
           className="link"
-          href="https://github.com/AXeL-dev/distract-me-not/wiki/FAQ"
+          href="https://github.com/OttScott/distract-me-not/wiki/FAQ"
           target="_blank"
           rel="noreferrer"
         >

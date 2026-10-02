@@ -28,8 +28,6 @@ test-report.xml
 screenshots/edge/*
 
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
 # Temporary and development files
 temp-*.js

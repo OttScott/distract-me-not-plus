@@ -1,0 +1,87 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/codetour/main/schema.json",
+  "title": "01 - Introduction",
+  "description": "Follow the extension from its manifest through the React popup, runtime messaging, and URL blocking engine. Start here before the storage and build tours.",
+  "isPrimary": true,
+  "nextTour": "02 - Persistence and Sync",
+  "steps": [
+    {
+      "title": "The browser loads two cooperating entry points",
+      "file": "public/manifest.json",
+      "pattern": "^  \"manifest_version\":",
+      "description": "This is a browser extension, not just a React website. The manifest declares a Manifest V3 background worker and an `index.html` popup/options page. The UI and background run in separate contexts and cooperate through browser APIs.\n\nRead `action`, `options_ui`, `background`, and `permissions`. The Chromium manifest uses `background.service_worker`; the Firefox manifest instead uses `background.scripts`. Browser-specific builds decide which manifest is shipped."
+    },
+    {
+      "title": "React owns the visible extension pages",
+      "file": "src/index.js",
+      "pattern": "^const root = createRoot",
+      "description": "The UI starts here with React 18's `createRoot`. It renders `App` inside `StrictMode`; it does not mount the background engine.\n\nMental model: React renders popup/settings/blocked pages, while the worker watches browser activity even when the popup is closed. The infrastructure tour explains how these two entry points become separate build outputs."
+    },
+    {
+      "title": "One HTML page, several hash routes",
+      "file": "src/App.jsx",
+      "pattern": "^export default class App",
+      "description": "`App` uses a hash router to reuse the same extension HTML for the panel, settings, timer, logs, and blocked page. Password-protected routes guard selected UI pages, while `/blocked` is directly reachable.\n\nNotice that `componentDidMount` reads the local password setting before determining access. UI access control and URL-blocking decisions are separate responsibilities."
+    },
+    {
+      "title": "The popup reads live worker state",
+      "file": "src/components/Panel/index.jsx",
+      "pattern": "^  componentDidMount\\(\\)",
+      "description": "Opening the panel triggers a group of runtime requests for enabled state, mode, schedule, and other features. A smaller set of UI preferences comes directly from the sync-aware helper.\n\nScroll to `toggleStatus` and `changeMode`: each updates React state, notifies the worker, and persists its value. This dual path is important when tracing a setting that appears correct in the popup but behaves differently in the background."
+    },
+    {
+      "title": "Cross-context communication has a small envelope",
+      "file": "src/helpers/webext.js",
+      "pattern": "^export function sendMessage\\(",
+      "description": "`sendMessage` sends `{ message, params }` through `browser.runtime.sendMessage` and unwraps the returned `response`. This helper is the UI-side boundary; the background router is the other end.\n\nFailures are logged and resolve to `null`, so callers may receive a fallback rather than worker state. A popup communication problem should be traced from this helper to the router and worker readiness, not treated only as a React rendering issue."
+    },
+    {
+      "title": "The router dispatches named operations",
+      "file": "src/service-worker/messaging/messageRouter.js",
+      "pattern": "^export function createMessageRouter\\(",
+      "description": "The router maps message names to handlers supplied by the worker entry point. Examples include getting the mode, saving lists, and starting a timer.\n\nBefore dispatching it awaits `waitForReady` when provided. Chromium can wake a previously idle worker just to answer a popup message, so a registered listener alone is not enough: the in-memory settings must also be loaded."
+    },
+    {
+      "title": "Register synchronously, initialize state lazily",
+      "file": "src/service-worker/index.js",
+      "pattern": "^setupMessageHandler\\(\\);",
+      "description": "The modular worker entry point registers its message, navigation/tab, and storage listeners synchronously at top level. That lets the browser deliver the event that wakes an MV3 worker.\n\nState loading is separate: `ensureInitialized` keeps a single in-flight initialization promise per worker instance. Follow `init` above to see settings load, rule compilation, icon updates, timer resumption, and open-tab checking. In-memory state is not durable storage."
+    },
+    {
+      "title": "Several browser events feed URL checks",
+      "file": "src/service-worker/listeners/registerListeners.js",
+      "pattern": "^export function registerAllListeners\\(",
+      "description": "The listener module wires navigation, tab updates/replacements, and optional web requests. API availability is checked because the supported browser surfaces differ; web-request coverage is primarily relevant to Firefox.\n\nThese adapters receive functions such as `checkUrl` and `handleUrl` from the entry point. Follow those callbacks rather than assuming every browser event uses exactly the same path or action."
+    },
+    {
+      "title": "Compile stored rules before evaluating URLs",
+      "file": "src/service-worker/rules/ruleCompiler.js",
+      "pattern": "^export function compileRules\\(",
+      "description": "Storage holds raw pattern and keyword arrays under legacy `blacklist`/`whitelist` keys. The compiler filters invalid entries and creates regex arrays plus the original strings needed for explanations.\n\nThe worker recompiles after relevant list changes. This separates rule preparation from repeated matching: editing pattern syntax belongs in the rules modules, not in React components or listener adapters."
+    },
+    {
+      "title": "A decision is distinct from the browser action",
+      "file": "src/service-worker/engine/decisionEngine.js",
+      "pattern": "^export function checkUrlShouldBeBlocked\\(",
+      "description": "This function combines system exclusions, enabled state, schedule/timer constraints, temporary allowances, and mode evaluation into a `BlockDecision`. The modes live in `blockingModes.js`: denylist matches block, allowlist misses block, and combined mode gives allow matches precedence over deny matches.\n\nThe entry point's `handleUrl` consumes that decision and redirects blocked tabs; the engine does not itself navigate them. Try following one denied URL through compiler -> decision -> `handleUrl` -> `redirectToBlockedPage`."
+    },
+    {
+      "title": "Worked example: popup to blocked page",
+      "file": "src/service-worker/index.js",
+      "pattern": "^function handleUrl\\(",
+      "description": "Imagine an enabled extension with `example.com` in the deny patterns, no allow match, no temporary allowance, and no schedule exemption.\n\n1. Open the popup: `Panel.componentDidMount` requests live state through `sendMessage`; the router awaits initialization.\n2. Choose denylist mode: `Panel.changeMode` updates React state, sends `setMode`, and saves mode through the UI sync helper. The worker setter updates memory, clears its cache, and persists mode.\n3. Navigate to `https://example.com/page`: a tab-update path feeds `handleUrl`. If this worker is not ready, it initializes and retries.\n4. `checkUrlLocal` invokes the decision engine with compiled rules and schedule helpers; the deny match yields a blocked decision.\n5. `redirectToBlockedPage` reads the custom message and builds an encoded `index.html#/blocked?...` URL, then updates the tab.\n6. The React `/blocked` route decodes URL/reason/message and renders the result.\n\nThis is the tab-update/`handleUrl` path, not a promise that every browser listener executes precisely the same sequence. You can follow this example in code without changing your real rules."
+    },
+    {
+      "title": "Use tests as executable examples",
+      "file": "src/__tests__/service-worker/engine/decisionEngine.test.js",
+      "pattern": "^describe\\('decisionEngine'",
+      "description": "The tests build small state objects and check the decision's shape and behavior. They are a convenient starting point for understanding the engine without launching a browser. Some cases are explicitly skipped for mocking limitations, so read the test status as well as the assertions.\n\nOptional terminal command: `npm test -- --watchAll=false --runInBand --runTestsByPath src/__tests__/service-worker/engine/decisionEngine.test.js`.\n\nYou now have the main map: React UI -> runtime router -> worker state -> compiled rules -> decisions -> browser effects. Continue with **02 - Persistence and Sync** to learn how state survives worker restarts and moves between devices."
+    },
+    {
+      "title": "Where to make changes",
+      "file": "src/App.jsx",
+      "pattern": "^  render\\(\\)",
+      "description": "Use this map when locating a change:\n\n| Change | Start here | Follow through |\n| --- | --- | --- |\n| Page or route | `App` and the target component | Password route requirements and UI tests |\n| UI-to-worker operation | `helpers/webext.sendMessage` | Message types, router case, entry-point handler, and response shape |\n| Blocking behavior | Worker rules/engine modules | Listener caller, browser effect, and engine tests |\n| Durable setting | UI sync helper and worker storage paths | Persistence tour's matrix and startup/event refresh |\n\nPrefer adding a small behavior test at the boundary you change. Continue with **02 - Persistence and Sync**; the later blocking and troubleshooting tours supply deeper runtime examples."
+    }
+  ]
+}

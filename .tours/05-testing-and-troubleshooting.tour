@@ -1,0 +1,79 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/codetour/main/schema.json",
+  "title": "05 - Testing and Troubleshooting",
+  "description": "Choose tests that exercise real behavior, inspect popup and worker contexts separately, and diagnose rules, wake-up, sync, and generated artifacts safely.",
+  "steps": [
+    {
+      "title": "Start with focused, non-watch tests",
+      "file": "package.json",
+      "pattern": "^    \"test\":",
+      "description": "`npm test` runs CRACO/Jest; `test:ci` adds coverage and reporting. For a focused run, pass selectors after `--` and disable watch mode:\n\n`npm test -- --watchAll=false --runInBand --runTestsByPath src/__tests__/service-worker/rules/patternMatcher.test.js src/__tests__/service-worker/engine/decisionEngine.test.js`\n\nThis combines related suites in one runner. Read failures and skip counts, not only the process exit code. Broader `validate`/`ci:*` scripts also invoke other checks; several apply formatting or fixes, so inspect them before using them for diagnosis."
+    },
+    {
+      "title": "Global test setup changes the environment",
+      "file": "src/setupTests.js",
+      "pattern": "^global.chrome =",
+      "description": "Setup installs DOM matchers, supplies the bcrypt global expected by older code, and injects a Chrome API mock. It also filters selected console errors/warnings.\n\nTests therefore do not run in the same environment as a loaded extension. A silent console is not evidence that the browser would report no error. For asynchronous API failures or browser-only behavior, add explicit assertions and inspect the browser console separately."
+    },
+    {
+      "title": "Unit tests exercise the real module boundary",
+      "file": "src/__tests__/service-worker/rules/patternMatcher.test.js",
+      "pattern": "^describe\\('patternMatcher'",
+      "description": "This suite imports the production matcher and checks compilation, filtering, matches, and attribution. Engine tests similarly supply small states to the actual engine.\n\nWhen fixing a matching bug, add the failing URL/pattern to the relevant real-module suite first. Keep tests about returned decisions distinct from tests of tab API effects. The engine suite marks some tests skipped for mocking limitations; skipped cases provide no passing evidence."
+    },
+    {
+      "title": "Characterization is not automatically live integration",
+      "file": "src/__tests__/characterization/blockingModes.test.js",
+      "pattern": "^describe\\('Blocking Modes Characterization Tests'",
+      "description": "Characterization tests record historical behavior and compatibility expectations. This suite uses shared helpers but also constructs simulated engines; its comments refer to legacy background implementations.\n\nUse it to preserve documented expectations, not as proof that the current worker entry point wires every handler correctly. When changing a current module or message path, pair historical examples with a test that imports that module or drives that boundary."
+    },
+    {
+      "title": "Mocked integration has a defined scope",
+      "file": "src/__tests__/integration/serviceWorker.storageInit.test.js",
+      "pattern": "^describe\\('Storage Initialization Integration'",
+      "description": "These tests import real sync-protection functions while replacing storage dependencies. They prove behavior under supplied responses; they do not simulate a browser sync account, cloud propagation, quota enforcement, or MV3 suspension.\n\nFor contrast, `src/__tests__/helpers/syncStorage.test.js` defines its own mockSyncStorage and illustrative storage tests rather than directly importing the UI helper. Select evidence by what actually executes, not the filename or suite label."
+    },
+    {
+      "title": "Use mocks that match callback and Promise contracts",
+      "file": "src/__tests__/characterization/setup.js",
+      "pattern": "^export function createStorageArea\\(",
+      "description": "This factory uses an in-memory map and supports callback-style and Promise-style storage calls. Its event factory can emit listener notifications explicitly.\n\nBefore reusing a mock, compare its return shape and asynchronous contract with the production caller. A `jest.fn` that always returns success cannot verify a real handler, chunk lifecycle, or storage event. Explicitly test rejects, missing values, and which area/key is written; do not assume a storage mock enforces real browser byte quotas."
+    },
+    {
+      "title": "Inspect popup and worker consoles independently",
+      "file": "src/helpers/webext.js",
+      "pattern": "^export function sendMessage\\(",
+      "description": "For a popup issue, inspect the popup/extension page DevTools console. For background issues, open the worker inspector from Chromium's extension details, or inspect the extension through Firefox's `about:debugging`. A page's console is not the worker's console.\n\nFollow `{ message, params }` into the router and `{ response }` back out. This helper logs failures and resolves `null`, so a rendered default value may mask a failed request. Capture the error and request name before investigating component state. Do not post real rule lists, passwords, or browsing URLs when sharing diagnostics."
+    },
+    {
+      "title": "Reproduce wake-up without keeping the worker alive",
+      "file": "src/service-worker/index.js",
+      "pattern": "^function ensureInitialized\\(",
+      "description": "The worker registers listeners at evaluation time, then loads state once per instance through an initialization promise. Confirm registration, readiness, and handler dispatch separately if the popup reports no receiving end or stale state.\n\nIn a disposable browser profile, close the worker inspector, allow the worker to become idle, and reopen the popup; compare the result with an already-running worker. An open inspector can affect worker lifetime, so an inspector-only reproduction is incomplete. Inspect logs afterward rather than changing storage to force a symptom."
+    },
+    {
+      "title": "Separate rule matching from the full decision",
+      "file": "src/service-worker/diagnostics/blockingDiagnostics.js",
+      "pattern": "^export function debugUrlMatching\\(",
+      "description": "In a modular worker console, after opening the popup to load state, the entry point exposes optional calls such as `self.testUrlMatch('https://example.com/page', 'example.com')`, `self.debugUrlMatching('https://example.com/page')`, and `self.checkUrlShouldBeBlocked('https://example.com/page')`.\n\nThe matching diagnostic reports list matches and a mode-based expected result; it is not the full schedule/timer/temporary-allow decision. Compare it with the engine result and actual navigation. If these globals are absent, check whether the emitted bundle is legacy before assuming the source is broken. These examples observe/log state; they do not save rules."
+    },
+    {
+      "title": "Diagnose sync before trying repair actions",
+      "file": "src/components/Settings/index.jsx",
+      "pattern": "^  runSyncDiagnosis =",
+      "description": "Settings' diagnosis path calls status/problem helpers and presents results. Inspect sync availability, bytes used, missing keys, errors, metadata, and local-versus-sync list counts before attempting repairs.\n\nSeparate cloud propagation from local fallback, fresh-install suppression, chunk reconstruction, and live worker refresh. Diagnosis can record local health telemetry. Nearby force-sync, test-sync, cleanup, migration, and clear-sync actions are not passive inspection: they may write or remove data. Back up rules and use a disposable profile before trying them; clearing cloud storage is not a routine diagnostic prerequisite."
+    },
+    {
+      "title": "Verify the artifact that the browser actually loaded",
+      "file": "scripts/generate-chrome-service-worker.js",
+      "pattern": "^const BUNDLED_SERVICE_WORKER =",
+      "description": "Check the loaded extension path/version, generated manifest, worker header, and build log. Chrome's generator can fall back to the legacy public worker; Edge's current generic chain has no modular bundling stage. All builds share one output directory.\n\nA passing unit test of modular source does not prove that the loaded extension executes that source. Reload the intended built extension and repeat the smoke test from the infrastructure tour before investigating stale behavior. Do not patch generated output and mistake it for a persistent source fix."
+    },
+    {
+      "title": "Where to add evidence and fixes",
+      "file": "src/__tests__/service-worker/messaging/messageRouter.test.js",
+      "pattern": "^describe\\('messageRouter'",
+      "description": "Use the smallest evidence that covers the actual failure:\n\n| Symptom | First evidence | Fix/test boundary |\n| --- | --- | --- |\n| Wrong URL match | Pattern and keyword examples | Real matcher tests |\n| Wrong precedence or time gate | Complete state + clock/helper inputs | Engine and feature tests |\n| Popup null/stale response | Both consoles + message envelope | Router plus supplied entry-point handler/readiness |\n| Missing rule after restart | Direct/chunked durable data + loaded state | Actual storage helper and initialization path |\n| Different behavior across browsers | Final manifest/worker + build log | Browser build chain and manual smoke test |\n\nRouter tests supply mocked handlers; they alone do not prove the entry point supplies the same implementations. Preserve a minimal reproduction, fix source rather than generated files, rerun targeted tests, then repeat relevant browser checks. Avoid unrelated cleanup while fixing a specific bug."
+    }
+  ]
+}

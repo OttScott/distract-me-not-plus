@@ -1,0 +1,86 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/codetour/main/schema.json",
+  "title": "04 - Blocking Rules and Runtime Features",
+  "description": "Follow rule syntax, mode precedence, schedule/timer gates, temporary allowances, URL caching, and blocked-page presentation.",
+  "nextTour": "05 - Testing and Troubleshooting",
+  "steps": [
+    {
+      "title": "Pattern syntax starts in shared helpers",
+      "file": "src/helpers/regex.js",
+      "pattern": "^  static wildcard\\(",
+      "description": "`wildcard` expands protocol-less patterns and adds path matching unless the input requests an exact ending. Inputs beginning with `^` take the raw-regex path; `parseUrl` otherwise escapes literal characters and turns `*` into regex wildcards, with case-insensitive URL matching.\n\nExamples to investigate: `example.com`, `*.example.com`, `example.com/path`, and a pattern ending with `$`. This is full-URL regex matching, not a browser declarativeNetRequest rule or a public-suffix-aware domain policy. Use the pattern tests to verify subdomain/path boundaries instead of inferring them from the UI label."
+    },
+    {
+      "title": "Compilation preserves attribution",
+      "file": "src/service-worker/rules/patternMatcher.js",
+      "pattern": "^export function testUrlWithPatternReport\\(",
+      "description": "The compiler produces regex arrays; matching walks them in order and reports the first matching index. This function maps that index back to the original rule text for the decision's explanation.\n\nThe rule compiler retains parallel original/compiled arrays after filtering invalid entries. Preserve that alignment when changing normalization or deduplication, and test both the match boolean and the reported rule."
+    },
+    {
+      "title": "Keywords test the URL, not only its hostname",
+      "file": "src/helpers/regex.js",
+      "pattern": "^  static parseKeyword\\(",
+      "description": "Plain keywords become escaped literal regexes. Slash-delimited expressions can specify regex flags; plain keywords have no implicit case-insensitive flag. The worker keyword matcher calls `.test(url)` on the full URL.\n\nA keyword can therefore match a path or query, not just a domain. Regex flags such as `g` or `y` also have stateful `lastIndex` behavior when a compiled regex is reused. When changing keyword behavior, include repeated evaluations and case variants in tests rather than checking only one URL once."
+    },
+    {
+      "title": "Mode precedence with a truth table",
+      "file": "src/service-worker/engine/blockingModes.js",
+      "pattern": "^export function evaluateUrlForMode\\(",
+      "description": "Ignoring system exclusions, schedule gates, and temporary allowances for this table:\n\n| Deny match | Allow match | Denylist mode | Allowlist mode | Combined mode |\n| --- | --- | --- | --- | --- |\n| Yes | No | Block | Block | Block |\n| Yes | Yes | Block | Allow | Allow |\n| No | Yes | Allow | Allow | Allow |\n| No | No | Allow | Block | Neutral/nonblocking |\n\nExample: deny `example.com`, allow `example.com/work`, and visit `https://example.com/work/page`. Combined mode checks allow matches first; denylist mode does not grant that allow-list exception. Legacy `blacklist`/`whitelist` mode values are normalized here. Patterns are checked before keywords within each list."
+    },
+    {
+      "title": "Decisions carry more than a boolean",
+      "file": "src/service-worker/engine/types.js",
+      "pattern": "^export function blockDecision\\(",
+      "description": "`BlockDecision` includes `action`, backward-compatible `blocked`, `reason`, `source`, and optional rule attribution. Combined mode's no-match result is neutral, not an explicit allow decision, though it is nonblocking to current boolean consumers.\n\nPreserve this output contract when changing rules. A diagnostic label is separate from the actual match: inspect the produced attribution as well as `.blocked` before relying on it."
+    },
+    {
+      "title": "Schedule gates run before mode evaluation",
+      "file": "src/service-worker/engine/decisionEngine.js",
+      "pattern": "^export function checkUrlShouldBeBlocked\\(",
+      "description": "Evaluation first excludes missing/internal/inaccessible URLs and disabled blocking. If no active timer exists, an allowed schedule result returns early without consulting lists. An active timer bypasses that schedule exemption, but still evaluates the selected mode; it does not mean every URL must be blocked.\n\nSchedule helpers are injected by the worker. The same state can produce different results when time, enabled state, or the supplied helpers change. Test those gates separately from rule syntax."
+    },
+    {
+      "title": "Schedule ranges use browser-local time",
+      "file": "src/helpers/schedule.js",
+      "pattern": "^export function isScheduleAllowed\\(",
+      "description": "`getTodaySchedule` selects today's configured ranges. `parseTime` converts hour/minute fields, and `inTime` uses the browser's local clock with a start-inclusive/end-exclusive check and special handling for a zero end value.\n\n`isScheduleAllowed` processes ranges in order with early returns; an empty day returns allowed. Do not assume overlap precedence or overnight splitting beyond the branches actually implemented. For a schedule change, test empty days, exact boundaries, overlapping range order, and midnight behavior."
+    },
+    {
+      "title": "Timers save deadlines, not durable callbacks",
+      "file": "src/service-worker/features/timer.js",
+      "pattern": "^export function startTimer\\(",
+      "description": "Timer duration is in seconds; `endDate` is an absolute timestamp in milliseconds. Starting saves the new timer through callbacks and enables blocking. Resuming computes remaining time and schedules completion; stopping clears the current timeout, disables blocking, and saves reset runtime state.\n\nThe entry point persists timers locally and resumes them during initialization. JavaScript `setTimeout` belongs to the current worker instance: a suspended/terminated MV3 worker cannot be assumed to execute its callback on time. Distinguish the persisted deadline, decision-engine active check, and completion effects when debugging restart behavior."
+    },
+    {
+      "title": "Temporary allowances are hostname-scoped runtime state",
+      "file": "src/service-worker/features/tempAllow.js",
+      "pattern": "^export function unblockTab\\(",
+      "description": "An allowance records hostname, start time, and a millisecond duration; expired entries are filtered. Optional timeout callbacks notify or recheck tabs. The entry-point handler stores the returned array in `state.tmpAllowed`, not durable storage.\n\nThe decision engine has its own temporary-allow hostname check, so trace both implementations before changing scope. Do not promise public-suffix correctness or persistence across worker restarts. The exported `processUnblockRequest` helper additionally redirects, but its existence does not mean the entry-point handler calls it."
+    },
+    {
+      "title": "URL caching is not permission caching",
+      "file": "src/service-worker/engine/dedupe.js",
+      "pattern": "^export function addToCache\\(",
+      "description": "The module keeps a bounded in-memory Set of blocked URLs and clears it at capacity. Multiple browser events may report the same URL.\n\nThe entry point's cached path still reevaluates the current decision before redirecting; it does not unconditionally block because a URL was previously cached. Mode/list changes clear the cache. Exported normalization helpers do not establish that every caller normalizes its key. Keep cache lifecycle and URL identity explicit in tests."
+    },
+    {
+      "title": "Follow the active action caller",
+      "file": "src/service-worker/index.js",
+      "pattern": "^function redirectToBlockedPage\\(",
+      "description": "The active `handleUrl` path redirects to the extension's blocked page, reading the custom message from sync and using `buildBlockedPageUrl` to encode URL/reason/message parameters before `tabs.update`.\n\n`engine/blockActions.js` also offers redirect-to-custom-URL and close-tab action helpers, but the entry point imports its executor under an unused alias. Do not describe those helpers as active behavior without tracing the caller and supplied router handlers. This distinction matters when a saved action setting appears to have no effect."
+    },
+    {
+      "title": "The blocked page decodes the decision context",
+      "file": "src/components/Blocked/index.jsx",
+      "pattern": "^  componentDidMount\\(\\)",
+      "description": "The page extracts encoded URL/reason/message from the hash, keeps a supplied URL message ahead of stored defaults, and reads display preferences through the plain local-storage facade. It also has a reload-time recheck path.\n\nThat recheck compares `isUrlStillBlocked` with boolean `false`; the current entry-point handler returns a decision object. Inspect the real response shape when debugging return navigation rather than assuming the message name guarantees a boolean. Presentation, persistence, and blocking are separate boundaries."
+    },
+    {
+      "title": "Where to make blocking/runtime changes",
+      "file": "src/__tests__/service-worker/engine/decisionEngine.test.js",
+      "pattern": "^describe\\('decisionEngine'",
+      "description": "| Change | Start with | Required examples |\n| --- | --- | --- |\n| URL/keyword syntax | Shared regex helper and worker matchers | Boundaries, invalid input, case, repeated regex use |\n| Precedence | Mode evaluator and decision engine | All four match combinations in every mode |\n| Schedule/timer | Time helpers, timer module, entry-point callbacks | Boundary times, deadline units, restart/resume |\n| Temporary allowance | Feature module and engine check | Hostname scope, expiry, worker lifetime |\n| Browser effect | Listener/entry-point caller and action helper | Actual tab API call and response shape |\n| Explanation UI | Blocked URL builder and component | Encoding, custom-message precedence, reload behavior |\n\nUse module tests for decisions and a disposable browser profile for actual navigation/lifecycle behavior. Continue with **05 - Testing and Troubleshooting** to choose the right evidence."
+    }
+  ]
+}

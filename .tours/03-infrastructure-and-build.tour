@@ -1,0 +1,98 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/codetour/main/schema.json",
+  "title": "03 - Infrastructure and Build",
+  "description": "Understand npm, React/CRACO and esbuild outputs, browser manifests and CSP preparation, packaging, local quality gates, and GitHub Actions.",
+  "nextTour": "04 - Blocking Rules and Runtime Features",
+  "steps": [
+    {
+      "title": "npm scripts are the build entry points",
+      "file": "package.json",
+      "pattern": "^  \"scripts\":",
+      "description": "Use `npm ci` with the committed `package-lock.json` for a reproducible dependency install. `prepare` installs Husky hooks. The main toolchain is React/CRACO for the visible UI, esbuild for the modular worker, and web-ext for ZIP packaging.\n\nFollow the script chains literally: `build` creates the UI and copies vendor libraries; `build:firefox` adds the worker bundle; `build:chrome` adds worker generation and Chromium preparation. `build:edge` currently calls only the generic build, so it is not identical to the Chrome chain."
+    },
+    {
+      "title": "A compatibility wrapper launches CRACO",
+      "file": "scripts/build-with-legacy-support.js",
+      "pattern": "^async function main\\(",
+      "description": "`npm start` and UI builds enter this wrapper. It chooses `craco start` or `craco build` and tries Node-version-specific command strategies, including memory and legacy OpenSSL fallbacks.\n\nIt sets `INLINE_RUNTIME_CHUNK=false` and `GENERATE_SOURCEMAP=false`; importantly, it also sets `CI=false`, so build warnings are not promoted to errors here. Read the strategy log to see which command actually succeeded rather than assuming one fixed runtime configuration."
+    },
+    {
+      "title": "Webpack output is adapted for an extension",
+      "file": "craco.config.js",
+      "pattern": "^module.exports =",
+      "description": "CRACO customizes Create React App without ejecting: it copies the browser polyfill and bcrypt assets, limits chunk count, allows imports from `public`, and removes hashes from JS/CSS filenames.\n\nStable extension asset names and external scripts are deliberate output choices. Changes here affect UI files, not the separate esbuild worker bundle."
+    },
+    {
+      "title": "The worker is bundled independently with esbuild",
+      "file": "scripts/build-service-worker.js",
+      "pattern": "^const buildOptions =",
+      "description": "The entry point is `src/service-worker/index.js`, and the output is `build/service-worker.js`. esbuild emits an IIFE targeting Chrome 90 and Firefox 109, resolves locale imports, and bundles dependencies.\n\nProduction minification depends on `NODE_ENV === 'production'`; otherwise source maps are emitted. The banner attempts to load the browser polyfill and bcrypt using `importScripts`. `--watch` uses esbuild's watch context, which is distinct from the npm `build:watch` UI command."
+    },
+    {
+      "title": "Chrome worker generation retains a legacy fallback",
+      "file": "scripts/generate-chrome-service-worker.js",
+      "pattern": "^const LEGACY_SERVICE_WORKER =",
+      "description": "The Chrome chain runs the esbuild script with a default production environment. If bundling fails, this wrapper logs a warning and copies the legacy `public/service-worker.js` instead.\n\nThat means a completed Chrome build can contain the legacy implementation. When debugging behavior that disagrees with the modular source, first inspect the build log and generated worker header to confirm which implementation shipped. Never edit generated `build/service-worker.js` as the source of a fix."
+    },
+    {
+      "title": "Chromium HTML must use external script files",
+      "file": "scripts/prepare-chrome-build.js",
+      "pattern": "^function updateHtmlFile\\(",
+      "description": "Chromium preparation copies required libraries and updates generated HTML to reference external scripts rather than relying on inline execution. It uses Cheerio when available and has a string-replacement fallback.\n\nThe manifest's extension CSP is `script-src 'self'`. If the popup is blank or a library is missing, inspect generated `index.html`, script order, copied filenames, and browser CSP errors. The Chrome chain also runs `fix-service-worker-syntax.js` after this preparation."
+    },
+    {
+      "title": "Generic builds also copy vendor files",
+      "file": "scripts/ensure-vendor-libs.js",
+      "pattern": "^function copyFileToMultipleDestinations\\(",
+      "description": "The generic `build` command copies browser-polyfill and bcrypt into the build root, `static`, and `static/js`. Different HTML and worker paths refer to these locations.\n\nThis script is distinct from Chrome-specific preparation. When comparing browser builds, examine both the npm command chain and the resulting asset locations instead of assuming a successful React compilation produces a complete, identical extension package."
+    },
+    {
+      "title": "Firefox swaps in its own manifest",
+      "file": "public/manifest.firefox.json",
+      "pattern": "^  \"background\":",
+      "description": "Firefox's Manifest V3 uses `background.scripts`, provides a Gecko ID/minimum version, and requests `webRequest`/`webRequestBlocking` permissions in addition to the shared capabilities. Chromium's manifest declares a service worker instead.\n\nThe npm `postbuild:firefox` hook replaces generated `manifest.json` with this manifest. Chrome/Edge postbuild hooks remove the Firefox manifest. These hooks run automatically after the corresponding npm scripts; a raw generic build does not perform the Firefox swap."
+    },
+    {
+      "title": "Browser-output matrix",
+      "file": "package.json",
+      "pattern": "^    \"build:firefox\":",
+      "description": "All targets reuse `build`; do not treat successive builds as isolated artifacts.\n\n| Command | UI | Worker source | Final manifest | Extra preparation |\n| --- | --- | --- | --- | --- |\n| `build` | CRACO | Legacy worker copied from public assets; no esbuild stage | Chromium | Generic vendor copies |\n| `build:firefox` | Generic build | Modular esbuild bundle replaces copied worker | Firefox via postbuild swap | Generic vendor copies |\n| `build:chrome` | CRACO | Modular bundle, or logged legacy fallback | Chromium | Chrome HTML/vendor preparation and syntax fix; removes Firefox manifest |\n| `build:edge` | Generic build | No modular bundling stage; legacy public worker | Chromium | Generic vendor copies; removes Firefox manifest |\n\nThese are the current npm chains. A browser label or ZIP filename does not establish worker parity. Inspect the emitted worker header and build log, especially when comparing Edge with Chrome."
+    },
+    {
+      "title": "Packaging wraps the current build directory",
+      "file": "package.json",
+      "pattern": "^    \"package\":",
+      "description": "`web-ext build` archives the existing `build` directory and overwrites the destination ZIP. The browser-specific package scripts choose names; they do not build or change the manifest themselves.\n\nBuild the intended target before packaging, for example `npm run build:firefox` followed by `npm run package:firefox`. `package:all` runs Firefox and Chrome builds in sequence, then packages Edge from the current output. The local Edge copy commands add a machine-specific copy step, not a separate core bundler."
+    },
+    {
+      "title": "Manual extension smoke-test checklist",
+      "file": "public/manifest.json",
+      "pattern": "^  \"background\":",
+      "description": "Use a dedicated test browser profile with disposable rules; avoid altering your everyday synced settings. After building the intended target, check:\n\n- Generated manifest has the expected background declaration, permissions, version, and Firefox ID where applicable.\n- Worker file is present; its header/log confirms modular versus legacy implementation.\n- Every script referenced by generated HTML or `importScripts` exists, and the popup has no missing-asset/CSP errors.\n- Load Chromium output via `chrome://extensions` or `edge://extensions` -> developer mode -> Load unpacked; load Firefox via `about:debugging` -> This Firefox -> Load Temporary Add-on -> generated manifest.\n- Open the popup, confirm mode/enabled state, save one disposable deny rule, and verify a matching URL reaches the blocked page with the expected reason.\n- Verify a nonmatching URL remains available; close/reopen the popup and test worker wake-up without leaving its inspector open.\n- Archive only after checking this output. Inspect the ZIP's manifest/worker too.\n\nThis is a manual acceptance checklist, not a claim that these browser checks have been executed while authoring the tour."
+    },
+    {
+      "title": "Local commit checks can modify source files",
+      "file": ".husky/pre-commit",
+      "pattern": "^npm run format$",
+      "description": "The pre-commit hook runs formatting, strict ESLint, and the CI test command. Formatting uses Prettier's `--write` on the entire `src` tree, not only staged files.\n\nCheck the working tree after a commit attempt: this hook can leave formatting changes unstaged. For a read-only local check, use `npm run format:check`; inspect the other `ci:*` scripts before using them because several intentionally apply fixes."
+    },
+    {
+      "title": "GitHub Actions exercises multiple environments",
+      "file": ".github/workflows/ci.yml",
+      "pattern": "^jobs:",
+      "description": "The main workflow separates formatting/linting, tests, browser builds, and additional checks. Installs use `npm ci` and npm caching. Tests have a Node 16/18/20 matrix; browser builds use the workflow's Node 18 setting and a Firefox/Chrome/Edge matrix.\n\nSome steps explicitly continue after failures or relax warning handling, so read each job's exit behavior rather than treating all reported checks as equally strict. The build job also contains a historical React compatibility step. Those are current workflow details, not runtime architecture recommendations."
+    },
+    {
+      "title": "Release automation is not npm publication",
+      "file": ".release-it.json",
+      "pattern": "^  \"npm\":",
+      "description": "The release-it configuration disables npm publishing, configures version tags/commits and GitHub releases, and uses a manifest-update plugin. It also allows a non-clean working directory, so review local changes before a release.\n\nIn `package.json`, `release:major/minor/patch` call release-it, but plain `npm run release` invokes the separate preparation script. Do not run release commands just to explore: they may change versions, create tags, or publish a GitHub release.\n\nYou have now followed source -> npm scripts -> UI/worker bundles -> browser manifest/assets -> ZIP -> quality/release automation. The tours are read-only guides; none automatically executes commands."
+    },
+    {
+      "title": "Where to make build and infrastructure changes",
+      "file": "package.json",
+      "pattern": "^    \"build:chrome\":",
+      "description": "| Change | Primary surface | Verify |\n| --- | --- | --- |\n| UI output/assets | CRACO and vendor/HTML scripts | Generated HTML, script order, CSP, and referenced files |\n| Worker bundling | esbuild script and Chrome wrapper | Emitted implementation, target compatibility, and fallback logs |\n| Browser capabilities | Both source manifests and npm postbuild hooks | Final manifest plus a loaded-extension smoke test |\n| Packaging | npm package scripts | ZIP contents match the intended latest build |\n| Quality gates | npm validation scripts, Husky, and workflows | Exit behavior and whether a command mutates files |\n| Release | Preparation scripts, release-it config, and release workflow | Version/manifest alignment without accidentally publishing |\n\nChange source/configuration, not generated build artifacts. Continue with **04 - Blocking Rules and Runtime Features**, then **05 - Testing and Troubleshooting** for behavior-focused maintenance."
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/codetour/main/schema.json",
+  "title": "02 - Persistence and Sync",
+  "description": "Trace durable settings, UI and worker storage paths, quota-aware chunking, fresh-install safeguards, and live synchronization.",
+  "nextTour": "03 - Infrastructure and Build",
+  "steps": [
+    {
+      "title": "Separate durable settings from runtime state",
+      "file": "src/service-worker/constants.js",
+      "pattern": "^export const syncSettings =",
+      "description": "The worker classifies rule lists, mode, frame types, message, redirect URL, and schedule as sync settings. Enabled state, timer, password, and logs are local. Sync means the browser's `storage.sync` service, not a backend owned by this repository.\n\nBelow, `STORAGE_KEY_MAP` preserves `blacklist`/`whitelist` storage names while exposing denylist/allowlist aliases. Renaming persisted keys without migration would strand existing users' data. The UI helper has its own local-only classification, so check both surfaces when adding a setting."
+    },
+    {
+      "title": "There is also a plain local-storage facade",
+      "file": "src/helpers/webext.js",
+      "pattern": "^export class storage",
+      "description": "This `storage` class wraps `browser.storage.local`; it does not route values to sync. For example, `App` uses it to read password protection.\n\nDo not confuse it with the `storage` alias exported at the bottom of `helpers/syncStorage.js`, which refers to the sync-aware object. Imports determine persistence behavior, even when callers use the same short name."
+    },
+    {
+      "title": "Trace a real UI save before choosing an abstraction",
+      "file": "src/components/Panel/index.jsx",
+      "pattern": "^  toggleStatus =",
+      "description": "`toggleStatus` sends a worker message and saves `isEnabled` through the UI sync helper, which classifies it as local-only. `changeMode` below sends its own message and persists a sync setting.\n\nThere are multiple active write paths, not one universal repository API. To diagnose a value, identify its caller, message handler, helper import, and target storage area."
+    },
+    {
+      "title": "UI reads split keys and reassemble lists",
+      "file": "src/helpers/syncStorage.js",
+      "pattern": "^  async get\\(items\\)",
+      "description": "The UI helper partitions requested defaults into sync and local groups. Sync reads also request metadata for chunkable lists, reconstruct chunked values, and remove metadata from the caller's result.\n\nOn a sync read exception it logs the failure and tries the locally cached values. A successful sync API read is not proof that every other device has already uploaded or downloaded the same data."
+    },
+    {
+      "title": "UI writes have explicit empty-list protection",
+      "file": "src/helpers/syncStorage.js",
+      "pattern": "^  async set\\(items\\)",
+      "description": "UI writes classify local/sync keys, check for a likely fresh install, and may keep empty lists local instead of replacing cloud data. Later in this method, empty chunkable arrays are also checked against existing metadata or list contents before sync writes proceed.\n\nThese guards deliberately make clearing a list different from a routine nonempty update. Follow the actual branch when investigating an import, reset, or empty save; do not assume an empty local list means the cloud list was cleared."
+    },
+    {
+      "title": "Large lists use chunks plus metadata",
+      "file": "src/service-worker/storage/syncStorage.js",
+      "pattern": "^export async function saveArrayToSync\\(",
+      "description": "The worker has a separate sync module. `saveArrayToSync` measures serialized size, splits large arrays below the per-item quota, writes `${key}_chunk_N` entries, then publishes `${key}_metadata`. It removes the old monolithic key and caches the full array locally. Smaller arrays are written directly.\n\n`loadArrayFromSync` reconstructs lists using that metadata. Writes span multiple API calls rather than one atomic transaction; metadata and leftover chunks matter when diagnosing partial or historical data. The UI helper implements a parallel chunking path."
+    },
+    {
+      "title": "The repository exposes aliases, but is not the startup loader",
+      "file": "src/service-worker/storage/settingsRepository.js",
+      "pattern": "^export async function loadSettings\\(",
+      "description": "The repository offers an alias-aware combined load and dedicated save methods. `toInternalSettings` and `toStorageSettings` translate names without changing persisted key compatibility.\n\nImportant boundary: the current worker entry point performs startup loading in its own `loadSettingsFromStorage`, rather than calling this `loadSettings`. Treat this module as an available helper, not as the only authoritative read/write path."
+    },
+    {
+      "title": "Restarted workers rebuild their in-memory state",
+      "file": "src/service-worker/index.js",
+      "pattern": "^async function loadSettingsFromStorage\\(",
+      "description": "Normal initialization reads the worker's sync keys, attempts dechunking for missing/empty lists, and separately loads local enabled/logging/timer/password settings. `applyStateFromStorage` validates list shapes and applies defaults; `init` subsequently recompiles patterns.\n\nThe error path logs and applies defaults. This differs from the UI helper's local fallback, which is why a popup and restarted worker can show different outcomes during a sync failure."
+    },
+    {
+      "title": "Fresh installs try to recover existing cloud rules first",
+      "file": "src/service-worker/storage/syncProtection.js",
+      "pattern": "^export async function initializeSyncProtection\\(",
+      "description": "On an install event the worker sets `isInitialInstall` and asks this module to pull existing sync data after a short delay. `forcePullFromSyncStorage` above reads regular and chunked lists; its success check requires a nonempty blacklist or whitelist. It caches recovered rules locally.\n\n`isLikelyFreshInstall` requires both the install flag and no rules. Read those concrete conditions rather than relying on older documentation's retry/time-window descriptions. Worker and UI fresh-install detection are different implementations."
+    },
+    {
+      "title": "Worker setters update memory and persistence differently",
+      "file": "src/service-worker/index.js",
+      "pattern": "^async function setBlacklist\\(",
+      "description": "Pattern-list setters update memory, recompile, clear the blocked-URL cache, and conditionally save through worker sync chunking. Empty lists on a likely fresh install are protected.\n\nNotice the keyword setters immediately below write locally, whereas UI helper classification includes keyword lists in sync. This is a current path difference, not a guarantee of one uniform policy. When changing persistence, inspect both message-driven saves and direct UI saves, and keep compatibility tests close."
+    },
+    {
+      "title": "Storage events refresh selected worker state",
+      "file": "src/service-worker/index.js",
+      "pattern": "^function handleStorageChanges\\(",
+      "description": "The current listener handles `sync` changes to direct list keys, mode, and frame types. List changes trigger recompilation, cache clearing, and checks of open tabs when enabled.\n\nRead the branches carefully: this handler does not reconstruct chunk/metadata change events and does not reload every sync setting. A successful chunk upload therefore is not equivalent to every live worker immediately applying the full reconstructed list."
+    },
+    {
+      "title": "Persistence and live-refresh matrix",
+      "file": "src/components/Settings/index.jsx",
+      "pattern": "^  save =",
+      "description": "Settings saves use the UI helper first, then send worker updates on success. This matrix summarizes current paths, not a proposed unified policy. UI writes may be suppressed by protection or use local fallback on failure.\n\n| Setting | UI write | Worker write/update | Durable area | Live worker refresh |\n| --- | --- | --- | --- | --- |\n| `isEnabled` | Panel/Settings -> UI helper | `setIsEnabled` -> local | Local | Message updates memory; local storage events are ignored |\n| `mode` | Panel/Settings -> UI helper | `setMode` -> sync | Sync | Message or direct sync-key event |\n| Pattern lists | Settings -> UI helper, with chunking | List setters -> guarded worker chunking | Sync + local cache | Message or direct list-key event; chunk/metadata events are not reconstructed |\n| Keyword lists | Settings -> UI helper, with chunking | Keyword setters save locally | UI: sync + local cache; worker setter: local | Message or direct sync-key event; chunk events are not reconstructed |\n| `schedule` | Settings -> UI helper | `setSchedule` updates memory and repository sync save | Sync | Message or startup; change listener has no schedule branch |\n| `timer` | Settings -> UI helper | Settings handler updates memory; start/stop callbacks save locally | Local | Message/startup; timeout belongs to current worker instance |\n| `password` | Settings -> UI helper | Startup reads local password; UI also sends password-related messages | Local | Startup; verify router and supplied handlers for each message |\n| `message` / `redirectUrl` | Settings -> UI helper | Startup loads sync values | Sync | No corresponding change-listener branches; blocked redirect reads message separately |\n\nA router case is not proof that the entry point supplies its handler. When tracing a new setting, verify both ends and the consumer, rather than interpreting a truthy acknowledgment as durable/live consistency."
+    },
+    {
+      "title": "Sync diagnostics are local observations",
+      "file": "src/helpers/syncDiagnostics.js",
+      "pattern": "^export const syncStatusTracker =",
+      "description": "UI load/save operations record timestamps, consecutive errors, and health information through this tracker in local storage. This supports troubleshooting, but it observes local API operations rather than end-to-end cloud replication acknowledgments.\n\nFor a sync problem, distinguish: browser sync account/service availability, quota errors, chunk reconstruction, fresh-install suppression, local fallback, and in-memory worker refresh. Those are different failure boundaries."
+    },
+    {
+      "title": "Exercise safeguards without touching real cloud data",
+      "file": "src/__tests__/integration/serviceWorker.storageInit.test.js",
+      "pattern": "^describe\\('Storage Initialization Integration'",
+      "description": "These integration tests import the real sync-protection functions but mock storage dependencies. They cover fresh-install detection, recovery of cloud lists, defaults, and safe saves, not browser-service replication or a full live worker lifecycle.\n\nOptional terminal command: `npm test -- --watchAll=false --runInBand --runTestsByPath src/__tests__/integration/serviceWorker.storageInit.test.js src/__tests__/helpers/syncStorage.test.js`.\n\nThe helper suite in that command demonstrates mocked storage behavior and its own mockSyncStorage object; it does not directly exercise the production UI sync helper. Keep that distinction in mind when assessing coverage."
+    },
+    {
+      "title": "Where to make persistence changes",
+      "file": "src/service-worker/constants.js",
+      "pattern": "^export const STORAGE_KEY_MAP =",
+      "description": "For a new or changed setting, trace the whole contract:\n\n1. Keep persisted names compatible or define an explicit migration.\n2. Update UI classification/defaults and the worker's relevant storage configuration.\n3. Wire the router case to a real entry-point handler and confirm its response/error contract.\n4. Define durable writes, restart loading, and live change-event behavior separately.\n5. For lists, cover direct and chunked representations, empty saves, fresh installs, and quota/fallback failures.\n6. Test actual helpers and callers, not just a replacement mock with the same method names.\n\nThe matrix records existing asymmetries so future changes do not accidentally hide them. Continue with **03 - Infrastructure and Build** to inspect the package that actually executes these paths."
+    }
+  ]
+}

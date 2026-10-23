@@ -106,6 +106,20 @@ Distract Me Not Plus is a lightweight website blocker with a user friendly inter
 
 ## Development
 
+### Guided code tours
+
+Install the [CodeTour extension for VS Code](https://marketplace.visualstudio.com/items?itemName=vsls-contrib.codetour), open this repository as your workspace, and select a tour from the **CodeTour** view in the Explorer. The recommended reading order is:
+
+1. [Introduction](.tours/01-introduction.tour) - UI entry points, runtime messaging, worker initialization, and URL blocking.
+2. [Persistence and Sync](.tours/02-persistence-and-sync.tour) - Local versus sync settings, compatibility keys, chunking, fresh-install protection, and state refresh.
+3. [Infrastructure and Build](.tours/03-infrastructure-and-build.tour) - npm scripts, UI/worker bundles, browser-specific output, packaging, CI, and release boundaries.
+4. [Blocking Rules and Runtime Features](.tours/04-blocking-rules-and-runtime.tour) - Pattern/keyword syntax, mode precedence, schedules, timers, temporary allowances, caching, and blocked-page behavior.
+5. [Testing and Troubleshooting](.tours/05-testing-and-troubleshooting.tour) - Test boundaries, browser API mocks, popup/worker debugging, safe sync diagnosis, and generated-artifact verification.
+
+The introduction includes a worked popup-to-blocked-page example. The persistence and build tours include reference matrices; the build tour also includes a manual browser smoke-test checklist. Every tour ends with guidance on where to make changes.
+
+Each step explains the current implementation and includes exercises or optional commands for further exploration. Source steps use pattern anchors rather than fixed line numbers. The tours do not automatically run commands; optional test/diagnostic commands are for you to run yourself. Use a disposable browser profile for manual checks that change rules or settings.
+
 ### Building for different browsers
 
 This extension can be built for different browsers with specific adaptations for each platform:

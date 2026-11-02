@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { debug } from 'helpers/debug';
 import { IconButton } from 'components';
 import { isBoolean } from 'lodash';
 import './styles.scss';
@@ -22,7 +21,7 @@ export class AnimatedIconButton extends Component {
       this.props.isVisible !== prevProps.isVisible &&
       this.props.isVisible !== this.state.isVisible
     ) {
-      debug.warn('isVisible prop has changed:', this.props.isVisible);
+      // isVisible prop changed externally, sync internal state
       if (this.props.isVisible) {
         this.show();
       } else {

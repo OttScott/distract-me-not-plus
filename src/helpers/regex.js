@@ -1,3 +1,5 @@
+import { MAX_REGEX_LENGTH } from './constants';
+
 export class regex {
   static wildcard(url) {
     if (url.startsWith('^')) {
@@ -25,7 +27,7 @@ export class regex {
   static create(str, flags) {
     try {
       // Input validation to prevent ReDoS attacks
-      if (typeof str !== 'string' || str.length > 10000) {
+      if (typeof str !== 'string' || str.length > MAX_REGEX_LENGTH) {
         console.warn('Regex pattern too long or invalid, using escaped literal');
         return this.escape(str);
       }

@@ -35,6 +35,7 @@ import {
   SegmentedControlField,
   AnimatedIconButton,
   SettingsButton,
+  SyncStatusButton,
   LinkIconButton,
   TooltipIcon,
 } from 'components';
@@ -57,6 +58,16 @@ export class Panel extends Component {
       hideReportIssueButton: false,
       showAddWebsitePrompt: false,
     };
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    // Log any state changes that might cause button to disappear
+    const stateChanges = Object.keys(this.state).filter(
+      (key) => this.state[key] !== prevState[key],
+    );
+    if (stateChanges.length > 0) {
+      console.log('[Panel] State updated:', stateChanges, this.state);
+    }
   }
 
   componentDidMount() {
@@ -229,6 +240,9 @@ export class Panel extends Component {
             >
               <Pane display="flex" gap={10}>
                 <SettingsButton history={this.props.history} />
+                {console.log('[DEBUG] About to render SyncStatusButton')}
+                <SyncStatusButton />
+                {console.log('[DEBUG] Rendered SyncStatusButton')}
                 {this.state.enableUnblock && (
                   <LinkIconButton
                     icon={ShieldIcon}
@@ -258,7 +272,7 @@ export class Panel extends Component {
                 {!this.state.hideReportIssueButton && (
                   <LinkIconButton
                     icon={GithubIcon}
-                    link="https://github.com/AXeL-dev/distract-me-not/issues"
+                    link="https://github.com/OttScott/distract-me-not/issues"
                     external
                     tooltip={translate('reportIssue')}
                     history={this.props.history}

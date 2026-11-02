@@ -152,17 +152,44 @@ export default class Diagnostics extends Component {
       if (results.success) {
         toaster.success(results.message || 'Successfully synced settings from cloud');
         this.runDiagnostics(); // Refresh diagnostics
-
-        // Notify parent component to refresh rules if callback is available
-        if (this.props.onRefreshRules) {
-          this.props.onRefreshRules();
-        }
       } else {
         toaster.danger(results.message || 'Failed to sync from cloud');
       }
     } catch (error) {
       console.error('Force sync down failed:', error);
       toaster.danger(`Failed to sync from cloud: ${error.message}`);
+    } finally {
+      this.setState({ isLoading: false });
+    }
+  };
+
+  /**
+   * Migrate large lists to chunked storage format
+   */
+  migrateToChunkedStorage = async () => {
+    try {
+      this.setState({ isLoading: true });
+
+      const { syncStorage } = await import('helpers/syncStorage');
+      const results = await syncStorage.migrateToChunkedStorage();
+
+      if (results.migrated.length > 0) {
+        const message = results.migrated
+          .map((m) => `${m.key}: ${m.itemCount} items (${m.size} bytes)`)
+          .join(', ');
+        toaster.success(`Migrated: ${message}`);
+      } else if (results.errors.length > 0) {
+        toaster.danger(
+          `Migration errors: ${results.errors.map((e) => e.error).join(', ')}`,
+        );
+      } else {
+        toaster.success('No migration needed - all data within limits');
+      }
+
+      this.runDiagnostics(); // Refresh diagnostics
+    } catch (error) {
+      console.error('Migration failed:', error);
+      toaster.danger(`Migration failed: ${error.message}`);
     } finally {
       this.setState({ isLoading: false });
     }
@@ -431,6 +458,15 @@ export default class Diagnostics extends Component {
             intent="success"
           >
             Force Sync Down
+          </Button>
+
+          <Button
+            iconBefore={RefreshIcon}
+            onClick={this.migrateToChunkedStorage}
+            disabled={isLoading}
+            intent="warning"
+          >
+            Migrate to Chunked Storage
           </Button>
         </Pane>
 

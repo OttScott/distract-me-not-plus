@@ -122,57 +122,32 @@ export function isPageReloaded() {
   }
 }
 
-export function blockUrl(url, mode = Mode.blacklist, tabId = null) {
-  return new Promise((resolve, reject) => {
-    switch (mode) {
-      case Mode.blacklist:
-      case Mode.combined:
-        storage
-          .get({
-            blacklist: defaultBlacklist,
-          })
-          .then(({ blacklist }) => {
-            for (const item of blacklist) {
-              if (item === url) {
-                resolve(false);
-                return;
-              }
-            }
-            blacklist.splice(0, 0, url);
-            sendMessage('setBlacklist', blacklist, tabId);
-            storage.set({ blacklist: blacklist });
-            resolve(true);
-          })
-          .catch((error) => {
-            reject(error);
-          });
-        break;
-      case Mode.whitelist:
-        // ToDo: merge common code (@see above)
-        storage
-          .get({
-            whitelist: defaultWhitelist,
-          })
-          .then(({ whitelist }) => {
-            for (const item of whitelist) {
-              if (item === url) {
-                resolve(false);
-                return;
-              }
-            }
-            whitelist.splice(0, 0, url);
-            sendMessage('setWhitelist', whitelist, tabId);
-            storage.set({ whitelist: whitelist });
-            resolve(true);
-          })
-          .catch((error) => {
-            reject(error);
-          });
-        break;
-      default:
-        break;
+export async function blockUrl(url, mode = Mode.blacklist, tabId = null) {
+  switch (mode) {
+    case Mode.blacklist:
+    case Mode.combined: {
+      const { blacklist } = await storage.get({ blacklist: defaultBlacklist });
+      if (blacklist.includes(url)) {
+        return false;
+      }
+      blacklist.splice(0, 0, url);
+      sendMessage('setBlacklist', blacklist, tabId);
+      await storage.set({ blacklist });
+      return true;
     }
-  });
+    case Mode.whitelist: {
+      const { whitelist } = await storage.get({ whitelist: defaultWhitelist });
+      if (whitelist.includes(url)) {
+        return false;
+      }
+      whitelist.splice(0, 0, url);
+      sendMessage('setWhitelist', whitelist, tabId);
+      await storage.set({ whitelist });
+      return true;
+    }
+    default:
+      return false;
+  }
 }
 
 export async function addCurrentWebsite(mode, isPrompt = false, exactUrl = false) {

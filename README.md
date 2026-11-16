@@ -40,14 +40,46 @@ Distract Me Not is a lightweight website blocker with a user friendly interface.
    - Robust fallback to local storage when sync operations fail
    - Fixed multiple instances of incorrect `chrome.storage.sync.get()` usage
 
-2. **Enhanced cross-device sync reliability:**
+3. **Enhanced cross-device sync reliability:**
    - Improved sync data detection on fresh installs
    - Added robust error handling for sync storage operations
    - Fixed sync status checking to prevent data corruption
 
-3. **Service worker stability improvements:**
+4. **Service worker stability improvements:**
    - Resolved storage access patterns that caused initialization failures
    - Enhanced pattern matching with detailed blocking reasons
+
+## Repository Status (2026-01-24)
+
+**Current state:** Production-ready with ongoing maintenance work
+
+### Recent Cleanup Improvements
+
+✅ **Security** - Reduced vulnerabilities from 180 to 32 (83% improvement)
+- Updated Babel, bcryptjs, DOMPurify, Prettier, Sass to latest versions
+- Remaining issues require breaking changes (documented in SECURITY-STATUS.md)
+
+✅ **Code Quality** - Modernized patterns and extracted constants
+- Converted legacy Promise constructors to async/await
+- Centralized magic numbers in constants.js for maintainability
+- All tests passing
+
+✅ **Documentation** - Added architecture guides
+- [SERVICE-WORKER-ARCHITECTURE.md](./SERVICE-WORKER-ARCHITECTURE.md) - Service worker internals
+- [ADR-SYNC-STORAGE-STRATEGY.md](./ADR-SYNC-STORAGE-STRATEGY.md) - Sync storage decisions
+- [SECURITY-STATUS.md](./SECURITY-STATUS.md) - Current vulnerability status
+
+### Known Technical Debt
+
+⚠️ **React 17** - Currently 2 major versions behind (17 → 18 → 19)
+- React reached EOL in June 2024
+- Upgrade requires careful testing (see DEPENDENCY-UPGRADE-PLAN.md)
+
+⚠️ **Service Worker** - Monolithic 650+ line file needs refactoring
+- Plan to split into modules: patterns.js, blocking.js, storage.js
+- Missing unit tests for core blocking logic
+
+📖 **Full details:** See [DEPENDENCY-UPGRADE-PLAN.md](./DEPENDENCY-UPGRADE-PLAN.md) for complete upgrade strategy
    - Improved error handling and fallback mechanisms
 
 ## Previous Changes (v2.9.4)
